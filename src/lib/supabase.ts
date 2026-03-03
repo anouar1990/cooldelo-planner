@@ -1,19 +1,23 @@
 import { Platform } from 'react-native';
 
+// Supabase is not yet configured — placeholder to avoid import.meta errors on web.
+// Replace these with real values from your Supabase project dashboard,
+// then wire up auth in the screens.
+let supabase: any = null;
+
 if (Platform.OS !== 'web') {
-  require('react-native-url-polyfill/auto');
+  try {
+    // Only initialise Supabase on native where import.meta is not an issue
+    // TODO: uncomment once real keys are set
+    // require('react-native-url-polyfill/auto');
+    // const { createClient } = require('@supabase/supabase-js');
+    // const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    // supabase = createClient('https://your-project.supabase.co', 'your-anon-key', {
+    //   auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true },
+    // });
+  } catch (e) {
+    // Supabase not yet configured
+  }
 }
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://your-project.supabase.co'; // TODO: Replace with env vars
-const supabaseAnonKey = 'your-anon-key'; // TODO: Replace with env vars
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+export { supabase };
