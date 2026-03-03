@@ -3,7 +3,8 @@ module.exports = function (api) {
     return {
         presets: ['babel-preset-expo'],
         plugins: [
-            '@babel/plugin-syntax-import-meta'
+            // Transforms import.meta → process.env compatible code for web builds
+            'babel-plugin-transform-import-meta',
         ]
     };
 };
