@@ -2,15 +2,17 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar, View, StyleSheet, TouchableOpacity } from 'react-native';
+import { StatusBar, View, StyleSheet, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { LayoutDashboard, FolderOpen, BarChart2 } from 'lucide-react-native';
+import { LayoutDashboard, FolderOpen, BarChart2, LogOut } from 'lucide-react-native';
 
 import DashboardScreen from './src/screens/DashboardScreen';
 import ProjectsListScreen from './src/screens/ProjectsListScreen';
 import AddProjectScreen from './src/screens/AddProjectScreen';
 import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen';
 import StatsScreen from './src/screens/StatsScreen';
+import AuthScreen from './src/screens/AuthScreen';
+import { useAuth } from './src/hooks/useAuth';
 
 const Tab = createBottomTabNavigator();
 const DashStack = createNativeStackNavigator();
@@ -48,6 +50,26 @@ function ProjectsNavigator() {
 }
 
 export default function App() {
+  const { session, loading, signOut } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingScreen}>
+        <Text style={styles.loadingBrand}>⚡ COOLDELO</Text>
+        <ActivityIndicator color="#FF6B35" size="large" style={{ marginTop: 24 }} />
+      </View>
+    );
+  }
+
+  if (!session) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+        <AuthScreen />
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
@@ -83,6 +105,11 @@ export default function App() {
               if (route.name === 'Stats') return <BarChart2 color={color} size={size} />;
               return null;
             },
+            tabBarRight: () => (
+              <TouchableOpacity onPress={signOut} style={{ marginRight: 16 }}>
+                <LogOut color={COLORS.textSub} size={20} />
+              </TouchableOpacity>
+            ),
           })}
         >
           <Tab.Screen name="Dashboard" component={DashboardNavigator} />
@@ -106,5 +133,12 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  loadingScreen: {
+    flex: 1, backgroundColor: '#0F1117',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  loadingBrand: {
+    fontSize: 28, fontWeight: '900', color: '#FFFFFF', letterSpacing: 2,
   },
 });

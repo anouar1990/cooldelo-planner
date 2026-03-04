@@ -3,7 +3,8 @@ import {
     View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ScrollView
 } from 'react-native';
 import { useStore, Project } from '../store/useStore';
-import { Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight } from 'lucide-react-native';
+import { Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut } from 'lucide-react-native';
+import { useAuth } from '../hooks/useAuth';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -41,6 +42,7 @@ function StatCard({ icon, value, label, color }: any) {
 }
 
 export default function DashboardScreen({ navigation }: any) {
+    const { signOut } = useAuth();
     const projects = useStore(s => s.projects);
     const materials = useStore(s => s.materials);
     const hourlyRate = useStore(s => s.hourlyRate);
@@ -70,8 +72,13 @@ export default function DashboardScreen({ navigation }: any) {
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.brand}>COOLDELO <Text style={styles.brandAccent}>Planner</Text></Text>
-                    <Text style={styles.subtitle}>Laser & CNC project hub</Text>
+                    <View>
+                        <Text style={styles.brand}>COOLDELO <Text style={styles.brandAccent}>Planner</Text></Text>
+                        <Text style={styles.subtitle}>Laser &amp; CNC project hub</Text>
+                    </View>
+                    <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
+                        <LogOut color="#8B95A8" size={20} />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Stats */}
@@ -145,7 +152,7 @@ export default function DashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: C.bg },
     scroll: { paddingBottom: 32 },
-    header: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 20 },
+    header: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     brand: { fontSize: 26, fontWeight: '800', color: C.text },
     brandAccent: { color: C.primary },
     subtitle: { fontSize: 14, color: C.sub, marginTop: 4 },
@@ -177,4 +184,9 @@ const styles = StyleSheet.create({
     rowMeta: { fontSize: 12, color: C.sub },
     badge: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
     badgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
+    signOutBtn: {
+        width: 38, height: 38, borderRadius: 19,
+        backgroundColor: 'rgba(255,255,255,0.07)',
+        justifyContent: 'center', alignItems: 'center',
+    },
 });
