@@ -5,7 +5,7 @@ node_modules/
 
 # Expo
 .expo/
-dist/
+# dist/ intentionally tracked — pre-built for Vercel static serving
 web-build/
 expo-env.d.ts
 
