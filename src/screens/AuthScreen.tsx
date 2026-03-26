@@ -45,22 +45,26 @@ export default function AuthScreen() {
     const handleSubmit = async () => {
         if (!validate()) return;
         setLoading(true);
-        if (mode === 'signin') {
-            const { error } = await signIn(email, password);
-            if (error) setPasswordError(error.message);
-        } else {
-            const { error } = await signUp(email, password);
-            if (error) {
-                setEmailError(error.message);
+        try {
+            if (mode === 'signin') {
+                const { error } = await signIn(email, password);
+                if (error) setPasswordError(error.message);
             } else {
-                Alert.alert(
-                    'Account created! ✅',
-                    'Check your email to confirm your account, then sign in.',
-                    [{ text: 'OK', onPress: () => setMode('signin') }]
-                );
+                const { data, error } = await signUp(email, password);
+                if (error) {
+                    setEmailError(error.message);
+                } else if (!data?.session) {
+                    Alert.alert(
+                        'Account created! ✅',
+                        'Check your email to confirm your account, then sign in.',
+                        [{ text: 'OK', onPress: () => setMode('signin') }]
+                    );
+                }
             }
+        } finally {
+            // Guarantee loading is cleared even on unexpected network errors
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleForgotPassword = async () => {
@@ -89,112 +93,118 @@ export default function AuthScreen() {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Brand */}
-                    <View style={styles.hero}>
-                        <Text style={styles.heroIcon}>⚡</Text>
-                        <Text style={styles.brand}>COOLDELO</Text>
-                        <Text style={styles.brandSub}>Planner</Text>
-                        <Text style={styles.tagline}>Laser & CNC project hub</Text>
-                    </View>
-
-                    {/* Tab switcher */}
-                    <View style={styles.tabRow}>
-                        <TouchableOpacity
-                            style={[styles.tabBtn, mode === 'signin' && styles.tabBtnActive]}
-                            onPress={() => { setMode('signin'); clearErrors(); }}
-                        >
-                            <LogIn color={mode === 'signin' ? '#fff' : C.sub} size={16} />
-                            <Text style={[styles.tabText, mode === 'signin' && styles.tabTextActive]}>Sign In</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tabBtn, mode === 'signup' && styles.tabBtnActive]}
-                            onPress={() => { setMode('signup'); clearErrors(); }}
-                        >
-                            <UserPlus color={mode === 'signup' ? '#fff' : C.sub} size={16} />
-                            <Text style={[styles.tabText, mode === 'signup' && styles.tabTextActive]}>Create Account</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Form */}
-                    <View style={styles.form}>
-                        {/* Email */}
-                        <Text style={styles.label}>EMAIL</Text>
-                        <View style={[styles.inputRow, emailError ? styles.inputError : null]}>
-                            <Mail color={C.sub} size={18} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="you@example.com"
-                                placeholderTextColor={C.dim}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                                value={email}
-                                onChangeText={(t) => { setEmail(t); setEmailError(''); }}
-                            />
+                    <View style={{ width: '100%', maxWidth: 480, alignSelf: 'center' }}>
+                        {/* Brand */}
+                        <View style={styles.hero}>
+                            <Text style={styles.heroIcon}>⚡</Text>
+                            <Text style={styles.brand}>0machine</Text>
+                            <Text style={styles.brandSub}>Planner</Text>
+                            <Text style={styles.tagline}>Laser & CNC project hub</Text>
                         </View>
-                        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-                        {/* Password */}
-                        <Text style={[styles.label, { marginTop: 16 }]}>PASSWORD</Text>
-                        <View style={[styles.inputRow, passwordError ? styles.inputError : null]}>
-                            <Lock color={C.sub} size={18} style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Min. 6 characters"
-                                placeholderTextColor={C.dim}
-                                secureTextEntry={!showPassword}
-                                value={password}
-                                onChangeText={(t) => { setPassword(t); setPasswordError(''); }}
-                            />
-                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-                                {showPassword ? <EyeOff color={C.sub} size={18} /> : <Eye color={C.sub} size={18} />}
+                        {/* Tab switcher */}
+                        <View style={styles.tabRow}>
+                            <TouchableOpacity
+                                style={[styles.tabBtn, mode === 'signin' && styles.tabBtnActive]}
+                                onPress={() => { setMode('signin'); clearErrors(); }}
+                            >
+                                <LogIn color={mode === 'signin' ? '#fff' : C.sub} size={16} />
+                                <Text style={[styles.tabText, mode === 'signin' && styles.tabTextActive]}>Sign In</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.tabBtn, mode === 'signup' && styles.tabBtnActive]}
+                                onPress={() => { setMode('signup'); clearErrors(); }}
+                            >
+                                <UserPlus color={mode === 'signup' ? '#fff' : C.sub} size={16} />
+                                <Text style={[styles.tabText, mode === 'signup' && styles.tabTextActive]}>Create Account</Text>
                             </TouchableOpacity>
                         </View>
-                        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
-                        {/* Confirm password (sign up only) */}
-                        {mode === 'signup' && (
-                            <>
-                                <Text style={[styles.label, { marginTop: 16 }]}>CONFIRM PASSWORD</Text>
-                                <View style={[styles.inputRow, passwordError ? styles.inputError : null]}>
-                                    <Lock color={C.sub} size={18} style={styles.inputIcon} />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Repeat password"
-                                        placeholderTextColor={C.dim}
-                                        secureTextEntry={!showPassword}
-                                        value={confirmPassword}
-                                        onChangeText={setConfirmPassword}
-                                    />
-                                </View>
-                            </>
-                        )}
+                        {/* Form */}
+                        <View style={styles.form}>
+                            {/* Email */}
+                            <Text style={styles.label}>EMAIL</Text>
+                            <View style={[styles.inputRow, emailError ? styles.inputError : null]}>
+                                <Mail color={C.sub} size={18} style={styles.inputIcon} />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="you@example.com"
+                                    placeholderTextColor={C.dim}
+                                    autoCapitalize="none"
+                                    keyboardType="email-address"
+                                    value={email}
+                                    onChangeText={(t) => { setEmail(t); setEmailError(''); }}
+                                />
+                            </View>
+                            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-                        {/* Submit */}
-                        <TouchableOpacity
-                            style={[styles.submitBtn, loading && styles.submitBtnLoading]}
-                            onPress={handleSubmit}
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <Text style={styles.submitText}>
-                                    {mode === 'signin' ? 'Sign In' : 'Create Account'}
-                                </Text>
+                            {/* Password */}
+                            <Text style={[styles.label, { marginTop: 16 }]}>PASSWORD</Text>
+                            <View style={[styles.inputRow, passwordError ? styles.inputError : null]}>
+                                <Lock color={C.sub} size={18} style={styles.inputIcon} />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Min. 6 characters"
+                                    placeholderTextColor={C.dim}
+                                    secureTextEntry={!showPassword}
+                                    value={password}
+                                    onChangeText={(t) => { setPassword(t); setPasswordError(''); }}
+                                    onSubmitEditing={mode === 'signin' ? handleSubmit : undefined}
+                                    returnKeyType={mode === 'signin' ? 'done' : 'next'}
+                                />
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                                    {showPassword ? <EyeOff color={C.sub} size={18} /> : <Eye color={C.sub} size={18} />}
+                                </TouchableOpacity>
+                            </View>
+                            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+
+                            {/* Confirm password (sign up only) */}
+                            {mode === 'signup' && (
+                                <>
+                                    <Text style={[styles.label, { marginTop: 16 }]}>CONFIRM PASSWORD</Text>
+                                    <View style={[styles.inputRow, passwordError ? styles.inputError : null]}>
+                                        <Lock color={C.sub} size={18} style={styles.inputIcon} />
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Repeat password"
+                                            placeholderTextColor={C.dim}
+                                            secureTextEntry={!showPassword}
+                                            value={confirmPassword}
+                                            onChangeText={setConfirmPassword}
+                                            onSubmitEditing={handleSubmit}
+                                            returnKeyType="done"
+                                        />
+                                    </View>
+                                </>
                             )}
-                        </TouchableOpacity>
 
-                        {/* Forgot password */}
-                        {mode === 'signin' && (
-                            <TouchableOpacity style={styles.forgotBtn} onPress={handleForgotPassword}>
-                                <Text style={styles.forgotText}>Forgot password?</Text>
+                            {/* Submit */}
+                            <TouchableOpacity
+                                style={[styles.submitBtn, loading && styles.submitBtnLoading]}
+                                onPress={handleSubmit}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <Text style={styles.submitText}>
+                                        {mode === 'signin' ? 'Sign In' : 'Create Account'}
+                                    </Text>
+                                )}
                             </TouchableOpacity>
-                        )}
-                    </View>
 
-                    <Text style={styles.footer}>
-                        Your data is securely stored and encrypted via Supabase.
-                    </Text>
+                            {/* Forgot password */}
+                            {mode === 'signin' && (
+                                <TouchableOpacity style={styles.forgotBtn} onPress={handleForgotPassword}>
+                                    <Text style={styles.forgotText}>Forgot password?</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                        <Text style={styles.footer}>
+                            Your data is securely stored and encrypted via Supabase.
+                        </Text>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>

@@ -1,10 +1,10 @@
 import React from 'react';
-import {
-    View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ScrollView
-} from 'react-native';
-import { useStore, Project } from '../store/useStore';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { useProjects, ProjectRow } from '../hooks/useProjects';
+import { useMaterials } from '../hooks/useMaterials';
 import { Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { ResponsiveContainer } from '../components/ResponsiveContainer';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: string }) {
     );
 }
 
-function StatCard({ icon, value, label, color }: any) {
+function StatCard({ icon, value, label, color }: { icon: React.ReactNode; value: string | number; label: string; color: string }) {
     return (
         <View style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: color + '20' }]}>
@@ -43,107 +43,126 @@ function StatCard({ icon, value, label, color }: any) {
 
 export default function DashboardScreen({ navigation }: any) {
     const { signOut } = useAuth();
-    const projects = useStore(s => s.projects);
-    const materials = useStore(s => s.materials);
-    const hourlyRate = useStore(s => s.hourlyRate);
+    const { projects } = useProjects();
+    const { materials, hourlyRate } = useMaterials();
 
-    const active = projects.filter(p => p.status === 'in-progress').length;
-    const done = projects.filter(p => p.status === 'completed').length;
-    const planned = projects.filter(p => p.status === 'planned').length;
+    const { active, done, planned, totalCost, recent } = React.useMemo(() => {
+        let activeCount = 0;
+        let doneCount = 0;
+        let plannedCount = 0;
+        let sumCost = 0;
 
-    // Compute total cost across all projects
-    const totalCost = projects.reduce((sum, p) => {
-        const mat = materials.find(m => m.id === p.materialId);
-        const matCost = (p.materialCostPerUnit ?? mat?.costPerUnit ?? 0) * (p.materialQuantity ?? 1);
-        const timeCost = (p.timeElapsed / 3600) * hourlyRate;
-        return sum + matCost + timeCost;
-    }, 0);
+        const matMap = new Map(materials.map(m => [m.id, m]));
 
-    const recent = [...projects].sort(
-        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    ).slice(0, 5);
+        for (const p of projects) {
+            if (p.status === 'in-progress') activeCount++;
+            else if (p.status === 'completed') doneCount++;
+            else if (p.status === 'planned') plannedCount++;
 
-    const navigate = (p: Project) => {
+            const mat = p.material_id ? matMap.get(p.material_id) : undefined;
+            const matCost = (p.material_cost_per_unit ?? mat?.cost_per_unit ?? 0) * (p.material_quantity ?? 1);
+            const timeCost = ((p.time_elapsed || 0) / 3600) * hourlyRate;
+            sumCost += matCost + timeCost;
+        }
+
+        const recentList = [...projects].sort(
+            (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        ).slice(0, 5);
+
+        return {
+            active: activeCount,
+            done: doneCount,
+            planned: plannedCount,
+            totalCost: sumCost,
+            recent: recentList
+        };
+    }, [projects, materials, hourlyRate]);
+
+    const navigate = (p: ProjectRow) => {
         navigation.navigate('ProjectDetails', { id: p.id });
     };
 
     return (
         <SafeAreaView style={styles.safe}>
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <View>
-                        <Text style={styles.brand}>COOLDELO <Text style={styles.brandAccent}>Planner</Text></Text>
-                        <Text style={styles.subtitle}>Laser &amp; CNC project hub</Text>
+                <ResponsiveContainer>
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <View>
+                            <Text style={styles.brand}>0machine <Text style={styles.brandAccent}>Planner</Text></Text>
+                            <Text style={styles.subtitle}>Laser &amp; CNC project hub</Text>
+                        </View>
+                        <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
+                            <LogOut color="#8B95A8" size={20} />
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
-                        <LogOut color="#8B95A8" size={20} />
-                    </TouchableOpacity>
-                </View>
 
-                {/* Stats */}
-                <View style={styles.statsGrid}>
-                    <StatCard
-                        icon={<Activity color={C.primary} size={20} />}
-                        value={projects.length}
-                        label="Total"
-                        color={C.primary}
-                    />
-                    <StatCard
-                        icon={<Clock color={C.amber} size={20} />}
-                        value={active}
-                        label="In Progress"
-                        color={C.amber}
-                    />
-                    <StatCard
-                        icon={<CheckCircle color={C.green} size={20} />}
-                        value={done}
-                        label="Completed"
-                        color={C.green}
-                    />
-                    <StatCard
-                        icon={<TrendingUp color={C.blue} size={20} />}
-                        value={`$${totalCost.toFixed(0)}`}
-                        label="Total Cost"
-                        color={C.blue}
-                    />
-                </View>
-
-                {/* Recent Projects */}
-                <View style={styles.sectionRow}>
-                    <Text style={styles.sectionTitle}>RECENT PROJECTS</Text>
-                    <TouchableOpacity onPress={() => navigation.getParent()?.navigate('Projects')}>
-                        <Text style={styles.seeAll}>See all</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {recent.length === 0 ? (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyIcon}>🔦</Text>
-                        <Text style={styles.emptyTitle}>No projects yet</Text>
-                        <Text style={styles.emptySub}>Head over to the Projects tab to start your first laser cutting project.</Text>
+                    {/* Stats */}
+                    <View style={styles.statsGrid}>
+                        <StatCard
+                            icon={<Activity color={C.primary} size={20} />}
+                            value={projects.length}
+                            label="Total"
+                            color={C.primary}
+                        />
+                        <StatCard
+                            icon={<Clock color={C.amber} size={20} />}
+                            value={active}
+                            label="In Progress"
+                            color={C.amber}
+                        />
+                        <StatCard
+                            icon={<CheckCircle color={C.green} size={20} />}
+                            value={done}
+                            label="Completed"
+                            color={C.green}
+                        />
+                        <StatCard
+                            icon={<TrendingUp color={C.blue} size={20} />}
+                            value={`$${totalCost.toFixed(0)}`}
+                            label="Total Cost"
+                            color={C.blue}
+                        />
                     </View>
-                ) : (
-                    recent.map(p => {
-                        const mat = materials.find(m => m.id === p.materialId);
-                        return (
-                            <TouchableOpacity key={p.id} style={styles.row} onPress={() => navigate(p)} activeOpacity={0.75}>
-                                <View style={[styles.rowBar, { backgroundColor: STATUS_COLOR[p.status] ?? C.sub }]} />
-                                <View style={styles.rowBody}>
-                                    <View style={styles.rowTop}>
-                                        <Text style={styles.rowTitle} numberOfLines={1}>{p.title}</Text>
-                                        <StatusBadge status={p.status} />
-                                    </View>
-                                    <Text style={styles.rowMeta} numberOfLines={1}>
-                                        {mat ? `${mat.name} · ${mat.thickness}mm` : 'No material'}
-                                        {p.machine ? ` · ${p.machine}` : ''}
-                                    </Text>
-                                </View>
-                                <ArrowRight color={C.dim} size={16} />
-                            </TouchableOpacity>
-                        );
-                    })
-                )}
+
+                    {/* Recent Projects */}
+                    <View style={styles.sectionRow}>
+                        <Text style={styles.sectionTitle}>RECENT PROJECTS</Text>
+                        <TouchableOpacity onPress={() => navigation.getParent()?.navigate('Projects')}>
+                            <Text style={styles.seeAll}>See all</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {recent.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <Text style={styles.emptyIcon}>🔦</Text>
+                            <Text style={styles.emptyTitle}>No projects yet</Text>
+                            <Text style={styles.emptySub}>Head over to the Projects tab to start your first laser cutting project.</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.recentList}>
+                            {recent.map(p => {
+                                const mat = materials.find(m => m.id === p.material_id);
+                                return (
+                                    <TouchableOpacity key={p.id} style={styles.row} onPress={() => navigate(p)} activeOpacity={0.75}>
+                                        <View style={[styles.rowBar, { backgroundColor: STATUS_COLOR[p.status] ?? C.sub }]} />
+                                        <View style={styles.rowBody}>
+                                            <View style={styles.rowTop}>
+                                                <Text style={styles.rowTitle} numberOfLines={1}>{p.title}</Text>
+                                                <StatusBadge status={p.status} />
+                                            </View>
+                                            <Text style={styles.rowMeta} numberOfLines={1}>
+                                                {mat ? `${mat.name} · ${p.material_thickness || mat.thickness}mm` : 'No material'}
+                                                {p.machine ? ` · ${p.machine}` : ''}
+                                            </Text>
+                                        </View>
+                                        <ArrowRight color={C.dim} size={16} />
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    )}
+                </ResponsiveContainer>
             </ScrollView>
         </SafeAreaView>
     );
@@ -172,6 +191,7 @@ const styles = StyleSheet.create({
     emptyIcon: { fontSize: 48, marginBottom: 12 },
     emptyTitle: { fontSize: 18, fontWeight: '700', color: C.text, marginBottom: 8 },
     emptySub: { fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 22 },
+    recentList: { width: '100%', maxWidth: 800, alignSelf: 'center' },
     row: {
         flexDirection: 'row', alignItems: 'center',
         backgroundColor: C.surface, marginHorizontal: 16, marginBottom: 8,

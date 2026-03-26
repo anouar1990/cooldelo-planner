@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "vercel-build": "expo export --platform web --output-dir web-build"
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.6",
@@ -19,8 +20,12 @@
     "expo": "~55.0.4",
     "expo-background-fetch": "^55.0.9",
     "expo-document-picker": "^55.0.8",
-    "expo-image-picker": "~55.0.10",
-    "expo-notifications": "^55.0.10",
+    "expo-file-system": "~55.0.10",
+    "expo-image-picker": "~55.0.12",
+    "expo-media-library": "~55.0.9",
+    "expo-notifications": "~55.0.12",
+    "expo-print": "~55.0.8",
+    "expo-sharing": "~55.0.11",
     "expo-status-bar": "~55.0.4",
     "expo-task-manager": "^55.0.9",
     "lucide-react-native": "^0.575.0",

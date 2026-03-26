@@ -4,7 +4,9 @@ import {
     SafeAreaView, ScrollView, Image, Alert, Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useStore } from '../store/useStore';
+import { ResponsiveContainer } from '../components/ResponsiveContainer';
+import { useProjects, ProjectInsert } from '../hooks/useProjects';
+import { useMaterials } from '../hooks/useMaterials';
 import { X, Camera, ChevronDown } from 'lucide-react-native';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,13 +27,14 @@ const STATUS_OPTS: { label: string; value: 'planned' | 'in-progress' | 'complete
 const MATERIAL_TYPES = ['wood', 'acrylic', 'leather', 'mdf', 'stone', 'other'];
 
 export default function AddProjectScreen({ navigation }: any) {
-    const addProject = useStore(s => s.addProject);
-    const materials = useStore(s => s.materials);
+    const { addProject } = useProjects();
+    const { materials, hourlyRate } = useMaterials();
+    const [isSaving, setIsSaving] = useState(false);
 
     const [imageUri, setImageUri] = useState<string | undefined>();
     const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [status, setStatus] = useState<'planned' | 'in-progress' | 'completed'>('planned');
+    const [desc, setDesc] = useState('');
+    const [status, setStatus] = useState<ProjectInsert['status']>('planned');
     const [machine, setMachine] = useState('');
     const [selectedMaterial, setSelectedMaterial] = useState(materials[0]?.id ?? '');
     const [thickness, setThickness] = useState('');
@@ -55,164 +58,174 @@ export default function AddProjectScreen({ navigation }: any) {
         if (!result.canceled) setImageUri(result.assets[0].uri);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!title.trim()) {
             Alert.alert('Required', 'Please enter a project title.');
             return;
         }
-        const project = {
-            id: uuidv4(),
+        setIsSaving(true);
+        const { error } = await addProject({
             title: title.trim(),
-            description: description.trim(),
+            description: desc || null,
             status,
-            imageUri,
-            machine: machine.trim() || undefined,
-            materialId: selectedMaterial || undefined,
-            materialThickness: thickness ? parseFloat(thickness) : undefined,
-            materialCostPerUnit: costPerUnit ? parseFloat(costPerUnit) : undefined,
-            materialQuantity: quantity ? parseFloat(quantity) : 1,
-            timeLogs: [],
-            timeElapsed: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        addProject(project);
-        navigation.goBack();
+            image_uri: imageUri,
+            machine: machine.trim() || null,
+            material_id: selectedMaterial || null,
+            material_thickness: thickness ? parseFloat(thickness) : null,
+            material_cost_per_unit: costPerUnit ? parseFloat(costPerUnit) : null,
+            material_quantity: quantity ? parseFloat(quantity) : 1,
+            time_elapsed: 0,
+        });
+        setIsSaving(false);
+
+        if (error) {
+            Alert.alert('Error saving project', error);
+        } else {
+            navigation.goBack();
+        }
     };
 
     const mat = materials.find(m => m.id === selectedMaterial);
 
     return (
         <SafeAreaView style={styles.safe}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-                    <X color={C.sub} size={22} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>New Project</Text>
-                <TouchableOpacity style={[styles.saveBtn, !title.trim() && styles.saveBtnOff]} onPress={handleSave} disabled={!title.trim()}>
-                    <Text style={[styles.saveBtnText, !title.trim() && styles.saveBtnTextOff]}>Save</Text>
-                </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
-                {/* Image picker */}
-                <TouchableOpacity style={styles.imagePicker} onPress={pickImage} activeOpacity={0.8}>
-                    {imageUri ? (
-                        <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-                    ) : (
-                        <View style={styles.imagePlaceholder}>
-                            <Camera color={C.sub} size={28} />
-                            <Text style={styles.imagePlaceholderText}>Add Photo</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-
-                {/* Title */}
-                <Text style={styles.label}>PROJECT TITLE *</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="e.g. Custom Acrylic Coasters"
-                    placeholderTextColor={C.dim}
-                    value={title}
-                    onChangeText={setTitle}
-                    autoFocus
-                />
-
-                {/* Description */}
-                <Text style={styles.label}>DESCRIPTION</Text>
-                <TextInput
-                    style={[styles.input, styles.textarea]}
-                    placeholder="Optional notes, client info..."
-                    placeholderTextColor={C.dim}
-                    multiline
-                    numberOfLines={3}
-                    value={description}
-                    onChangeText={setDescription}
-                />
-
-                {/* Status */}
-                <Text style={styles.label}>STATUS</Text>
-                <View style={styles.chipRow}>
-                    {STATUS_OPTS.map(opt => (
-                        <TouchableOpacity
-                            key={opt.value}
-                            style={[styles.chip, status === opt.value && { backgroundColor: opt.color, borderColor: opt.color }]}
-                            onPress={() => setStatus(opt.value)}
-                        >
-                            <Text style={[styles.chipText, status === opt.value && styles.chipTextActive]}>{opt.label}</Text>
-                        </TouchableOpacity>
-                    ))}
+            <ResponsiveContainer>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
+                        <X color={C.sub} size={22} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>New Project</Text>
+                    <TouchableOpacity
+                        style={[styles.saveBtn, (!title.trim() || isSaving) && styles.saveBtnOff]}
+                        onPress={handleSave}
+                        disabled={!title.trim() || isSaving}
+                    >
+                        <Text style={[styles.saveBtnText, (!title.trim() || isSaving) && styles.saveBtnTextOff]}>
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Machine */}
-                <Text style={styles.label}>MACHINE (OPTIONAL)</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="e.g. Glowforge Pro, xTool D1"
-                    placeholderTextColor={C.dim}
-                    value={machine}
-                    onChangeText={setMachine}
-                />
+                <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-                {/* Material */}
-                <Text style={styles.label}>MATERIAL</Text>
-                <View style={styles.materialList}>
-                    {materials.map(m => (
-                        <TouchableOpacity
-                            key={m.id}
-                            style={[styles.materialRow, selectedMaterial === m.id && styles.materialRowSelected]}
-                            onPress={() => setSelectedMaterial(m.id)}
-                        >
-                            <View>
-                                <Text style={[styles.materialName, selectedMaterial === m.id && { color: C.text }]}>{m.name}</Text>
-                                <Text style={styles.materialMeta}>{m.type} · {m.thickness}mm · ${m.costPerUnit}/sqft</Text>
+                    {/* Image picker */}
+                    <TouchableOpacity style={styles.imagePicker} onPress={pickImage} activeOpacity={0.8}>
+                        {imageUri ? (
+                            <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                        ) : (
+                            <View style={styles.imagePlaceholder}>
+                                <Camera color={C.sub} size={28} />
+                                <Text style={styles.imagePlaceholderText}>Add Photo</Text>
                             </View>
-                            {selectedMaterial === m.id && (
-                                <View style={styles.selectedDot} />
-                            )}
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                        )}
+                    </TouchableOpacity>
 
-                {/* Overrides */}
-                <Text style={styles.label}>OVERRIDES (OPTIONAL)</Text>
-                <View style={styles.row2}>
-                    <View style={styles.halfGroup}>
-                        <Text style={styles.subLabel}>THICKNESS (mm)</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder={mat ? `${mat.thickness}` : '3.0'}
-                            placeholderTextColor={C.dim}
-                            keyboardType="decimal-pad"
-                            value={thickness}
-                            onChangeText={setThickness}
-                        />
-                    </View>
-                    <View style={styles.halfGroup}>
-                        <Text style={styles.subLabel}>COST / SQFT ($)</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder={mat ? `${mat.costPerUnit}` : '2.00'}
-                            placeholderTextColor={C.dim}
-                            keyboardType="decimal-pad"
-                            value={costPerUnit}
-                            onChangeText={setCostPerUnit}
-                        />
-                    </View>
-                </View>
-                <Text style={styles.subLabel}>QTY USED (sqft)</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="1"
-                    placeholderTextColor={C.dim}
-                    keyboardType="decimal-pad"
-                    value={quantity}
-                    onChangeText={setQuantity}
-                />
+                    {/* Title */}
+                    <Text style={styles.label}>PROJECT TITLE *</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Custom Acrylic Coasters"
+                        placeholderTextColor={C.dim}
+                        value={title}
+                        onChangeText={setTitle}
+                        autoFocus
+                    />
 
-            </ScrollView>
+                    {/* Description */}
+                    <Text style={styles.label}>DESCRIPTION</Text>
+                    <TextInput
+                        style={[styles.input, styles.textarea]}
+                        placeholder="Optional notes, client info..."
+                        placeholderTextColor={C.dim}
+                        multiline
+                        numberOfLines={3}
+                        value={desc}
+                        onChangeText={setDesc}
+                    />
+
+                    {/* Status */}
+                    <Text style={styles.label}>STATUS</Text>
+                    <View style={styles.chipRow}>
+                        {STATUS_OPTS.map(opt => (
+                            <TouchableOpacity
+                                key={opt.value}
+                                style={[styles.chip, status === opt.value && { backgroundColor: opt.color, borderColor: opt.color }]}
+                                onPress={() => setStatus(opt.value)}
+                            >
+                                <Text style={[styles.chipText, status === opt.value && styles.chipTextActive]}>{opt.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Machine */}
+                    <Text style={styles.label}>MACHINE (OPTIONAL)</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Glowforge Pro, xTool D1"
+                        placeholderTextColor={C.dim}
+                        value={machine}
+                        onChangeText={setMachine}
+                    />
+
+                    {/* Material */}
+                    <Text style={styles.label}>MATERIAL</Text>
+                    <View style={styles.materialList}>
+                        {materials.map(m => (
+                            <TouchableOpacity
+                                key={m.id}
+                                style={[styles.materialRow, selectedMaterial === m.id && styles.materialRowSelected]}
+                                onPress={() => setSelectedMaterial(m.id)}
+                            >
+                                <View>
+                                    <Text style={[styles.materialName, selectedMaterial === m.id && { color: C.text }]}>{m.name}</Text>
+                                    <Text style={styles.materialMeta}>{m.type} · {m.thickness}mm · ${m.cost_per_unit}/sqft</Text>
+                                </View>
+                                {selectedMaterial === m.id && (
+                                    <View style={styles.selectedDot} />
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Overrides */}
+                    <Text style={styles.label}>OVERRIDES (OPTIONAL)</Text>
+                    <View style={styles.row2}>
+                        <View style={styles.halfGroup}>
+                            <Text style={styles.subLabel}>THICKNESS (mm)</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder={mat ? `${mat.thickness}` : '3.0'}
+                                placeholderTextColor={C.dim}
+                                keyboardType="decimal-pad"
+                                value={thickness}
+                                onChangeText={setThickness}
+                            />
+                        </View>
+                        <View style={styles.halfGroup}>
+                            <Text style={styles.subLabel}>COST / SQFT ($)</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder={mat ? `${mat.cost_per_unit}` : '2.00'}
+                                placeholderTextColor={C.dim}
+                                keyboardType="decimal-pad"
+                                value={costPerUnit}
+                                onChangeText={setCostPerUnit}
+                            />
+                        </View>
+                    </View>
+                    <Text style={styles.subLabel}>QTY USED (sqft)</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="1"
+                        placeholderTextColor={C.dim}
+                        keyboardType="decimal-pad"
+                        value={quantity}
+                        onChangeText={setQuantity}
+                    />
+
+                </ScrollView>
+            </ResponsiveContainer>
         </SafeAreaView>
     );
 }

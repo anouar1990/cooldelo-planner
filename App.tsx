@@ -2,33 +2,38 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar, View, StyleSheet, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
+import { StatusBar, View, StyleSheet, ActivityIndicator, Text, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { LayoutDashboard, FolderOpen, BarChart2, LogOut } from 'lucide-react-native';
 
 import DashboardScreen from './src/screens/DashboardScreen';
 import ProjectsListScreen from './src/screens/ProjectsListScreen';
 import AddProjectScreen from './src/screens/AddProjectScreen';
 import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen';
 import StatsScreen from './src/screens/StatsScreen';
-import AuthScreen from './src/screens/AuthScreen';
+import AuthScreen from './src/screens/AuthScreen'; import DesktopAuthScreen from './src/screens/DesktopAuthScreen';
+import PaywallScreen from './src/screens/PaywallScreen';
+import MachineProfilesScreen from './src/screens/MachineProfilesScreen';
+import ClientsScreen from './src/screens/ClientsScreen';
+import TemplatesScreen from './src/screens/TemplatesScreen';
 import { useAuth } from './src/hooks/useAuth';
+import { useSubscription } from './src/hooks/useSubscription';
+import { ResponsiveTabBar } from './src/components/ResponsiveTabBar';
 
 const Tab = createBottomTabNavigator();
 const DashStack = createNativeStackNavigator();
 const ProjectStack = createNativeStackNavigator();
 
 const COLORS = {
-  bg: '#0F1117',
-  surface: '#1C2030',
-  border: 'rgba(255,255,255,0.07)',
+  bg: '#0A0C12',
+  surface: '#13151F',
+  border: 'rgba(255,255,255,0.08)',
   primary: '#FF6B35',
   textSub: '#8B95A8',
 };
 
 function DashboardNavigator() {
   return (
-    <DashStack.Navigator screenOptions={{ headerShown: false }}>
+    <DashStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
       <DashStack.Screen name="DashboardMain" component={DashboardScreen} />
       <DashStack.Screen name="ProjectDetails" component={ProjectDetailsScreen} />
     </DashStack.Navigator>
@@ -37,25 +42,28 @@ function DashboardNavigator() {
 
 function ProjectsNavigator() {
   return (
-    <ProjectStack.Navigator screenOptions={{ headerShown: false }}>
+    <ProjectStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
       <ProjectStack.Screen name="ProjectsList" component={ProjectsListScreen} />
-      <ProjectStack.Screen
-        name="AddProject"
-        component={AddProjectScreen}
-        options={{ presentation: 'modal' }}
-      />
+      <ProjectStack.Screen name="AddProject" component={AddProjectScreen} options={{ presentation: 'modal' }} />
       <ProjectStack.Screen name="ProjectDetails" component={ProjectDetailsScreen} />
+      <ProjectStack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal' }} />
+      <ProjectStack.Screen name="MachineProfiles" component={MachineProfilesScreen} />
+      <ProjectStack.Screen name="Clients" component={ClientsScreen} />
+      <ProjectStack.Screen name="Templates" component={TemplatesScreen} />
     </ProjectStack.Navigator>
   );
 }
 
 export default function App() {
-  const { session, loading, signOut } = useAuth();
+  const { session, loading } = useAuth();
+  const { isPro } = useSubscription();
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
 
   if (loading) {
     return (
       <View style={styles.loadingScreen}>
-        <Text style={styles.loadingBrand}>⚡ COOLDELO</Text>
+        <Text style={styles.loadingBrand}>⚡ 0machine</Text>
         <ActivityIndicator color="#FF6B35" size="large" style={{ marginTop: 24 }} />
       </View>
     );
@@ -65,7 +73,7 @@ export default function App() {
     return (
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
-        <AuthScreen />
+        {isDesktop ? <DesktopAuthScreen /> : <AuthScreen />}
       </SafeAreaProvider>
     );
   }
@@ -93,28 +101,30 @@ export default function App() {
         }}
       >
         <Tab.Navigator
-          screenOptions={({ route }) => ({
+          tabBar={(props) => <ResponsiveTabBar {...props} />}
+          screenOptions={{
             headerShown: false,
-            tabBarStyle: styles.tabBar,
-            tabBarActiveTintColor: COLORS.primary,
-            tabBarInactiveTintColor: COLORS.textSub,
-            tabBarLabelStyle: styles.tabLabel,
-            tabBarIcon: ({ color, size }) => {
-              if (route.name === 'Dashboard') return <LayoutDashboard color={color} size={size} />;
-              if (route.name === 'Projects') return <FolderOpen color={color} size={size} />;
-              if (route.name === 'Stats') return <BarChart2 color={color} size={size} />;
-              return null;
-            },
-            tabBarRight: () => (
-              <TouchableOpacity onPress={signOut} style={{ marginRight: 16 }}>
-                <LogOut color={COLORS.textSub} size={20} />
-              </TouchableOpacity>
-            ),
-          })}
+            sceneStyle: {
+              backgroundColor: COLORS.bg,
+              marginLeft: isDesktop ? 260 : 0,
+              flex: 1
+            }
+          }}
         >
           <Tab.Screen name="Dashboard" component={DashboardNavigator} />
           <Tab.Screen name="Projects" component={ProjectsNavigator} />
-          <Tab.Screen name="Stats" component={StatsScreen} />
+          <Tab.Screen
+            name="Stats"
+            component={isPro ? StatsScreen : PaywallScreen}
+            listeners={({ navigation }) => ({
+              tabPress: (e) => {
+                if (!isPro) {
+                  e.preventDefault();
+                  navigation.navigate('Projects', { screen: 'Paywall' });
+                }
+              },
+            })}
+          />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
@@ -122,20 +132,8 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: COLORS.surface,
-    borderTopColor: COLORS.border,
-    borderTopWidth: 1,
-    height: 84,
-    paddingBottom: 24,
-    paddingTop: 10,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
   loadingScreen: {
-    flex: 1, backgroundColor: '#0F1117',
+    flex: 1, backgroundColor: '#0A0C12',
     justifyContent: 'center', alignItems: 'center',
   },
   loadingBrand: {

@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    SafeAreaView, TextInput, Image, ScrollView
+    SafeAreaView, TextInput, Image, ScrollView, useWindowDimensions
 } from 'react-native';
-import { useStore, Project, Material } from '../store/useStore';
-import { Plus, Search, X, Clock, DollarSign, Layers, ChevronRight } from 'lucide-react-native';
+import { ResponsiveContainer } from '../components/ResponsiveContainer';
+// useStore removed — not used in this screen; projects come from useProjects (Supabase-backed)
+import { useProjects, ProjectRow } from '../hooks/useProjects';
+import { useMaterials, MaterialRow } from '../hooks/useMaterials';
+import { useSubscription } from '../hooks/useSubscription';
+import { Plus, Search, X, Clock, DollarSign, Layers, ChevronRight, Zap, Cpu, User, Copy, Bookmark } from 'lucide-react-native';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -34,45 +38,66 @@ const FILTERS = ['All', 'Planned', 'In Progress', 'Completed'];
 const TABS = ['Projects', 'Materials'];
 
 export default function ProjectsListScreen({ navigation }: any) {
-    const projects = useStore(s => s.projects);
-    const materials = useStore(s => s.materials);
-    const hourlyRate = useStore(s => s.hourlyRate);
+    const { projects, refetch: projectsRefetch, loading: pLoading } = useProjects();
+    const { materials, hourlyRate, refetch: materialsRefetch, loading: mLoading } = useMaterials();
+    const { isPro } = useSubscription();
+    const { width } = useWindowDimensions();
+    const numColumns = width > 1024 ? 3 : width > 768 ? 2 : 1;
+
+    const FREE_PROJECT_LIMIT = 3;
 
     const [tab, setTab] = useState<'Projects' | 'Materials'>('Projects');
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('All');
+    const [refreshing, setRefreshing] = useState(false);
 
-    const filtered = projects.filter(p => {
-        const matchQ = p.title.toLowerCase().includes(query.toLowerCase());
-        const matchF =
-            filter === 'All' ||
-            (filter === 'Planned' && p.status === 'planned') ||
-            (filter === 'In Progress' && p.status === 'in-progress') ||
-            (filter === 'Completed' && p.status === 'completed');
-        return matchQ && matchF;
-    });
+    const onRefresh = async () => {
+        setRefreshing(true);
+        if (tab === 'Projects') {
+            await projectsRefetch();
+        } else {
+            await materialsRefetch();
+        }
+        setRefreshing(false);
+    };
+
+    const filtered = React.useMemo(() => {
+        return projects.filter(p => {
+            const matchQ = p.title.toLowerCase().includes(query.toLowerCase());
+            const matchF =
+                filter === 'All' ||
+                (filter === 'Planned' && p.status === 'planned') ||
+                (filter === 'In Progress' && p.status === 'in-progress') ||
+                (filter === 'Completed' && p.status === 'completed');
+            return matchQ && matchF;
+        });
+    }, [projects, query, filter]);
 
     // --- Project card ---
-    const renderCard = ({ item: p }: { item: Project }) => {
-        const mat = materials.find(m => m.id === p.materialId);
+    const renderCard = ({ item: p }: { item: ProjectRow }) => {
+        const mat = materials.find(m => m.id === p.material_id);
         const matColor = mat ? (MAT_META[mat.type]?.color ?? C.sub) : C.sub;
-        const matCost = (p.materialCostPerUnit ?? mat?.costPerUnit ?? 0) * (p.materialQuantity ?? 1);
-        const timeCost = (p.timeElapsed / 3600) * hourlyRate;
+        const matCost = (p.material_cost_per_unit ?? mat?.cost_per_unit ?? 0) * (p.material_quantity ?? 1);
+        const elapsed = p.time_elapsed || 0;
+        const timeCost = (elapsed / 3600) * hourlyRate;
         const totalCost = (matCost + timeCost).toFixed(2);
-        const hours = Math.floor(p.timeElapsed / 3600);
-        const mins = Math.floor((p.timeElapsed % 3600) / 60);
-        const timeStr = p.timeElapsed === 0 ? '—' : hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-        const color = STATUS_COLOR[p.status] ?? C.sub;
+        const hours = Math.floor(elapsed / 3600);
+        const mins = Math.floor((elapsed % 3600) / 60);
+        const timeStr = elapsed === 0 ? '—' : hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+
+        type StatusKey = 'planned' | 'in-progress' | 'completed';
+        const st: StatusKey = p.status as StatusKey;
+        const color = STATUS_COLOR[st] ?? C.sub;
 
         return (
             <TouchableOpacity
-                style={styles.card}
+                style={[styles.card, { flex: 1, marginHorizontal: numColumns > 1 ? 8 : 0 }]}
                 onPress={() => navigation.navigate('ProjectDetails', { id: p.id })}
                 activeOpacity={0.78}
             >
                 {/* Banner */}
-                {p.imageUri ? (
-                    <Image source={{ uri: p.imageUri }} style={styles.cardImage} />
+                {p.image_uri ? (
+                    <Image source={{ uri: p.image_uri }} style={styles.cardImage} />
                 ) : (
                     <View style={[styles.cardImagePlaceholder, { backgroundColor: color + '22' }]}>
                         <Text style={styles.cardImageEmoji}>
@@ -127,12 +152,22 @@ export default function ProjectsListScreen({ navigation }: any) {
 
     // --- Materials section ---
     const renderMaterials = () => {
+        if (materials.length === 0) {
+            return (
+                <View style={styles.emptyState}>
+                    <Text style={styles.emptyIcon}>📦</Text>
+                    <Text style={styles.emptyTitle}>No materials added yet.</Text>
+                    <Text style={styles.emptySub}>Tap + to add your first material.</Text>
+                </View>
+            );
+        }
+
         // Group by type
-        const groups: Record<string, Material[]> = {};
-        materials.forEach(m => {
-            if (!groups[m.type]) groups[m.type] = [];
-            groups[m.type].push(m);
-        });
+        const groups = materials.reduce((acc, m) => {
+            if (!acc[m.type]) acc[m.type] = [];
+            acc[m.type].push(m);
+            return acc;
+        }, {} as Record<string, MaterialRow[]>);
 
         return (
             <ScrollView contentContainerStyle={styles.matSection} showsVerticalScrollIndicator={false}>
@@ -151,8 +186,8 @@ export default function ProjectsListScreen({ navigation }: any) {
                                 </Text>
                             </View>
 
-                            {mats.map(m => {
-                                const usedInProjects = projects.filter(p => p.materialId === m.id).length;
+                            {(mats as MaterialRow[]).map(m => {
+                                const usedInProjects = projects.filter(p => p.material_id === m.id).length;
                                 return (
                                     <View key={m.id} style={styles.matCard}>
                                         <View style={styles.matCardLeft}>
@@ -166,7 +201,7 @@ export default function ProjectsListScreen({ navigation }: any) {
                                                 <View style={styles.matDetail}>
                                                     <Text style={styles.matDetailLabel}>COST / SQFT</Text>
                                                     <Text style={[styles.matDetailValue, { color: C.primary }]}>
-                                                        ${m.costPerUnit.toFixed(2)}
+                                                        ${m.cost_per_unit.toFixed(2)}
                                                     </Text>
                                                 </View>
                                                 <View style={styles.matDetailDivider} />
@@ -191,83 +226,129 @@ export default function ProjectsListScreen({ navigation }: any) {
 
     return (
         <SafeAreaView style={styles.safe}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.title}>Projects</Text>
-            </View>
+            <ResponsiveContainer>
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text style={styles.title}>Projects</Text>
+                </View>
 
-            {/* Tab switcher */}
-            <View style={styles.tabRow}>
-                {TABS.map(t => (
-                    <TouchableOpacity
-                        key={t}
-                        style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
-                        onPress={() => setTab(t as any)}
-                    >
-                        <Text style={[styles.tabBtnText, tab === t && styles.tabBtnTextActive]}>{t}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
+                {/* Pro Tools Quick Access */}
+                {isPro && (
+                    <View style={styles.proToolsRow}>
+                        <TouchableOpacity style={styles.proTool} onPress={() => navigation.navigate('Clients')}>
+                            <User color={C.primary} size={16} />
+                            <Text style={styles.proToolText}>Clients</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.proTool} onPress={() => navigation.navigate('Templates')}>
+                            <Bookmark color={C.primary} size={16} />
+                            <Text style={styles.proToolText}>Templates</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.proTool} onPress={() => navigation.navigate('MachineProfiles')}>
+                            <Cpu color={C.primary} size={16} />
+                            <Text style={styles.proToolText}>Machines</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
 
-            {/* Projects tab */}
-            {tab === 'Projects' && (
-                <>
-                    {/* Search */}
-                    <View style={styles.searchRow}>
-                        <Search color={C.sub} size={18} style={styles.searchIcon} />
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder="Search projects..."
-                            placeholderTextColor={C.dim}
-                            value={query}
-                            onChangeText={setQuery}
+                {/* Tab switcher */}
+                <View style={styles.tabRow}>
+                    {TABS.map(t => (
+                        <TouchableOpacity
+                            key={t}
+                            style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
+                            onPress={() => {
+                                if (t === 'Materials' && !isPro) {
+                                    navigation.navigate('Paywall');
+                                    return;
+                                }
+                                setTab(t as any);
+                            }}
+                        >
+                            <Text style={[styles.tabBtnText, tab === t && styles.tabBtnTextActive]}>{t}</Text>
+                            {t === 'Materials' && !isPro && (
+                                <Zap color="#F59E0B" size={11} fill="#F59E0B" style={{ marginLeft: 4 }} />
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* Projects tab */}
+                {tab === 'Projects' && (
+                    <>
+                        {/* Search */}
+                        <View style={styles.searchRow}>
+                            <Search color={C.sub} size={18} style={styles.searchIcon} />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Search projects..."
+                                placeholderTextColor={C.dim}
+                                value={query}
+                                onChangeText={setQuery}
+                            />
+                            {query ? (
+                                <TouchableOpacity onPress={() => setQuery('')}>
+                                    <X color={C.sub} size={18} />
+                                </TouchableOpacity>
+                            ) : null}
+                        </View>
+
+                        {/* Status filters */}
+                        <View style={styles.filterRow}>
+                            {FILTERS.map(f => (
+                                <TouchableOpacity
+                                    key={f}
+                                    style={[styles.filterChip, filter === f && styles.filterChipActive]}
+                                    onPress={() => setFilter(f)}
+                                >
+                                    <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>{f}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <FlatList
+                            data={filtered}
+                            key={numColumns} // Force re-render on grid size change
+                            numColumns={numColumns}
+                            keyExtractor={p => p.id}
+                            renderItem={renderCard}
+                            contentContainerStyle={styles.list}
+                            columnWrapperStyle={numColumns > 1 ? { justifyContent: 'space-between' } : undefined}
+                            showsVerticalScrollIndicator={false}
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            ListEmptyComponent={
+                                <View style={styles.emptyState}>
+                                    <Text style={styles.emptyIcon}>📂</Text>
+                                    <Text style={styles.emptyTitle}>No projects found</Text>
+                                    <Text style={styles.emptySub}>
+                                        {query ? 'Try a different search term.' : 'Tap + to add your first project.'}
+                                    </Text>
+                                </View>
+                            }
                         />
-                        {query ? (
-                            <TouchableOpacity onPress={() => setQuery('')}>
-                                <X color={C.sub} size={18} />
-                            </TouchableOpacity>
-                        ) : null}
-                    </View>
+                    </>
+                )}
 
-                    {/* Status filters */}
-                    <View style={styles.filterRow}>
-                        {FILTERS.map(f => (
-                            <TouchableOpacity
-                                key={f}
-                                style={[styles.filterChip, filter === f && styles.filterChipActive]}
-                                onPress={() => setFilter(f)}
-                            >
-                                <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>{f}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    <FlatList
-                        data={filtered}
-                        keyExtractor={p => p.id}
-                        renderItem={renderCard}
-                        contentContainerStyle={styles.list}
-                        showsVerticalScrollIndicator={false}
-                        ListEmptyComponent={
-                            <View style={styles.emptyState}>
-                                <Text style={styles.emptyIcon}>📂</Text>
-                                <Text style={styles.emptyTitle}>No projects found</Text>
-                                <Text style={styles.emptySub}>
-                                    {query ? 'Try a different search term.' : 'Tap + to add your first project.'}
-                                </Text>
-                            </View>
-                        }
-                    />
-                </>
-            )}
-
-            {/* Materials tab */}
-            {tab === 'Materials' && renderMaterials()}
+                {/* Materials tab */}
+                {tab === 'Materials' && renderMaterials()}
+            </ResponsiveContainer>
 
             {/* FAB */}
-            <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddProject')}>
-                <Plus color="#fff" size={28} strokeWidth={3} />
-            </TouchableOpacity>
+            {tab === 'Projects' ? (
+                <TouchableOpacity
+                    style={styles.fab}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                        if (!isPro && projects.length >= FREE_PROJECT_LIMIT) {
+                            navigation.navigate('Paywall');
+                            return;
+                        }
+                        navigation.navigate('AddProject');
+                    }}
+                >
+                    <Plus color="#FFF" size={24} />
+                </TouchableOpacity>
+            ) : null}
         </SafeAreaView>
     );
 }
@@ -301,9 +382,9 @@ const styles = StyleSheet.create({
     filterChipActive: { backgroundColor: C.primary, borderColor: C.primary },
     filterText: { fontSize: 12, fontWeight: '600', color: C.sub },
     filterTextActive: { color: '#fff' },
-    list: { paddingHorizontal: 16, paddingBottom: 120 },
+    list: { paddingHorizontal: 0, paddingBottom: 120 },
     card: {
-        backgroundColor: C.surface, borderRadius: 18, marginBottom: 14,
+        backgroundColor: C.surface, borderRadius: 16, marginBottom: 16,
         overflow: 'hidden', borderWidth: 1, borderColor: C.border,
     },
     cardImage: { width: '100%', height: 160, resizeMode: 'cover' },
@@ -352,5 +433,16 @@ const styles = StyleSheet.create({
         backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center',
         shadowColor: C.primary, shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.5, shadowRadius: 12, elevation: 12,
+    },
+    proToolsRow: {
+        flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingBottom: 10,
+    },
+    proTool: {
+        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+        backgroundColor: C.surface, borderRadius: 12, paddingVertical: 9,
+        borderWidth: 1, borderColor: C.primary + '30',
+    },
+    proToolText: {
+        fontSize: 12, fontWeight: '700', color: C.primary,
     },
 });

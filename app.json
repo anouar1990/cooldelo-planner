@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "COOLDELO Planner",
-    "slug": "cooldelo-planner",
+    "name": "0machine Planner",
+    "slug": "0machine-planner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cooldelo.planner"
+      "bundleIdentifier": "com.0machine.planner"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +26,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-sharing"
+    ]
   }
 }

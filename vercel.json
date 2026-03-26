@@ -1,4 +1,7 @@
 {
-    "outputDirectory": "dist",
-    "installCommand": "echo skip"
+  "installCommand": "npm install",
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "web-build",
+  "cleanUrls": true,
+  "trailingSlash": false
 }
