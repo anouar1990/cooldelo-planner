@@ -101,7 +101,7 @@ export default function DashboardScreen({ navigation }: any) {
                                 </View>
                             )}
                             <View>
-                                <Text style={styles.brand}>0machine <Text style={styles.brandAccent}>Planner</Text></Text>
+                                <Text style={styles.brand}>ZeroCut <Text style={styles.brandAccent}>PLANNER</Text></Text>
                                 <Text style={styles.subtitle}>Welcome, {displayName}</Text>
                             </View>
                         </View>

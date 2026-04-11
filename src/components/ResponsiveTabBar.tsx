@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LayoutDashboard, FolderOpen, BarChart2, LogOut } from 'lucide-react-native';
+import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 
 const COLORS = {
@@ -15,8 +15,12 @@ const COLORS = {
 
 const ICONS: Record<string, any> = {
     Dashboard: LayoutDashboard,
-    Projects: FolderOpen,
-    Stats: BarChart2,
+    'Cost Calculator': Calculator,
+    Materials: Package,
+    Orders: Calendar,
+    'Laser Presets': Zap,
+    'Quote Generator': FileText,
+    'Nesting Estimator': Grid,
 };
 
 export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
@@ -43,21 +47,16 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
         // DESKTOP SIDEBAR
         return (
             <View style={[styles.sidebar, { paddingTop: Math.max(insets.top, 24) }]}>
-                {/* User profile pill */}
-                <View style={styles.userPill}>
-                    {avatarUrl ? (
-                        <Image source={{ uri: avatarUrl }} style={styles.sidebarAvatar} />
-                    ) : (
-                        <View style={styles.sidebarAvatarFallback}>
-                            <Text style={styles.sidebarAvatarInitial}>{initials}</Text>
-                        </View>
-                    )}
-                    <View style={styles.userInfo}>
-                        <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
-                        <Text style={styles.userRole}>Pro Member</Text>
+                {/* Brand Logo */}
+                <View style={styles.brandContainer}>
+                    <View style={styles.brandIconWrap}>
+                        <Zap color="#FFFFFF" size={18} fill="#FFFFFF" />
+                    </View>
+                    <View>
+                        <Text style={styles.brandLogoText}>ZeroCut</Text>
+                        <Text style={styles.brandSub}>PLANNER</Text>
                     </View>
                 </View>
-
                 <View style={styles.sidebarLinks}>
                     {state.routes.map((route: any, index: number) => {
                         const isFocused = state.index === index;
@@ -77,6 +76,21 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                             </TouchableOpacity>
                         );
                     })}
+                </View>
+
+                {/* User profile pill */}
+                <View style={styles.userPill}>
+                    {avatarUrl ? (
+                        <Image source={{ uri: avatarUrl }} style={styles.sidebarAvatar} />
+                    ) : (
+                        <View style={styles.sidebarAvatarFallback}>
+                            <Text style={styles.sidebarAvatarInitial}>{initials}</Text>
+                        </View>
+                    )}
+                    <View style={styles.userInfo}>
+                        <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
+                        <Text style={styles.userRole}>Pro Member</Text>
+                    </View>
                 </View>
 
                 <TouchableOpacity onPress={signOut} style={styles.sidebarSignOut}>
@@ -175,9 +189,10 @@ const styles = StyleSheet.create({
         color: COLORS.textSub,
         marginTop: 1,
     },
-    brandContainer: { display: 'none' as any }, // hidden — removed in favour of userPill
-    brandLogo: { display: 'none' as any },
-    brandAccent: { color: COLORS.primary },
+    brandContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, marginBottom: 32 },
+    brandIconWrap: { width: 36, height: 36, borderRadius: 8, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
+    brandLogoText: { fontSize: 18, fontWeight: '800', color: COLORS.text, letterSpacing: -0.2 },
+    brandSub: { fontSize: 10, fontWeight: '700', color: COLORS.textSub, letterSpacing: 1.5 },
     sidebarLinks: {
         flex: 1,
         gap: 8,

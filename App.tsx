@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { trackPageView } from './src/lib/analytics';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar, View, StyleSheet, ActivityIndicator, Text, useWindowDimensions } from 'react-native';
@@ -10,7 +11,14 @@ import ProjectsListScreen from './src/screens/ProjectsListScreen';
 import AddProjectScreen from './src/screens/AddProjectScreen';
 import ProjectDetailsScreen from './src/screens/ProjectDetailsScreen';
 import StatsScreen from './src/screens/StatsScreen';
-import AuthScreen from './src/screens/AuthScreen'; import DesktopAuthScreen from './src/screens/DesktopAuthScreen';
+import CostCalculatorScreen from './src/screens/CostCalculatorScreen';
+import MaterialsScreen from './src/screens/MaterialsScreen';
+import OrdersScreen from './src/screens/OrdersScreen';
+import LaserPresetsScreen from './src/screens/LaserPresetsScreen';
+import QuoteGeneratorScreen from './src/screens/QuoteGeneratorScreen';
+import NestingEstimatorScreen from './src/screens/NestingEstimatorScreen';
+import AuthScreen from './src/screens/AuthScreen';
+import DesktopAuthScreen from './src/screens/DesktopAuthScreen';
 import PaywallScreen from './src/screens/PaywallScreen';
 import MachineProfilesScreen from './src/screens/MachineProfilesScreen';
 import ClientsScreen from './src/screens/ClientsScreen';
@@ -59,6 +67,8 @@ export default function App() {
   const { isPro } = useSubscription();
   const { width } = useWindowDimensions();
   const isDesktop = width > 768;
+  const navigationRef = useRef<any>(null);
+  const routeNameRef = useRef<string | undefined>(undefined);
 
   if (loading) {
     return (
@@ -82,6 +92,21 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
       <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
+          const currentRouteName = routeNameRef.current;
+          if (currentRouteName) trackPageView(currentRouteName);
+        }}
+        onStateChange={async () => {
+          const previousRouteName = routeNameRef.current;
+          const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
+          
+          if (previousRouteName !== currentRouteName && currentRouteName) {
+            trackPageView(currentRouteName);
+          }
+          routeNameRef.current = currentRouteName;
+        }}
         theme={{
           dark: true,
           colors: {
@@ -112,19 +137,12 @@ export default function App() {
           }}
         >
           <Tab.Screen name="Dashboard" component={DashboardNavigator} />
-          <Tab.Screen name="Projects" component={ProjectsNavigator} />
-          <Tab.Screen
-            name="Stats"
-            component={isPro ? StatsScreen : PaywallScreen}
-            listeners={({ navigation }) => ({
-              tabPress: (e) => {
-                if (!isPro) {
-                  e.preventDefault();
-                  navigation.navigate('Projects', { screen: 'Paywall' });
-                }
-              },
-            })}
-          />
+          <Tab.Screen name="Cost Calculator" component={CostCalculatorScreen} />
+          <Tab.Screen name="Materials" component={MaterialsScreen} />
+          <Tab.Screen name="Orders" component={OrdersScreen} />
+          <Tab.Screen name="Laser Presets" component={LaserPresetsScreen} />
+          <Tab.Screen name="Quote Generator" component={QuoteGeneratorScreen} />
+          <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
