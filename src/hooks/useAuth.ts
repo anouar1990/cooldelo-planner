@@ -8,14 +8,12 @@ export function useAuth() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
         });
 
-        // Subscribe to auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
@@ -40,9 +38,48 @@ export function useAuth() {
     };
 
     const resetPassword = async (email: string) => {
-        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: 'https://app.0machine.com',
+        });
         return { error };
     };
 
-    return { session, user, loading, signUp, signIn, signOut, resetPassword };
+    /** Redirects to Google OAuth — returns to app.0machine.com after login */
+    const signInWithGoogle = async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: 'https://app.0machine.com',
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                },
+            },
+        });
+        return { error };
+    };
+
+    // ── Derived user display info from OAuth metadata or email ──────────────
+    const displayName: string =
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        (user?.email ? user.email.split('@')[0] : 'User');
+
+    const avatarUrl: string | null =
+        user?.user_metadata?.avatar_url ||
+        user?.user_metadata?.picture ||
+        null;
+
+    return {
+        session,
+        user,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+        resetPassword,
+        signInWithGoogle,
+        displayName,
+        avatarUrl,
+    };
 }

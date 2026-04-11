@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, FolderOpen, BarChart2, LogOut } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
@@ -22,7 +22,8 @@ const ICONS: Record<string, any> = {
 export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
     const { width } = useWindowDimensions();
     const insets = useSafeAreaInsets();
-    const { signOut } = useAuth();
+    const { signOut, displayName, avatarUrl } = useAuth();
+    const initials = displayName.charAt(0).toUpperCase();
 
     const isDesktop = width > 768;
 
@@ -42,8 +43,19 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
         // DESKTOP SIDEBAR
         return (
             <View style={[styles.sidebar, { paddingTop: Math.max(insets.top, 24) }]}>
-                <View style={styles.brandContainer}>
-                    <Text style={styles.brandLogo}>⚡ <Text style={styles.brandAccent}>0</Text>machine</Text>
+                {/* User profile pill */}
+                <View style={styles.userPill}>
+                    {avatarUrl ? (
+                        <Image source={{ uri: avatarUrl }} style={styles.sidebarAvatar} />
+                    ) : (
+                        <View style={styles.sidebarAvatarFallback}>
+                            <Text style={styles.sidebarAvatarInitial}>{initials}</Text>
+                        </View>
+                    )}
+                    <View style={styles.userInfo}>
+                        <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
+                        <Text style={styles.userRole}>Pro Member</Text>
+                    </View>
                 </View>
 
                 <View style={styles.sidebarLinks}>
@@ -119,19 +131,53 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         zIndex: 100,
     },
-    brandContainer: {
-        marginBottom: 40,
-        paddingHorizontal: 12,
+    userPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        backgroundColor: 'rgba(255,255,255,0.04)',
+        borderRadius: 14,
+        padding: 10,
+        marginBottom: 28,
+        borderWidth: 1,
+        borderColor: COLORS.border,
     },
-    brandLogo: {
-        fontSize: 22,
-        fontWeight: '900',
-        color: COLORS.text,
-        letterSpacing: 1,
+    sidebarAvatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        borderWidth: 2,
+        borderColor: COLORS.primary,
     },
-    brandAccent: {
+    sidebarAvatarFallback: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: COLORS.primary + '25',
+        borderWidth: 2,
+        borderColor: COLORS.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sidebarAvatarInitial: {
+        fontSize: 14,
+        fontWeight: '800',
         color: COLORS.primary,
     },
+    userInfo: { flex: 1, minWidth: 0 },
+    userName: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: COLORS.text,
+    },
+    userRole: {
+        fontSize: 11,
+        color: COLORS.textSub,
+        marginTop: 1,
+    },
+    brandContainer: { display: 'none' as any }, // hidden — removed in favour of userPill
+    brandLogo: { display: 'none' as any },
+    brandAccent: { color: COLORS.primary },
     sidebarLinks: {
         flex: 1,
         gap: 8,

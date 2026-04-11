@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
 
 // Read credentials from environment variables — never hardcode secrets in source.
@@ -13,11 +13,25 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   );
 }
 
+// On web, Supabase MUST detect the session token from the URL (email confirm,
+// password reset links). On native, we use AsyncStorage instead.
+const isWeb = Platform.OS === 'web';
+
+const authStorage = isWeb
+  ? undefined  // web uses localStorage automatically
+  : (() => {
+      // Lazy-require so the native module is never bundled on web
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      return AsyncStorage;
+    })();
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: AsyncStorage,
+    storage: authStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // Must be true on web so email-confirm & password-reset URLs are handled
+    detectSessionInUrl: isWeb,
   },
 });

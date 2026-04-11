@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { trackEvent } from '../lib/analytics';
 import { Linking, Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
@@ -106,6 +107,7 @@ export function useSubscription() {
     const startCheckout = async (priceId?: string) => {
         if (!user) return;
 
+        trackEvent('purchase_attempt', { priceId: priceId ?? STRIPE_PRICE_ID });
         setCheckoutLoading(true);
         setError(null);
 

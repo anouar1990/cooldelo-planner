@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image } from 'react-native';
 import { useProjects, ProjectRow } from '../hooks/useProjects';
 import { useMaterials } from '../hooks/useMaterials';
 import { Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut } from 'lucide-react-native';
@@ -42,9 +42,12 @@ function StatCard({ icon, value, label, color }: { icon: React.ReactNode; value:
 }
 
 export default function DashboardScreen({ navigation }: any) {
-    const { signOut } = useAuth();
+    const { signOut, displayName, avatarUrl } = useAuth();
     const { projects } = useProjects();
     const { materials, hourlyRate } = useMaterials();
+
+    // Avatar: first letter of displayName for initials fallback
+    const initials = displayName.charAt(0).toUpperCase();
 
     const { active, done, planned, totalCost, recent } = React.useMemo(() => {
         let activeCount = 0;
@@ -88,9 +91,19 @@ export default function DashboardScreen({ navigation }: any) {
                 <ResponsiveContainer>
                     {/* Header */}
                     <View style={styles.header}>
-                        <View>
-                            <Text style={styles.brand}>0machine <Text style={styles.brandAccent}>Planner</Text></Text>
-                            <Text style={styles.subtitle}>Laser &amp; CNC project hub</Text>
+                        <View style={styles.headerUser}>
+                            {/* Avatar */}
+                            {avatarUrl ? (
+                                <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+                            ) : (
+                                <View style={styles.avatarFallback}>
+                                    <Text style={styles.avatarInitial}>{initials}</Text>
+                                </View>
+                            )}
+                            <View>
+                                <Text style={styles.brand}>0machine <Text style={styles.brandAccent}>Planner</Text></Text>
+                                <Text style={styles.subtitle}>Welcome, {displayName}</Text>
+                            </View>
                         </View>
                         <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
                             <LogOut color="#8B95A8" size={20} />
@@ -172,9 +185,13 @@ const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: C.bg },
     scroll: { paddingBottom: 32 },
     header: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    brand: { fontSize: 26, fontWeight: '800', color: C.text },
+    headerUser: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    avatar: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: C.primary },
+    avatarFallback: { width: 40, height: 40, borderRadius: 20, backgroundColor: C.primary + '30', borderWidth: 2, borderColor: C.primary, justifyContent: 'center', alignItems: 'center' },
+    avatarInitial: { fontSize: 16, fontWeight: '800', color: C.primary },
+    brand: { fontSize: 22, fontWeight: '800', color: C.text },
     brandAccent: { color: C.primary },
-    subtitle: { fontSize: 14, color: C.sub, marginTop: 4 },
+    subtitle: { fontSize: 13, color: C.sub, marginTop: 2 },
     statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 10, marginBottom: 8 },
     statCard: {
         flex: 1, minWidth: '44%', backgroundColor: C.surface,

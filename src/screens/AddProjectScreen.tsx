@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
+import { trackEvent } from '../lib/analytics';
 import { useProjects, ProjectInsert } from '../hooks/useProjects';
 import { useMaterials } from '../hooks/useMaterials';
 import { X, Camera, ChevronDown } from 'lucide-react-native';
@@ -81,6 +82,7 @@ export default function AddProjectScreen({ navigation }: any) {
         if (error) {
             Alert.alert('Error saving project', error);
         } else {
+            trackEvent('btn_click', { action: 'add_project', title: title.trim(), material: selectedMaterial });
             navigation.goBack();
         }
     };

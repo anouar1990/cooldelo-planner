@@ -7,7 +7,9 @@ import {
     Image, KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { trackEvent } from '../lib/analytics';
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, ShieldCheck, Zap, Layers } from 'lucide-react-native';
+import { SocialAuthButtons } from '../components/SocialAuthButtons';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -53,11 +55,13 @@ export default function DesktopAuthScreen() {
             if (mode === 'signin') {
                 const { error } = await signIn(email, password);
                 if (error) setPasswordError(error.message);
+                else trackEvent('login', { method: 'email' });
             } else {
                 const { data, error } = await signUp(email, password);
                 if (error) {
                     setEmailError(error.message);
                 } else if (!data?.session) {
+                    trackEvent('sign_up', { method: 'email' });
                     Alert.alert(
                         'Account created! ✅',
                         'Check your email to confirm your account, then sign in.',
@@ -151,6 +155,9 @@ export default function DesktopAuthScreen() {
                                         : 'Start organizing your laser cut projects today.'}
                                 </Text>
                             </View>
+
+                            {/* Social Auth */}
+                            <SocialAuthButtons onError={(msg) => setPasswordError(msg)} />
 
                             <View style={styles.tabRow}>
                                 <TouchableOpacity style={[styles.tabBtn, mode === 'signin' && styles.tabBtnActive]} onPress={() => { setMode('signin'); clearErrors(); }}>
