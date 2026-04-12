@@ -1,407 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>0machine — Laser & CNC Fabrication Planner</title>
-  <meta name="description" content="0machine is the professional fabrication workflow platform for laser cutting, CNC, and making studios. Calculate costs, manage jobs, generate quotes — all in one place."/>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0A0C12;
-      --surface: #13151F;
-      --surface2: #1C2030;
-      --border: rgba(255,255,255,0.08);
-      --primary: #FF6B35;
-      --primary-glow: rgba(255,107,53,0.2);
-      --text: #F1F5F9;
-      --sub: #8B95A8;
-      --green: #10B981;
-      --amber: #F59E0B;
-      --blue: #3B82F6;
-    }
-    html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>%WEB_TITLE%</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script>
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-8V921YKC8S';
+        document.head.appendChild(script);
 
-    /* NAV */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 48px; height: 72px;
-      background: rgba(10,12,18,0.85); backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .nav-logo-icon { width: 36px; height: 36px; border-radius: 9px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .nav-logo-text { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; }
-    .nav-links { display: flex; align-items: center; gap: 8px; }
-    .nav-links a { color: var(--sub); text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; transition: color 0.2s; }
-    .nav-links a:hover { color: var(--text); }
-    .nav-cta { background: var(--primary); color: white !important; font-weight: 700 !important; border-radius: 10px !important; padding: 10px 22px !important; transition: opacity 0.2s !important; }
-    .nav-cta:hover { opacity: 0.85 !important; }
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-8V921YKC8S');
+      }
+    </script>
+  </head>
 
-    /* HERO */
-    .hero {
-      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 120px 24px 80px; text-align: center; position: relative; overflow: hidden;
-    }
-    .hero-glow {
-      position: absolute; width: 600px; height: 600px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,107,53,0.15) 0%, transparent 70%);
-      top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(255,107,53,0.12); border: 1px solid rgba(255,107,53,0.3);
-      color: var(--primary); border-radius: 100px; padding: 6px 16px; font-size: 13px; font-weight: 600;
-      margin-bottom: 28px; animation: fadeUp 0.6s ease;
-    }
-    .hero h1 {
-      font-size: clamp(38px, 6vw, 72px); font-weight: 900; line-height: 1.1; letter-spacing: -2px;
-      margin-bottom: 24px; animation: fadeUp 0.7s ease;
-    }
-    .hero h1 span { color: var(--primary); }
-    .hero p {
-      font-size: 18px; color: var(--sub); max-width: 560px; line-height: 1.7;
-      margin-bottom: 48px; animation: fadeUp 0.8s ease;
-    }
-    .hero-buttons { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.9s ease; }
-    .btn-primary {
-      background: var(--primary); color: white; padding: 16px 36px; border-radius: 12px;
-      font-size: 16px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 0 0 0 var(--primary-glow);
-    }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--primary-glow); }
-    .btn-secondary {
-      color: var(--text); padding: 16px 28px; border-radius: 12px; font-size: 16px; font-weight: 600;
-      text-decoration: none; border: 1px solid var(--border); transition: border-color 0.2s, background 0.2s;
-    }
-    .btn-secondary:hover { border-color: var(--primary); background: var(--primary-glow); }
-    .hero-trial { font-size: 13px; color: var(--sub); margin-top: 16px; }
-    .hero-trial span { color: var(--green); font-weight: 600; }
-
-    /* SCREEN PREVIEW */
-    .screen-preview {
-      margin: 0 auto 80px; max-width: 900px; padding: 0 24px;
-      animation: fadeUp 1s ease;
-    }
-    .screen-frame {
-      background: var(--surface); border-radius: 20px; padding: 3px;
-      border: 1px solid var(--border);
-      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px var(--border);
-    }
-    .screen-bar { display: flex; align-items: center; gap: 8px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
-    .sb { width: 12px; height: 12px; border-radius: 50%; }
-    .sb1 { background: #FF5F57; } .sb2 { background: #FEBC2E; } .sb3 { background: #28C840; }
-    .screen-url { flex: 1; text-align: center; font-size: 12px; color: var(--sub); }
-    .screen-inner { padding: 24px; display: grid; grid-template-columns: 200px 1fr; gap: 16px; min-height: 340px; }
-    .screen-sidebar { background: var(--surface2); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-    .sbar-brand { font-size: 14px; font-weight: 900; color: var(--text); margin-bottom: 12px; }
-    .sbar-brand span { color: var(--primary); }
-    .sbar-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 13px; color: var(--sub); }
-    .sbar-item.active { background: rgba(255,107,53,0.1); color: var(--primary); font-weight: 600; }
-    .screen-main { display: grid; grid-template-rows: 1fr 1fr; gap: 12px; }
-    .screen-card { background: var(--surface2); border-radius: 12px; padding: 16px; }
-    .screen-card-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-    .screen-num { font-size: 28px; font-weight: 900; color: var(--primary); }
-    .screen-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-
-    /* STATS STRIP */
-    .stats-strip {
-      display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
-      margin: 0 auto 100px; max-width: 900px; padding: 0 24px;
-    }
-    .stat { flex: 1; min-width: 180px; text-align: center; padding: 32px 24px; border: 1px solid var(--border); }
-    .stat:first-child { border-radius: 16px 0 0 16px; }
-    .stat:last-child { border-radius: 0 16px 16px 0; }
-    .stat-num { font-size: 36px; font-weight: 900; color: var(--primary); }
-    .stat-label { font-size: 14px; color: var(--sub); margin-top: 6px; }
-
-    /* FEATURES */
-    .section { max-width: 1100px; margin: 0 auto; padding: 0 24px 100px; }
-    .section-tag { font-size: 12px; font-weight: 700; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
-    .section-title { font-size: clamp(28px, 4vw, 48px); font-weight: 900; letter-spacing: -1px; margin-bottom: 16px; }
-    .section-sub { font-size: 17px; color: var(--sub); max-width: 540px; line-height: 1.7; margin-bottom: 56px; }
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-    .feature-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-      padding: 28px; transition: transform 0.2s, border-color 0.2s;
-    }
-    .feature-card:hover { transform: translateY(-4px); border-color: var(--primary); }
-    .feature-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 18px; }
-    .feature-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .feature-desc { font-size: 14px; color: var(--sub); line-height: 1.7; }
-
-    /* HOW IT WORKS */
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; }
-    .step { text-align: center; padding: 32px 24px; }
-    .step-num { width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: white; font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-    .step-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
-    .step-desc { font-size: 14px; color: var(--sub); line-height: 1.7; }
-
-    /* PRICING */
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 800px; margin: 0 auto; }
-    .price-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 36px;
-    }
-    .price-card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(255,107,53,0.02)); }
-    .price-badge { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-    .price-name { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-    .price-amount { font-size: 44px; font-weight: 900; color: var(--primary); margin: 20px 0; }
-    .price-amount span { font-size: 18px; color: var(--sub); font-weight: 500; }
-    .price-features { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
-    .price-features li { font-size: 14px; color: var(--sub); display: flex; align-items: center; gap: 10px; }
-    .price-features li::before { content: '✓'; color: var(--green); font-weight: 700; }
-    .price-btn {
-      display: block; text-align: center; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700;
-      text-decoration: none; transition: opacity 0.2s;
-    }
-    .price-btn.outline { border: 1px solid var(--border); color: var(--text); }
-    .price-btn.solid { background: var(--primary); color: white; }
-    .price-btn:hover { opacity: 0.85; }
-    .price-trial { font-size: 12px; color: var(--sub); text-align: center; margin-top: 10px; }
-    .price-trial span { color: var(--green); font-weight: 600; }
-
-    /* CTA BANNER */
-    .cta-banner {
-      max-width: 900px; margin: 0 auto 100px; padding: 64px 48px;
-      background: linear-gradient(135deg, rgba(255,107,53,0.12) 0%, rgba(255,107,53,0.04) 100%);
-      border: 1px solid rgba(255,107,53,0.25); border-radius: 28px; text-align: center;
-    }
-    .cta-banner h2 { font-size: clamp(24px, 4vw, 40px); font-weight: 900; margin-bottom: 16px; }
-    .cta-banner p { font-size: 17px; color: var(--sub); margin-bottom: 36px; }
-
-    /* FOOTER */
-    footer {
-      border-top: 1px solid var(--border); padding: 48px;
-      display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: start;
-      max-width: 1200px; margin: 0 auto;
-    }
-    .footer-brand { margin-bottom: 12px; font-size: 20px; font-weight: 900; }
-    .footer-brand span { color: var(--primary); }
-    .footer-tagline { font-size: 13px; color: var(--sub); margin-bottom: 16px; }
-    .footer-copy { font-size: 12px; color: var(--sub); }
-    .footer-links { display: flex; flex-direction: column; gap: 32px; }
-    .footer-col h4 { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
-    .footer-col a { display: block; font-size: 13px; color: var(--sub); text-decoration: none; margin-bottom: 8px; transition: color 0.2s; }
-    .footer-col a:hover { color: var(--text); }
-    .footer-links-wrap { display: flex; gap: 48px; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @media (max-width: 768px) {
-      nav { padding: 0 20px; }
-      .nav-links { display: none; }
-      .hero { padding: 100px 20px 60px; }
-      footer { grid-template-columns: 1fr; }
-      .screen-inner { grid-template-columns: 1fr; }
-      .screen-sidebar { display: none; }
-      .footer-links-wrap { flex-direction: column; gap: 24px; }
-    }
-  </style>
-</head>
-<body>
-
-<!-- NAV -->
-<nav>
-  <a href="/" class="nav-logo">
-    <div class="nav-logo-icon">⚡</div>
-    <span class="nav-logo-text">0machine</span>
-  </a>
-  <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#how">How It Works</a>
-    <a href="#pricing">Pricing</a>
-    <a href="/about.html">About</a>
-    <a href="/contact.html">Contact</a>
-    <a href="/app" class="nav-cta">Launch App →</a>
-  </div>
-</nav>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-glow"></div>
-  <div class="hero-badge">⚡ Fabrication Workflow Platform</div>
-  <h1>Your laser shop,<br/><span>finally organized.</span></h1>
-  <p>Cost calculators, job orders, client quotes, material inventory, and laser presets — all in one professional platform built for makers and fabricators.</p>
-  <div class="hero-buttons">
-    <a href="/app" class="btn-primary">Start Free Trial →</a>
-    <a href="#features" class="btn-secondary">See Features</a>
-  </div>
-  <p class="hero-trial">👋 <span>3-day free trial</span> · No credit card required · Cancel anytime</p>
-</section>
-
-<!-- SCREEN PREVIEW -->
-<div class="screen-preview">
-  <div class="screen-frame">
-    <div class="screen-bar">
-      <div class="sb sb1"></div><div class="sb sb2"></div><div class="sb sb3"></div>
-      <div class="screen-url">app.0machine.com — Dashboard</div>
-    </div>
-    <div class="screen-inner">
-      <div class="screen-sidebar">
-        <div class="sbar-brand">⚡ <span>0machine</span></div>
-        <div class="sbar-item active">📊 Dashboard</div>
-        <div class="sbar-item">🧮 Cost Calculator</div>
-        <div class="sbar-item">📦 Materials</div>
-        <div class="sbar-item">📋 Orders</div>
-        <div class="sbar-item">⚡ Laser Presets</div>
-        <div class="sbar-item">📄 Quote Generator</div>
-        <div class="sbar-item">🔲 Nesting</div>
-      </div>
-      <div class="screen-main">
-        <div class="screen-cards">
-          <div class="screen-card"><div class="screen-card-title">Projects</div><div class="screen-num" style="color:#FF6B35">12</div></div>
-          <div class="screen-card"><div class="screen-card-title">Active</div><div class="screen-num" style="color:#F59E0B">3</div></div>
-          <div class="screen-card"><div class="screen-card-title">Revenue</div><div class="screen-num" style="color:#10B981">$1.2k</div></div>
-        </div>
-        <div class="screen-card"><div class="screen-card-title">Recent Orders</div><div style="display:flex;gap:8px;flex-direction:column;margin-top:8px"><div style="height:8px;background:#1C2030;border-radius:4px;width:80%"></div><div style="height:8px;background:#1C2030;border-radius:4px;width:60%"></div><div style="height:8px;background:#1C2030;border-radius:4px;width:70%"></div></div></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- STATS STRIP -->
-<div class="stats-strip">
-  <div class="stat"><div class="stat-num">6+</div><div class="stat-label">Fabrication Tools</div></div>
-  <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Accurate Calculations</div></div>
-  <div class="stat"><div class="stat-num">3-Day</div><div class="stat-label">Free Trial</div></div>
-  <div class="stat"><div class="stat-num">GDPR</div><div class="stat-label">Data Compliant</div></div>
-</div>
-
-<!-- FEATURES -->
-<section class="section" id="features">
-  <div class="section-tag">Features</div>
-  <h2 class="section-title">Everything for your fabrication workflow</h2>
-  <p class="section-sub">Tailored for laser cutting, CNC, and fabrication professionals. Stop using spreadsheets—start using tools built for your shop.</p>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon" style="background:rgba(255,107,53,0.1)">🧮</div>
-      <div class="feature-title">Real-Time Cost Calculator</div>
-      <div class="feature-desc">Accurately price every job with material cost, laser time, electricity, machine wear, labor, and profit margin — updated instantly as you type.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="background:rgba(16,185,129,0.1)">📦</div>
-      <div class="feature-title">Material Inventory</div>
-      <div class="feature-desc">Track all your sheets, panels, and rolls. Monitor stock levels, unit costs, and total inventory value. Low-stock alerts included.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="background:rgba(59,130,246,0.1)">📋</div>
-      <div class="feature-title">Orders Management</div>
-      <div class="feature-desc">Manage jobs from Pending → In Progress → Completed. Track revenue per client, deadlines, and order history in one place.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="background:rgba(245,158,11,0.1)">⚡</div>
-      <div class="feature-title">Laser Presets Library</div>
-      <div class="feature-desc">Save your perfect speed, power, frequency, and pass settings for every material. Duplicate presets, star favorites, and never lose settings again.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="background:rgba(124,58,237,0.1)">📄</div>
-      <div class="feature-title">Client Quote Generator</div>
-      <div class="feature-desc">Build professional quotes with multiple line items, VAT, validity dates, and status tracking (Draft → Sent → Accepted). Ready to share in seconds.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="background:rgba(239,68,68,0.1)">🔲</div>
-      <div class="feature-title">Nesting Estimator</div>
-      <div class="feature-desc">Calculate how many parts fit on a sheet. Supports rotation optimization, kerf, margins. Shows material efficiency %, waste %, and sheets needed.</div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section class="section" id="how">
-  <div class="section-tag">Workflow</div>
-  <h2 class="section-title">From quote to delivery</h2>
-  <p class="section-sub">0machine covers every step of a fabrication job — from estimating costs to delivering orders.</p>
-  <div class="steps">
-    <div class="step"><div class="step-num">1</div><div class="step-title">Calculate Costs</div><div class="step-desc">Enter material, time, electricity, and labor. Get an accurate selling price with profit margin instantly.</div></div>
-    <div class="step"><div class="step-num">2</div><div class="step-title">Generate a Quote</div><div class="step-desc">Add line items, delivery date, and VAT. Send a professional quote to your client in one click.</div></div>
-    <div class="step"><div class="step-num">3</div><div class="step-title">Plan the Job</div><div class="step-desc">Use the nesting estimator to optimize material usage. Pull your laser presets for perfect settings.</div></div>
-    <div class="step"><div class="step-num">4</div><div class="step-title">Track & Deliver</div><div class="step-desc">Mark orders as in-progress and completed. Monitor revenue, clients, and your full fabrication history.</div></div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="section" id="pricing" style="text-align:center">
-  <div class="section-tag" style="text-align:center">Pricing</div>
-  <h2 class="section-title">Simple, honest pricing</h2>
-  <p class="section-sub" style="margin: 0 auto 56px;">Start for free. Upgrade when you're ready.</p>
-  <div class="pricing-grid">
-    <div class="price-card">
-      <div class="price-badge">Starter</div>
-      <div class="price-name">Free Trial</div>
-      <div class="price-amount">$0<span>/3 days</span></div>
-      <ul class="price-features">
-        <li>Cost Calculator</li>
-        <li>Nesting Estimator</li>
-        <li>Up to 3 projects</li>
-        <li>Basic laser presets</li>
-        <li>Email support</li>
-      </ul>
-      <a href="/app" class="price-btn outline">Start Free Trial</a>
-      <p class="price-trial">No credit card required</p>
-    </div>
-    <div class="price-card featured">
-      <div class="price-badge">Most Popular</div>
-      <div class="price-name">Pro</div>
-      <div class="price-amount">$19<span>/month</span></div>
-      <ul class="price-features">
-        <li>Everything in Free</li>
-        <li>Unlimited projects & orders</li>
-        <li>Client quote generator</li>
-        <li>Material inventory tracking</li>
-        <li>Unlimited laser presets</li>
-        <li>Priority support</li>
-        <li>Exportable reports</li>
-      </ul>
-      <a href="/app" class="price-btn solid">Get Started →</a>
-      <p class="price-trial"><span>3-day free trial</span> included</p>
-    </div>
-  </div>
-</section>
-
-<!-- CTA BANNER -->
-<div class="cta-banner" style="max-width:900px;margin:0 auto 100px;padding:0 24px">
-  <div style="background:linear-gradient(135deg,rgba(255,107,53,.12),rgba(255,107,53,.04));border:1px solid rgba(255,107,53,.25);border-radius:28px;padding:64px 48px;text-align:center">
-    <h2 style="font-size:clamp(24px,4vw,40px);font-weight:900;margin-bottom:16px">Ready to streamline your shop?</h2>
-    <p style="font-size:17px;color:var(--sub);margin-bottom:36px">Join fabrication professionals who use 0machine every day. Start your free 3-day trial — no card needed.</p>
-    <a href="/app" class="btn-primary" style="display:inline-flex">Start Your Free Trial →</a>
-  </div>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <div>
-    <div class="footer-brand">⚡ <span>0machine</span></div>
-    <div class="footer-tagline">Professional fabrication workflow platform for laser cutting, CNC, and making studios.</div>
-    <div class="footer-copy">© 2026 Cooldelo Ltd. All rights reserved.</div>
-  </div>
-  <div class="footer-links">
-    <div class="footer-links-wrap">
-      <div class="footer-col">
-        <h4>Product</h4>
-        <a href="#features">Features</a>
-        <a href="#pricing">Pricing</a>
-        <a href="/about.html">About Us</a>
-        <a href="/contact.html">Contact</a>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
-        <a href="/privacy-policy.html">Privacy Policy</a>
-        <a href="/terms.html">Terms of Service</a>
-        <a href="/cookies.html">Cookie Policy</a>
-        <a href="/data-protection.html">Data Protection</a>
-        <a href="/refund.html">Refund Policy</a>
-        <a href="/acceptable-use.html">Acceptable Use</a>
-      </div>
-    </div>
-  </div>
-</footer>
-</body>
+  <body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  </body>
 </html>
