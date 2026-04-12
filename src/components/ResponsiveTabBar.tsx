@@ -53,7 +53,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         <Zap color="#FFFFFF" size={18} fill="#FFFFFF" />
                     </View>
                     <View>
-                        <Text style={styles.brandLogoText}>ZeroCut</Text>
+                        <Text style={styles.brandLogoText}>0machine</Text>
                         <Text style={styles.brandSub}>PLANNER</Text>
                     </View>
                 </View>
