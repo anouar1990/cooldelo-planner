@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
@@ -104,7 +104,12 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
     // MOBILE BOTTOM BAR
     return (
         <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-            <View style={styles.bottomBarInner}>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.bottomBarInner}
+                bounces={true}
+            >
                 {state.routes.map((route: any, index: number) => {
                     const isFocused = state.index === index;
                     const Icon = ICONS[route.name] || LayoutDashboard;
@@ -117,13 +122,13 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                             activeOpacity={0.7}
                         >
                             <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={24} />
-                            <Text style={[styles.bottomLabel, isFocused && styles.bottomLabelActive]}>
+                            <Text style={[styles.bottomLabel, isFocused && styles.bottomLabelActive]} numberOfLines={1}>
                                 {route.name}
                             </Text>
                         </TouchableOpacity>
                     );
                 })}
-            </View>
+            </ScrollView>
         </View>
     );
 }
@@ -234,13 +239,16 @@ const styles = StyleSheet.create({
     },
     bottomBarInner: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
         alignItems: 'center',
+        paddingHorizontal: 16,
     },
     bottomTab: {
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 6,
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 4,
+        minWidth: 80,
     },
     bottomLabel: {
         fontSize: 11,
