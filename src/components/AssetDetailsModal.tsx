@@ -33,6 +33,17 @@ export function AssetDetailsModal({ design, visible, onClose }: Props) {
         try {
             setDownloading(true);
             
+            // Check if it's an external link (like Google Drive)
+            if (design.file_url.startsWith('http://') || design.file_url.startsWith('https://')) {
+                if (Platform.OS === 'web') {
+                    window.open(design.file_url, '_blank');
+                } else {
+                    await Linking.openURL(design.file_url);
+                }
+                await incrementDownload(design.id);
+                return;
+            }
+
             // Get signed URL for the actual file
             const { data, error } = await supabase.storage
                 .from('designs')
