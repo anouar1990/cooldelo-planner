@@ -288,14 +288,14 @@ export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props
                                             style={styles.editButton} 
                                             onPress={() => setShowEditModal(true)}
                                         >
-                                            <Edit3 color={COLORS.primary} size={18} />
+                                            <Edit3 color="#00E5FF" size={18} />
                                             <Text style={styles.editButtonText}>Edit Design</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity 
                                             style={styles.deleteButton} 
                                             onPress={handleDelete}
                                         >
-                                            <Trash2 color={COLORS.error} size={18} />
+                                            <Trash2 color="#FF1744" size={18} />
                                             <Text style={styles.deleteButtonText}>Delete</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -393,6 +393,7 @@ const styles = StyleSheet.create({
     },
     detailsArea: {
         padding: 24,
+        paddingBottom: 48,
     },
     titleSection: {
         marginBottom: 24,
@@ -498,8 +499,8 @@ const styles = StyleSheet.create({
     adminActions: {
         flexDirection: 'row',
         gap: 12,
-        marginTop: 8,
-        marginBottom: 12,
+        marginTop: 12,
+        marginBottom: 16,
         width: '100%',
     },
     editButton: {
@@ -509,13 +510,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         gap: 8,
         borderWidth: 1,
-        borderColor: COLORS.primary,
+        borderColor: '#00E5FF',
         paddingVertical: 12,
         borderRadius: 12,
-        backgroundColor: COLORS.primary + '08',
+        backgroundColor: 'rgba(0,229,255,0.08)',
     },
     editButtonText: {
-        color: COLORS.primary,
+        color: '#00E5FF',
         fontSize: 14,
         fontWeight: '700',
     },
@@ -526,13 +527,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         gap: 8,
         borderWidth: 1,
-        borderColor: COLORS.error,
+        borderColor: '#FF1744',
         paddingVertical: 12,
         borderRadius: 12,
-        backgroundColor: COLORS.error + '08',
+        backgroundColor: 'rgba(255,23,68,0.08)',
     },
     deleteButtonText: {
-        color: COLORS.error,
+        color: '#FF1744',
         fontSize: 14,
         fontWeight: '700',
     },
