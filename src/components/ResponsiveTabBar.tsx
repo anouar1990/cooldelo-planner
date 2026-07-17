@@ -64,7 +64,14 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         <Text style={styles.brandSub}>PLANNER</Text>
                     </View>
                 </View>
-                <View style={styles.sidebarLinks}>
+
+                {/* Scrollable nav links — prevents overlap with bottom section */}
+                <ScrollView
+                    style={styles.sidebarScrollArea}
+                    contentContainerStyle={styles.sidebarLinks}
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
+                >
                     {state.routes.map((route: any, index: number) => {
                         const isFocused = state.index === index;
                         const Icon = ICONS[route.name] || LayoutDashboard;
@@ -83,36 +90,39 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                             </TouchableOpacity>
                         );
                     })}
-                </View>
+                </ScrollView>
 
-                {/* User profile pill */}
-                <View style={styles.userPill}>
-                    {avatarUrl ? (
-                        <Image source={{ uri: avatarUrl }} style={styles.sidebarAvatar} />
-                    ) : (
-                        <View style={styles.sidebarAvatarFallback}>
-                            <Text style={styles.sidebarAvatarInitial}>{initials}</Text>
+                {/* Bottom section — always visible, never overlaps tabs */}
+                <View style={styles.sidebarBottom}>
+                    {/* User profile pill */}
+                    <View style={styles.userPill}>
+                        {avatarUrl ? (
+                            <Image source={{ uri: avatarUrl }} style={styles.sidebarAvatar} />
+                        ) : (
+                            <View style={styles.sidebarAvatarFallback}>
+                                <Text style={styles.sidebarAvatarInitial}>{initials}</Text>
+                            </View>
+                        )}
+                        <View style={styles.userInfo}>
+                            <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
+                            <Text style={styles.userRole}>Pro Member</Text>
                         </View>
-                    )}
-                    <View style={styles.userInfo}>
-                        <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
-                        <Text style={styles.userRole}>Pro Member</Text>
                     </View>
+
+                    <TouchableOpacity 
+                        onPress={() => Linking.openURL('https://0machine.com/privacy')} 
+                        style={[styles.sidebarLink, { marginBottom: 4 }]}
+                        activeOpacity={0.7}
+                    >
+                        <HelpCircle color={COLORS.textSub} size={20} />
+                        <Text style={styles.sidebarLabel}>Privacy & Support</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={signOut} style={styles.sidebarSignOut}>
+                        <LogOut color={COLORS.textSub} size={22} />
+                        <Text style={styles.sidebarLabel}>Sign Out</Text>
+                    </TouchableOpacity>
                 </View>
-
-                <TouchableOpacity 
-                    onPress={() => Linking.openURL('https://0machine.com/privacy')} 
-                    style={[styles.sidebarLink, { marginBottom: 10 }]}
-                    activeOpacity={0.7}
-                >
-                    <HelpCircle color={COLORS.textSub} size={20} />
-                    <Text style={styles.sidebarLabel}>Privacy & Support</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={signOut} style={styles.sidebarSignOut}>
-                    <LogOut color={COLORS.textSub} size={22} />
-                    <Text style={styles.sidebarLabel}>Sign Out</Text>
-                </TouchableOpacity>
             </View>
         );
     }
@@ -214,9 +224,17 @@ const styles = StyleSheet.create({
     brandIconWrap: { width: 36, height: 36, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
     brandLogoText: { fontSize: 18, fontWeight: '800', color: COLORS.text, letterSpacing: -0.2 },
     brandSub: { fontSize: 10, fontWeight: '700', color: COLORS.textSub, letterSpacing: 1.5 },
-    sidebarLinks: {
+    sidebarScrollArea: {
         flex: 1,
-        gap: 8,
+    },
+    sidebarLinks: {
+        gap: 4,
+        paddingBottom: 8,
+    },
+    sidebarBottom: {
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.06)',
+        paddingTop: 12,
     },
     sidebarLink: {
         flexDirection: 'row',
