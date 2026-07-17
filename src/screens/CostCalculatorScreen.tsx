@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
-    TextInput, TouchableOpacity, Platform,
+    TextInput, TouchableOpacity, Platform, ActivityIndicator, Alert
 } from 'react-native';
-import { Calculator, RotateCcw, Save, DollarSign, Zap, Wrench, Clock } from 'lucide-react-native';
+import { Calculator, RotateCcw, Save, DollarSign, Zap, Wrench, Clock, UploadCloud, FileText, Check } from 'lucide-react-native';
+import * as DocumentPicker from 'expo-document-picker';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -63,6 +64,167 @@ export default function CostCalculatorScreen() {
     const [f, setF] = useState<Inputs>(DEFAULT);
     const upd = (k: keyof Inputs) => (v: string) => setF(prev => ({ ...prev, [k]: v }));
 
+    // SVG Analyzer State
+    const [fileName, setFileName] = useState('');
+    const [rawSvgText, setRawSvgText] = useState('');
+    const [targetWidth, setTargetWidth] = useState('300'); // physical target width in mm
+    const [cutSpeed, setCutSpeed] = useState('30'); // speed in mm/s
+    const [analyzing, setAnalyzing] = useState(false);
+    
+    const [totalLengthMm, setTotalLengthMm] = useState(0); 
+    const [estimatedTimeMin, setEstimatedTimeMin] = useState(0); 
+
+    const recalculateSVG = (text: string, widthMm: number, speedMms: number) => {
+        if (!text || Platform.OS !== 'web') return;
+        
+        try {
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(text, 'image/svg+xml');
+            
+            // 1. Find ViewBox or raw width
+            let viewBoxWidth = 0;
+            const viewBoxAttr = svgDoc.documentElement.getAttribute('viewBox');
+            if (viewBoxAttr) {
+                const parts = viewBoxAttr.split(/[\s,]+/).filter(Boolean);
+                if (parts.length >= 4) {
+                    viewBoxWidth = parseFloat(parts[2]) || 0;
+                }
+            }
+            
+            if (viewBoxWidth <= 0) {
+                const widthAttr = svgDoc.documentElement.getAttribute('width');
+                if (widthAttr) {
+                    viewBoxWidth = parseFloat(widthAttr) || 800;
+                } else {
+                    viewBoxWidth = 800;
+                }
+            }
+            
+            // 2. Compute path lengths
+            let totalLengthPx = 0;
+            const tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            
+            // Paths
+            const paths = svgDoc.getElementsByTagName('path');
+            for (let i = 0; i < paths.length; i++) {
+                const d = paths[i].getAttribute('d');
+                if (d) {
+                    tempPath.setAttribute('d', d);
+                    totalLengthPx += tempPath.getTotalLength() || 0;
+                }
+            }
+            
+            // Circles
+            const circles = svgDoc.getElementsByTagName('circle');
+            for (let i = 0; i < circles.length; i++) {
+                const r = parseFloat(circles[i].getAttribute('r') || '0');
+                totalLengthPx += 2 * Math.PI * r;
+            }
+            
+            // Rectangles
+            const rects = svgDoc.getElementsByTagName('rect');
+            for (let i = 0; i < rects.length; i++) {
+                const w = parseFloat(rects[i].getAttribute('width') || '0');
+                const h = parseFloat(rects[i].getAttribute('height') || '0');
+                totalLengthPx += 2 * (w + h);
+            }
+            
+            // Lines
+            const lines = svgDoc.getElementsByTagName('line');
+            for (let i = 0; i < lines.length; i++) {
+                const x1 = parseFloat(lines[i].getAttribute('x1') || '0');
+                const y1 = parseFloat(lines[i].getAttribute('y1') || '0');
+                const x2 = parseFloat(lines[i].getAttribute('x2') || '0');
+                const y2 = parseFloat(lines[i].getAttribute('y2') || '0');
+                totalLengthPx += Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            }
+            
+            // Polylines & Polygons
+            const polylines = svgDoc.getElementsByTagName('polyline');
+            const polygons = svgDoc.getElementsByTagName('polygon');
+            const polyElements = [...Array.from(polylines), ...Array.from(polygons)];
+            
+            for (const poly of polyElements) {
+                const pointsStr = poly.getAttribute('points') || '';
+                const coords = pointsStr.trim().split(/[\s,]+/).map(parseFloat).filter(v => !isNaN(v));
+                let polyLen = 0;
+                for (let j = 0; j < coords.length - 3; j += 2) {
+                    polyLen += Math.sqrt((coords[j+2] - coords[j]) ** 2 + (coords[j+3] - coords[j+1]) ** 2);
+                }
+                if (poly.tagName.toLowerCase() === 'polygon' && coords.length >= 4) {
+                    const len = coords.length;
+                    polyLen += Math.sqrt((coords[len-2] - coords[0]) ** 2 + (coords[len-1] - coords[1]) ** 2);
+                }
+                totalLengthPx += polyLen;
+            }
+            
+            // 3. Scale and estimate
+            const scale = widthMm / viewBoxWidth;
+            const finalLengthMm = totalLengthPx * scale;
+            setTotalLengthMm(finalLengthMm);
+            
+            const timeSeconds = finalLengthMm / Math.max(speedMms, 0.1);
+            const timeMinutes = timeSeconds / 60;
+            setEstimatedTimeMin(timeMinutes);
+            
+        } catch (err) {
+            console.error('Error recalculating SVG:', err);
+        }
+    };
+
+    React.useEffect(() => {
+        if (rawSvgText) {
+            recalculateSVG(rawSvgText, parseFloat(targetWidth) || 300, parseFloat(cutSpeed) || 30);
+        }
+    }, [targetWidth, cutSpeed, rawSvgText]);
+
+    const handlePickSVG = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: 'image/svg+xml',
+                copyToCacheDirectory: false,
+            });
+            
+            if (result.canceled || !result.assets || result.assets.length === 0) return;
+            
+            const file = result.assets[0];
+            setFileName(file.name);
+            setAnalyzing(true);
+            
+            if (Platform.OS === 'web') {
+                const webFile = file.file as File;
+                const text = await webFile.text();
+                setRawSvgText(text);
+            } else {
+                Alert.alert('Info', 'Vector file analysis is optimized for the Web version.');
+                setFileName('');
+            }
+        } catch (err: any) {
+            console.error(err);
+            if (Platform.OS === 'web') {
+                window.alert('Failed to read file: ' + err.message);
+            } else {
+                Alert.alert('Error', 'Failed to read file');
+            }
+        } finally {
+            setAnalyzing(false);
+        }
+    };
+
+    const handleApplyTime = () => {
+        if (estimatedTimeMin <= 0) return;
+        setF(prev => ({
+            ...prev,
+            laserTime: Math.ceil(estimatedTimeMin).toString()
+        }));
+        
+        if (Platform.OS === 'web') {
+            window.alert(`Applied ${Math.ceil(estimatedTimeMin)} minutes of laser cut time to the pricing calculator below!`);
+        } else {
+            Alert.alert('Success', `Applied ${Math.ceil(estimatedTimeMin)} minutes of laser cut time.`);
+        }
+    };
+
     const calc = useMemo(() => {
         const qty = Math.max(n(f.quantity), 1);
         // Material cost = sheetCost × (usagePct / 100)
@@ -112,6 +274,88 @@ export default function CostCalculatorScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+                {/* ── SVG File Analyzer Card ── */}
+                <View style={styles.analyzerCard}>
+                    <View style={styles.analyzerHeader}>
+                        <View style={styles.analyzerTitleRow}>
+                            <UploadCloud color={C.primary} size={18} />
+                            <Text style={styles.analyzerTitle}>SVG Vector File Analyzer (Auto-Estimate)</Text>
+                        </View>
+                        <Text style={styles.analyzerSubtitle}>
+                            Upload a vector design file to automatically compute its cut path length and estimate cutting time.
+                        </Text>
+                    </View>
+
+                    <View style={styles.analyzerBody}>
+                        {/* Drop / picker zone */}
+                        <TouchableOpacity style={styles.uploadZone} onPress={handlePickSVG}>
+                            {analyzing ? (
+                                <ActivityIndicator color={C.primary} size="small" />
+                            ) : fileName ? (
+                                <View style={styles.uploadZoneContent}>
+                                    <FileText color={C.green} size={24} />
+                                    <Text style={styles.fileNameText}>{fileName}</Text>
+                                    <Text style={styles.changeFileText}>Change design file</Text>
+                                </View>
+                            ) : (
+                                <View style={styles.uploadZoneContent}>
+                                    <UploadCloud color={C.sub} size={28} />
+                                    <Text style={styles.uploadZoneText}>Click to select SVG vector file</Text>
+                                    <Text style={styles.uploadZoneHint}>optimized for Web browser</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+
+                        {fileName ? (
+                            <View style={styles.analyzerParams}>
+                                <View style={styles.paramGroup}>
+                                    <Text style={styles.paramLabel}>Design Width (mm)</Text>
+                                    <TextInput
+                                        style={styles.paramInput}
+                                        value={targetWidth}
+                                        onChangeText={setTargetWidth}
+                                        keyboardType="decimal-pad"
+                                        placeholder="300"
+                                    />
+                                    <Text style={styles.paramHint}>Used to scale paths correctly</Text>
+                                </View>
+
+                                <View style={styles.paramGroup}>
+                                    <Text style={styles.paramLabel}>Cut Speed (mm/s)</Text>
+                                    <TextInput
+                                        style={styles.paramInput}
+                                        value={cutSpeed}
+                                        onChangeText={setCutSpeed}
+                                        keyboardType="decimal-pad"
+                                        placeholder="30"
+                                    />
+                                    <Text style={styles.paramHint}>Laser head speed for cutting</Text>
+                                </View>
+
+                                <View style={styles.metricsGroup}>
+                                    <View style={styles.metricRow}>
+                                        <Text style={styles.metricLabel}>Total Cut Length:</Text>
+                                        <Text style={styles.metricValue}>
+                                            {(totalLengthMm / 1000).toFixed(2)} meters <Text style={styles.metricUnit}>({Math.round(totalLengthMm)} mm)</Text>
+                                        </Text>
+                                    </View>
+                                    <View style={styles.metricRow}>
+                                        <Text style={styles.metricLabel}>Est. Cut Time:</Text>
+                                        <Text style={[styles.metricValue, { color: C.primary }]}>
+                                            {estimatedTimeMin.toFixed(1)} mins <Text style={styles.metricUnit}>({Math.ceil(estimatedTimeMin * 60)} secs)</Text>
+                                        </Text>
+                                    </View>
+
+                                    <TouchableOpacity style={styles.applyBtn} onPress={handleApplyTime}>
+                                        <Check color="#FFF" size={14} />
+                                        <Text style={styles.applyBtnText}>Apply to Calculator</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ) : null}
+                    </View>
+                </View>
+
                 <View style={styles.grid}>
                     {/* ── Form ── */}
                     <View style={styles.formCard}>
@@ -293,4 +537,153 @@ const styles = StyleSheet.create({
     actionsRow: { gap: 8 },
     resetBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 44, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface },
     resetBtnText: { color: C.sub, fontSize: 14, fontWeight: '600' },
+    analyzerCard: {
+        backgroundColor: C.surface,
+        borderRadius: 16,
+        padding: 24,
+        borderWidth: 1,
+        borderColor: C.border,
+        marginBottom: 24,
+        width: '100%',
+        ...Platform.select({ web: { boxShadow: '0 1px 4px rgba(0,0,0,0.05)' } as any }),
+    },
+    analyzerHeader: {
+        marginBottom: 20,
+    },
+    analyzerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 6,
+    },
+    analyzerTitle: {
+        fontSize: 16,
+        fontWeight: '800',
+        color: C.text,
+    },
+    analyzerSubtitle: {
+        fontSize: 13,
+        color: C.sub,
+        lineHeight: 18,
+    },
+    analyzerBody: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 20,
+    },
+    uploadZone: {
+        flex: 1,
+        minWidth: 260,
+        borderWidth: 2,
+        borderColor: C.border,
+        borderStyle: 'dashed',
+        borderRadius: 12,
+        padding: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.01)',
+    },
+    uploadZoneContent: {
+        alignItems: 'center',
+        gap: 10,
+    },
+    uploadZoneText: {
+        color: C.text,
+        fontSize: 14,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    uploadZoneHint: {
+        color: C.sub,
+        fontSize: 11,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    fileNameText: {
+        color: C.green,
+        fontSize: 14,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+    changeFileText: {
+        color: C.primary,
+        fontSize: 12,
+        fontWeight: '600',
+        textDecorationLine: 'underline',
+    },
+    analyzerParams: {
+        flex: 1.2,
+        minWidth: 280,
+        backgroundColor: 'rgba(0,0,0,0.15)',
+        borderRadius: 12,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: C.border,
+        gap: 16,
+    },
+    paramGroup: {
+        gap: 6,
+    },
+    paramLabel: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: C.text,
+    },
+    paramInput: {
+        height: 40,
+        backgroundColor: C.surface2,
+        borderWidth: 1,
+        borderColor: C.border,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        color: C.text,
+        fontSize: 14,
+        ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}),
+    },
+    paramHint: {
+        fontSize: 11,
+        color: C.sub,
+    },
+    metricsGroup: {
+        marginTop: 8,
+        gap: 12,
+        borderTopWidth: 1,
+        borderTopColor: C.border,
+        paddingTop: 16,
+    },
+    metricRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    metricLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: C.sub,
+    },
+    metricValue: {
+        fontSize: 14,
+        fontWeight: '800',
+        color: C.text,
+    },
+    metricUnit: {
+        fontSize: 11,
+        fontWeight: '500',
+        color: C.sub,
+    },
+    applyBtn: {
+        backgroundColor: C.green,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 12,
+        borderRadius: 8,
+        marginTop: 8,
+    },
+    applyBtnText: {
+        color: '#FFF',
+        fontSize: 13,
+        fontWeight: '700',
+    },
 });
