@@ -197,6 +197,7 @@ export default function DesignLibraryScreen() {
                     design={selectedDesign} 
                     visible={!!selectedDesign} 
                     onClose={() => setSelectedDesign(null)} 
+                    onRefresh={() => fetchDesigns(true)}
                 />
             )}
 

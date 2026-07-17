@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { UploadCloud, CheckCircle, AlertCircle, Link, FolderPlus, X, HelpCircle } from 'lucide-react-native';
+import { UploadCloud, CheckCircle, AlertCircle, Link, FolderPlus, X, Edit3 } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import JSZip from 'jszip';
 import { supabase } from '../lib/supabase';
@@ -19,10 +19,12 @@ const COLORS = {
 
 interface AdminUploadScreenProps {
     onClose?: () => void;
+    design?: any; // Passed when editing
 }
 
-export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
+export default function AdminUploadScreen({ onClose, design }: AdminUploadScreenProps) {
     const [activeTab, setActiveTab] = useState<'link' | 'zip'>('link');
+    const isEditing = !!design;
     
     // Common fields
     const [category, setCategory] = useState('');
@@ -30,7 +32,8 @@ export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
     
     // Link fields
     const [title, setTitle] = useState('');
-    const [fileUrl, setFileUrl] = useState('');
+    const [driveUrl, setDriveUrl] = useState('');
+    const [megaUrl, setMegaUrl] = useState('');
     const [fileType, setFileType] = useState('zip');
     const [thumbnailUrl, setThumbnailUrl] = useState('');
     
@@ -40,43 +43,98 @@ export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
     const [statusText, setStatusText] = useState('');
     const [logs, setLogs] = useState<{type: 'success'|'error', msg: string}[]>([]);
 
+    useEffect(() => {
+        if (design) {
+            setTitle(design.title || '');
+            setCategory(design.category || '');
+            setTags(design.tags ? design.tags.join(', ') : '');
+            setFileType(design.file_type || 'zip');
+            setThumbnailUrl(design.thumbnail_url || '');
+            
+            const fileVal = design.file_url || '';
+            if (fileVal.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(fileVal);
+                    setDriveUrl(parsed.drive || '');
+                    setMegaUrl(parsed.mega || '');
+                } catch {
+                    setDriveUrl(fileVal);
+                }
+            } else {
+                if (fileVal.includes('mega.nz')) {
+                    setMegaUrl(fileVal);
+                } else {
+                    setDriveUrl(fileVal);
+                }
+            }
+        }
+    }, [design]);
+
     const addLog = (type: 'success'|'error', msg: string) => {
         setLogs(prev => [...prev, { type, msg }]);
     };
 
-    const handleAddLink = async () => {
-        if (!title.trim() || !fileUrl.trim()) {
-            Alert.alert('Error', 'Please fill in the Title and File URL.');
+    const handleSaveDesign = async () => {
+        if (!title.trim()) {
+            Alert.alert('Error', 'Please fill f the Design Title.');
+            return;
+        }
+        if (!driveUrl.trim() && !megaUrl.trim()) {
+            Alert.alert('Error', 'Please enter at least one download link (Google Drive or Mega).');
             return;
         }
 
         try {
             setUploading(true);
-            
             const tagsArray = tags.split(',').map(t => t.trim()).filter(Boolean);
             
-            const { error } = await supabase.from('designs').insert({
+            // Build the file url value
+            let finalFileUrl = '';
+            if (driveUrl.trim() && megaUrl.trim()) {
+                finalFileUrl = JSON.stringify({
+                    drive: driveUrl.trim(),
+                    mega: megaUrl.trim()
+                });
+            } else {
+                finalFileUrl = driveUrl.trim() || megaUrl.trim();
+            }
+
+            const designPayload = {
                 title: title.trim(),
                 category: category.trim() || 'Uncategorized',
                 tags: tagsArray,
-                file_url: fileUrl.trim(),
+                file_url: finalFileUrl,
                 file_type: fileType.toLowerCase(),
                 thumbnail_url: thumbnailUrl.trim() || null,
-            });
+            };
 
-            if (error) throw error;
+            if (isEditing) {
+                const { error } = await supabase
+                    .from('designs')
+                    .update(designPayload)
+                    .eq('id', design.id);
 
-            Alert.alert('Success', 'Design added successfully!');
-            // Reset link fields
-            setTitle('');
-            setFileUrl('');
-            setThumbnailUrl('');
-            if (onClose) {
-                onClose();
+                if (error) throw error;
+                Alert.alert('Success', 'Design updated successfully!');
+            } else {
+                const { error } = await supabase
+                    .from('designs')
+                    .insert(designPayload);
+
+                if (error) throw error;
+                Alert.alert('Success', 'Design added successfully!');
+                
+                // Clear fields
+                setTitle('');
+                setDriveUrl('');
+                setMegaUrl('');
+                setThumbnailUrl('');
             }
+
+            if (onClose) onClose();
         } catch (err: any) {
             console.error(err);
-            Alert.alert('Error', err.message || 'Failed to add design');
+            Alert.alert('Error', err.message || 'Failed to save design');
         } finally {
             setUploading(false);
         }
@@ -180,8 +238,10 @@ export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
             {/* Header */}
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.headerTitle}>Admin Panel</Text>
-                    <Text style={styles.headerSubtitle}>Manage and add files to Design Library</Text>
+                    <Text style={styles.headerTitle}>{isEditing ? 'Edit Design' : 'Admin Panel'}</Text>
+                    <Text style={styles.headerSubtitle}>
+                        {isEditing ? 'Modify design data and resource links' : 'Manage and add files to Design Library'}
+                    </Text>
                 </View>
                 {onClose && (
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -190,26 +250,28 @@ export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
                 )}
             </View>
 
-            {/* Tabs */}
-            <View style={styles.tabContainer}>
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'link' && styles.activeTab]}
-                    onPress={() => setActiveTab('link')}
-                >
-                    <Link color={activeTab === 'link' ? COLORS.primary : COLORS.textSub} size={18} />
-                    <Text style={[styles.tabText, activeTab === 'link' && styles.activeTabText]}>Add Link (Drive)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'zip' && styles.activeTab]}
-                    onPress={() => setActiveTab('zip')}
-                >
-                    <UploadCloud color={activeTab === 'zip' ? COLORS.primary : COLORS.textSub} size={18} />
-                    <Text style={[styles.tabText, activeTab === 'zip' && styles.activeTabText]}>Bulk ZIP Upload</Text>
-                </TouchableOpacity>
-            </View>
+            {/* Tabs (Disabled when editing) */}
+            {!isEditing && (
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity 
+                        style={[styles.tab, activeTab === 'link' && styles.activeTab]}
+                        onPress={() => setActiveTab('link')}
+                    >
+                        <Link color={activeTab === 'link' ? COLORS.primary : COLORS.textSub} size={18} />
+                        <Text style={[styles.tabText, activeTab === 'link' && styles.activeTabText]}>Add Link (Drive/Mega)</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.tab, activeTab === 'zip' && styles.activeTab]}
+                        onPress={() => setActiveTab('zip')}
+                    >
+                        <UploadCloud color={activeTab === 'zip' ? COLORS.primary : COLORS.textSub} size={18} />
+                        <Text style={[styles.tabText, activeTab === 'zip' && styles.activeTabText]}>Bulk ZIP Upload</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                {activeTab === 'link' ? (
+                {activeTab === 'link' || isEditing ? (
                     <View style={styles.form}>
                         <Text style={styles.label}>Design Title *</Text>
                         <TextInput
@@ -243,7 +305,7 @@ export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
 
                         <View style={styles.row}>
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.label}>File Type *</Text>
+                                <Text style={styles.label}>File Type / Extension *</Text>
                                 <View style={styles.pickerContainer}>
                                     {['zip', 'dxf', 'svg', 'pdf', 'png'].map((type) => (
                                         <TouchableOpacity
@@ -260,13 +322,25 @@ export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
                             </View>
                         </View>
 
-                        <Text style={styles.label}>File URL (Google Drive / External Link) *</Text>
+                        <Text style={styles.label}>Google Drive Link (URL)</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="https://drive.google.com/..."
                             placeholderTextColor={COLORS.textSub}
-                            value={fileUrl}
-                            onChangeText={setFileUrl}
+                            value={driveUrl}
+                            onChangeText={setDriveUrl}
+                            editable={!uploading}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+
+                        <Text style={styles.label}>Mega Link (URL)</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="https://mega.nz/..."
+                            placeholderTextColor={COLORS.textSub}
+                            value={megaUrl}
+                            onChangeText={setMegaUrl}
                             editable={!uploading}
                             autoCapitalize="none"
                             autoCorrect={false}
@@ -286,15 +360,15 @@ export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
 
                         <TouchableOpacity 
                             style={[styles.primaryButton, uploading && styles.buttonDisabled]}
-                            onPress={handleAddLink}
+                            onPress={handleSaveDesign}
                             disabled={uploading}
                         >
                             {uploading ? (
                                 <ActivityIndicator color="#FFF" />
                             ) : (
                                 <>
-                                    <FolderPlus color="#FFF" size={20} />
-                                    <Text style={styles.primaryButtonText}>Save Design</Text>
+                                    {isEditing ? <Edit3 color="#FFF" size={20} /> : <FolderPlus color="#FFF" size={20} />}
+                                    <Text style={styles.primaryButtonText}>{isEditing ? 'Update Design' : 'Save Design'}</Text>
                                 </>
                             )}
                         </TouchableOpacity>

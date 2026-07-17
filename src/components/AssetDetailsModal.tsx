@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { 
     View, Text, StyleSheet, Modal, TouchableOpacity, 
-    Image, ActivityIndicator, Linking, Platform, ScrollView, useWindowDimensions 
+    Image, ActivityIndicator, Linking, Platform, ScrollView, useWindowDimensions,
+    Alert
 } from 'react-native';
-import { X, Download, FileType2, Tag, Calendar, LayoutGrid } from 'lucide-react-native';
+import { X, Download, FileType2, Tag, Calendar, LayoutGrid, Edit3, Trash2 } from 'lucide-react-native';
 import { Design, useDesignLibrary } from '../hooks/useDesignLibrary';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
+import AdminUploadScreen from '../screens/AdminUploadScreen';
 
 interface Props {
     design: Design;
     visible: boolean;
     onClose: () => void;
+    onRefresh?: () => void; // Optional refresh list callback
 }
 
 const COLORS = {
@@ -23,22 +27,93 @@ const COLORS = {
     text: '#F1F5F9',
 };
 
-export function AssetDetailsModal({ design, visible, onClose }: Props) {
+export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props) {
     const { incrementDownload } = useDesignLibrary();
     const [downloading, setDownloading] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const { session } = useAuth();
+    const isAdmin = session?.user?.user_metadata?.is_admin === true || session?.user?.user_metadata?.is_admin === 'true';
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
+    // Parse multi resources
+    let driveLink = '';
+    let megaLink = '';
+    let isMultiLink = false;
+    
+    const fileVal = design.file_url || '';
+    if (fileVal.startsWith('{')) {
+        try {
+            const parsed = JSON.parse(fileVal);
+            driveLink = parsed.drive || '';
+            megaLink = parsed.mega || '';
+            isMultiLink = !!(driveLink && megaLink);
+        } catch {
+            driveLink = fileVal;
+        }
+    } else {
+        if (fileVal.includes('mega.nz')) {
+            megaLink = fileVal;
+        } else {
+            driveLink = fileVal;
+        }
+    }
+
+    const handleDirectDownload = async (url: string) => {
+        try {
+            setDownloading(true);
+            if (Platform.OS === 'web') {
+                window.open(url, '_blank');
+            } else {
+                await Linking.openURL(url);
+            }
+            await incrementDownload(design.id);
+        } catch (err) {
+            console.error('Error downloading:', err);
+            alert('Failed to open link.');
+        } finally {
+            setDownloading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        Alert.alert(
+            'Confirm Delete',
+            'Are you sure you want to permanently delete this design?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { 
+                    text: 'Delete', 
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const { error } = await supabase.from('designs').delete().eq('id', design.id);
+                            if (error) throw error;
+                            Alert.alert('Success', 'Design deleted successfully!');
+                            onClose();
+                            if (onRefresh) onRefresh();
+                        } catch (err: any) {
+                            Alert.alert('Error', err.message || 'Failed to delete');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const handleDownload = async () => {
+        const targetUrl = driveLink || megaLink;
+        if (!targetUrl) return;
+
         try {
             setDownloading(true);
             
             // Check if it's an external link (like Google Drive)
-            if (design.file_url.startsWith('http://') || design.file_url.startsWith('https://')) {
+            if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
                 if (Platform.OS === 'web') {
-                    window.open(design.file_url, '_blank');
+                    window.open(targetUrl, '_blank');
                 } else {
-                    await Linking.openURL(design.file_url);
+                    await Linking.openURL(targetUrl);
                 }
                 await incrementDownload(design.id);
                 return;
@@ -47,7 +122,7 @@ export function AssetDetailsModal({ design, visible, onClose }: Props) {
             // Get signed URL for the actual file
             const { data, error } = await supabase.storage
                 .from('designs')
-                .createSignedUrl(design.file_url, 60); // 60 seconds expiry
+                .createSignedUrl(targetUrl, 60); // 60 seconds expiry
 
             if (error) throw error;
 
@@ -167,20 +242,65 @@ export function AssetDetailsModal({ design, visible, onClose }: Props) {
                             )}
 
                             <View style={styles.actionSection}>
-                                <TouchableOpacity 
-                                    style={[styles.downloadButton, downloading && styles.downloadButtonDisabled]} 
-                                    onPress={handleDownload}
-                                    disabled={downloading}
-                                >
-                                    {downloading ? (
-                                        <ActivityIndicator color="#FFF" size="small" />
-                                    ) : (
-                                        <>
-                                            <Download color="#FFF" size={20} />
-                                            <Text style={styles.downloadButtonText}>Download {design.file_type.toUpperCase()}</Text>
-                                        </>
-                                    )}
-                                </TouchableOpacity>
+                                {isMultiLink ? (
+                                    <View style={{ gap: 12, width: '100%', marginBottom: 12 }}>
+                                        {driveLink ? (
+                                            <TouchableOpacity 
+                                                style={[styles.downloadButton, downloading && styles.downloadButtonDisabled]} 
+                                                onPress={() => handleDirectDownload(driveLink)}
+                                                disabled={downloading}
+                                            >
+                                                <Download color="#FFF" size={20} />
+                                                <Text style={styles.downloadButtonText}>Download from Google Drive</Text>
+                                            </TouchableOpacity>
+                                        ) : null}
+                                        {megaLink ? (
+                                            <TouchableOpacity 
+                                                style={[styles.downloadButton, { backgroundColor: '#D9252A' }, downloading && styles.downloadButtonDisabled]} 
+                                                onPress={() => handleDirectDownload(megaLink)}
+                                                disabled={downloading}
+                                            >
+                                                <Download color="#FFF" size={20} />
+                                                <Text style={styles.downloadButtonText}>Download from Mega</Text>
+                                            </TouchableOpacity>
+                                        ) : null}
+                                    </View>
+                                ) : (
+                                    <TouchableOpacity 
+                                        style={[styles.downloadButton, downloading && styles.downloadButtonDisabled]} 
+                                        onPress={handleDownload}
+                                        disabled={downloading}
+                                    >
+                                        {downloading ? (
+                                            <ActivityIndicator color="#FFF" size="small" />
+                                        ) : (
+                                            <>
+                                                <Download color="#FFF" size={20} />
+                                                <Text style={styles.downloadButtonText}>Download {design.file_type.toUpperCase()}</Text>
+                                            </>
+                                        )}
+                                    </TouchableOpacity>
+                                )}
+                                
+                                {isAdmin && (
+                                    <View style={styles.adminActions}>
+                                        <TouchableOpacity 
+                                            style={styles.editButton} 
+                                            onPress={() => setShowEditModal(true)}
+                                        >
+                                            <Edit3 color={COLORS.primary} size={18} />
+                                            <Text style={styles.editButtonText}>Edit Design</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity 
+                                            style={styles.deleteButton} 
+                                            onPress={handleDelete}
+                                        >
+                                            <Trash2 color={COLORS.error} size={18} />
+                                            <Text style={styles.deleteButtonText}>Delete</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+
                                 <Text style={styles.licenseText}>
                                     By downloading this file, you agree to our standard licensing terms.
                                 </Text>
@@ -189,6 +309,21 @@ export function AssetDetailsModal({ design, visible, onClose }: Props) {
                     </ScrollView>
                 </View>
             </View>
+
+            <Modal 
+                visible={showEditModal} 
+                animationType="slide"
+                onRequestClose={() => setShowEditModal(false)}
+            >
+                <AdminUploadScreen 
+                    design={design} 
+                    onClose={() => {
+                        setShowEditModal(false);
+                        onClose();
+                        if (onRefresh) onRefresh();
+                    }} 
+                />
+            </Modal>
         </Modal>
     );
 }
@@ -359,5 +494,46 @@ const styles = StyleSheet.create({
         fontSize: 11,
         color: COLORS.textSub,
         textAlign: 'center',
+    },
+    adminActions: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 8,
+        marginBottom: 12,
+        width: '100%',
+    },
+    editButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+        paddingVertical: 12,
+        borderRadius: 12,
+        backgroundColor: COLORS.primary + '08',
+    },
+    editButtonText: {
+        color: COLORS.primary,
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    deleteButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        borderWidth: 1,
+        borderColor: COLORS.error,
+        paddingVertical: 12,
+        borderRadius: 12,
+        backgroundColor: COLORS.error + '08',
+    },
+    deleteButtonText: {
+        color: COLORS.error,
+        fontSize: 14,
+        fontWeight: '700',
     },
 });
