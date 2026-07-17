@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 const COLORS = {
     bg: '#0A0C12',
@@ -51,7 +52,11 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                 {/* Brand Logo */}
                 <View style={styles.brandContainer}>
                     <View style={styles.brandIconWrap}>
-                        <Zap color="#FFFFFF" size={18} fill="#FFFFFF" />
+                        <Svg width={20} height={20} viewBox="0 0 28 28">
+                            <Circle cx={6} cy={22} r={3} fill="#FFFFFF" />
+                            <Path d="M9 22L19 6" stroke="#FFFFFF" strokeWidth={3.5} strokeLinecap="round" />
+                            <Path d="M18 6H24V12" stroke="#FFFFFF" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
+                        </Svg>
                     </View>
                     <View>
                         <Text style={styles.brandLogoText}>0machine</Text>
