@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
         zIndex: 10,
     },
     brandBadge: {
-        color: C.primary,
+        color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '800',
         letterSpacing: 2,

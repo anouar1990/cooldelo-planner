@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
         marginTop: 1,
     },
     brandContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, marginBottom: 32 },
-    brandIconWrap: { width: 36, height: 36, borderRadius: 8, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
+    brandIconWrap: { width: 36, height: 36, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
     brandLogoText: { fontSize: 18, fontWeight: '800', color: COLORS.text, letterSpacing: -0.2 },
     brandSub: { fontSize: 10, fontWeight: '700', color: COLORS.textSub, letterSpacing: 1.5 },
     sidebarLinks: {
