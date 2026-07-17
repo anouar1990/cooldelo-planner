@@ -6,9 +6,10 @@ import {
 import { Calculator, RotateCcw, Save, DollarSign, Zap, Wrench, Clock } from 'lucide-react-native';
 
 const C = {
-    bg: '#F9FAFB', surface: '#FFFFFF', border: '#E5E7EB',
-    text: '#111827', sub: '#6B7280', primary: '#FF6B35',
+    bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
+    border: 'rgba(255,255,255,0.07)', primary: '#FF6B35',
     green: '#10B981', amber: '#F59E0B', blue: '#3B82F6',
+    text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
 interface Inputs {
@@ -261,8 +262,8 @@ const styles = StyleSheet.create({
     row: { flexDirection: 'row', gap: 12, marginBottom: 0 },
     inputGroup: { flex: 1, marginBottom: 12 },
     label: { fontSize: 12, fontWeight: '600', color: C.text, marginBottom: 6 },
-    inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: C.border, borderRadius: 8, backgroundColor: '#F8FAFC', overflow: 'hidden' },
-    inputPrefix: { paddingHorizontal: 10, fontSize: 14, color: C.sub, backgroundColor: '#F1F3F5', alignSelf: 'stretch', textAlignVertical: 'center', lineHeight: 44 },
+    inputWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: C.border, borderRadius: 8, backgroundColor: C.surface, overflow: 'hidden' },
+    inputPrefix: { paddingHorizontal: 10, fontSize: 14, color: C.sub, backgroundColor: C.surface2, alignSelf: 'stretch', textAlignVertical: 'center', lineHeight: 44 },
     input: { flex: 1, height: 44, paddingHorizontal: 12, color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
     inputPrefixed: { borderRadius: 0 },
     sidebar: { flex: 1, minWidth: 260, gap: 16 },

@@ -57,6 +57,7 @@ export function useMachineProfiles() {
     };
 
     const updateMachine = async (id: string, updates: Partial<MachineProfile>) => {
+        if (!session?.user) return { error: new Error('Not authenticated') };
         const { data, error } = await supabase
             .from('machine_profiles')
             .update(updates)
@@ -68,6 +69,7 @@ export function useMachineProfiles() {
     };
 
     const deleteMachine = async (id: string) => {
+        if (!session?.user) return { error: new Error('Not authenticated') };
         const { error } = await supabase.from('machine_profiles').delete().eq('id', id);
         if (!error) setMachines(prev => prev.filter(m => m.id !== id));
         return { error };

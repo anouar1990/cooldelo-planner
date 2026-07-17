@@ -8,7 +8,7 @@ import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useProjects, ProjectRow } from '../hooks/useProjects';
 import { useMaterials, MaterialRow } from '../hooks/useMaterials';
 import { useSubscription } from '../hooks/useSubscription';
-import { Plus, Search, X, Clock, DollarSign, Layers, ChevronRight, Zap, Cpu, User, Copy, Bookmark } from 'lucide-react-native';
+import { Plus, Search, X, Clock, DollarSign, Layers, ChevronRight, Zap, Cpu, User, Copy, Bookmark, BarChart2 } from 'lucide-react-native';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -246,6 +246,10 @@ export default function ProjectsListScreen({ navigation }: any) {
                         <TouchableOpacity style={styles.proTool} onPress={() => navigation.navigate('MachineProfiles')}>
                             <Cpu color={C.primary} size={16} />
                             <Text style={styles.proToolText}>Machines</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.proTool} onPress={() => navigation.navigate('Stats')}>
+                            <BarChart2 color={C.primary} size={16} />
+                            <Text style={styles.proToolText}>Stats</Text>
                         </TouchableOpacity>
                     </View>
                 )}

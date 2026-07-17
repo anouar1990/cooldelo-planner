@@ -56,6 +56,7 @@ export function useClients() {
     };
 
     const updateClient = async (id: string, updates: Partial<Client>) => {
+        if (!session?.user) return { error: new Error('Not authenticated') };
         const { data, error } = await supabase
             .from('clients')
             .update(updates)
@@ -67,6 +68,7 @@ export function useClients() {
     };
 
     const deleteClient = async (id: string) => {
+        if (!session?.user) return { error: new Error('Not authenticated') };
         const { error } = await supabase.from('clients').delete().eq('id', id);
         if (!error) setClients(prev => prev.filter(c => c.id !== id));
         return { error };

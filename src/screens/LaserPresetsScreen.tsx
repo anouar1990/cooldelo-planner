@@ -6,9 +6,10 @@ import {
 import { Zap, Plus, X, Check, Search, Star, Pencil, Trash2, Copy } from 'lucide-react-native';
 
 const C = {
-    bg: '#F9FAFB', surface: '#FFFFFF', border: '#E5E7EB',
-    text: '#111827', sub: '#6B7280', primary: '#FF6B35',
+    bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
+    border: 'rgba(255,255,255,0.07)', primary: '#FF6B35',
     amber: '#F59E0B', green: '#10B981', blue: '#3B82F6',
+    text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
 interface Preset {
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
     iconBtn: { padding: 5 },
     cardMaterial: { fontSize: 12, color: C.sub, marginBottom: 12 },
     paramsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
-    param: { backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', minWidth: 64 },
+    param: { backgroundColor: C.surface2, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, alignItems: 'center', minWidth: 64 },
     paramLabel: { fontSize: 10, color: C.sub, fontWeight: '600', marginBottom: 2 },
     paramValue: { fontSize: 13, fontWeight: '700', color: C.text },
     cardNotes: { fontSize: 12, color: C.sub, marginTop: 4, lineHeight: 18 },
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
     label: { fontSize: 12, fontWeight: '600', color: C.text, marginBottom: 8, marginTop: 12 },
     mField: { marginBottom: 4 },
     mrow: { flexDirection: 'row', gap: 12 },
-    minput: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: '#F8FAFC', color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
+    minput: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: C.surface2, color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
     toggleRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
     toggleBtn: { flex: 1, height: 40, borderRadius: 8, borderWidth: 1, borderColor: C.border, justifyContent: 'center', alignItems: 'center' },
     toggleActive: { backgroundColor: C.primary, borderColor: C.primary },

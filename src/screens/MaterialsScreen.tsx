@@ -6,9 +6,10 @@ import {
 import { Package, Plus, Pencil, Trash2, X, Check, Layers, DollarSign } from 'lucide-react-native';
 
 const C = {
-    bg: '#F9FAFB', surface: '#FFFFFF', border: '#E5E7EB',
-    text: '#111827', sub: '#6B7280', primary: '#FF6B35',
+    bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
+    border: 'rgba(255,255,255,0.07)', primary: '#FF6B35',
     green: '#10B981', amber: '#F59E0B', red: '#EF4444',
+    text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
 interface Material {
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
     label: { fontSize: 12, fontWeight: '600', color: C.text, marginBottom: 8, marginTop: 12 },
     mField: { marginBottom: 4 },
     mrow: { flexDirection: 'row', gap: 12 },
-    minput: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: '#F8FAFC', color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
+    minput: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: C.surface2, color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
     typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
     typeChip: { borderRadius: 8, borderWidth: 1, borderColor: C.border, paddingHorizontal: 12, paddingVertical: 6 },
     typeChipText: { fontSize: 13, fontWeight: '600', color: C.text },

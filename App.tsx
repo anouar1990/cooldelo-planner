@@ -21,8 +21,10 @@ import AuthScreen from './src/screens/AuthScreen';
 import DesktopAuthScreen from './src/screens/DesktopAuthScreen';
 import PaywallScreen from './src/screens/PaywallScreen';
 import MachineProfilesScreen from './src/screens/MachineProfilesScreen';
-import ClientsScreen from './src/screens/ClientsScreen';
 import TemplatesScreen from './src/screens/TemplatesScreen';
+import DesignLibraryScreen from './src/screens/DesignLibraryScreen';
+import AdminUploadScreen from './src/screens/AdminUploadScreen';
+import ClientsScreen from './src/screens/ClientsScreen';
 import { useAuth } from './src/hooks/useAuth';
 import { useSubscription } from './src/hooks/useSubscription';
 import { ResponsiveTabBar } from './src/components/ResponsiveTabBar';
@@ -58,6 +60,8 @@ function ProjectsNavigator() {
       <ProjectStack.Screen name="MachineProfiles" component={MachineProfilesScreen} />
       <ProjectStack.Screen name="Clients" component={ClientsScreen} />
       <ProjectStack.Screen name="Templates" component={TemplatesScreen} />
+      <ProjectStack.Screen name="AdminUpload" component={AdminUploadScreen} />
+      <ProjectStack.Screen name="Stats" component={StatsScreen} />
     </ProjectStack.Navigator>
   );
 }
@@ -142,6 +146,7 @@ export default function App() {
           <Tab.Screen name="Orders" component={OrdersScreen} />
           <Tab.Screen name="Laser Presets" component={LaserPresetsScreen} />
           <Tab.Screen name="Quote Generator" component={QuoteGeneratorScreen} />
+          <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
           <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
         </Tab.Navigator>
       </NavigationContainer>

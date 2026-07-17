@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "vercel-build": "expo export --platform web --output-dir web-build"
+    "vercel-build": "expo export --platform web --output-dir web-build && node ./scripts/fix-import-meta.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.6",
@@ -28,6 +28,7 @@
     "expo-sharing": "~55.0.11",
     "expo-status-bar": "~55.0.4",
     "expo-task-manager": "^55.0.9",
+    "jszip": "^3.10.1",
     "lucide-react-native": "^0.575.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",

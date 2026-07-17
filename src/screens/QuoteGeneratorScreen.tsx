@@ -6,9 +6,10 @@ import {
 import { FileText, Plus, X, Check, Trash2, User, Calendar, Hash, Percent } from 'lucide-react-native';
 
 const C = {
-    bg: '#F9FAFB', surface: '#FFFFFF', border: '#E5E7EB',
-    text: '#111827', sub: '#6B7280', primary: '#FF6B35',
+    bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
+    border: 'rgba(255,255,255,0.07)', primary: '#FF6B35',
     green: '#10B981', amber: '#F59E0B',
+    text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
 interface LineItem {
@@ -312,7 +313,7 @@ const styles = StyleSheet.create({
     statusBtnText: { fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
     editBtn: { borderRadius: 6, borderWidth: 1, borderColor: C.border, paddingHorizontal: 12, paddingVertical: 5 },
     editBtnText: { fontSize: 13, fontWeight: '600', color: C.text },
-    delBtn: { borderRadius: 6, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: '#FEF2F2' },
+    delBtn: { borderRadius: 6, paddingHorizontal: 12, paddingVertical: 5, backgroundColor: 'rgba(239,68,68,0.15)' },
     delBtnText: { fontSize: 13, fontWeight: '600', color: '#EF4444' },
     overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24 },
     modal: { backgroundColor: C.surface, borderRadius: 20, width: '100%', maxWidth: 560, maxHeight: '95%', overflow: 'hidden' },
@@ -322,15 +323,15 @@ const styles = StyleSheet.create({
     modalActions: { flexDirection: 'row', gap: 12, padding: 20, borderTopWidth: 1, borderTopColor: C.border },
     label: { fontSize: 12, fontWeight: '600', color: C.text, marginBottom: 8, marginTop: 8 },
     mrow: { flexDirection: 'row', gap: 12, marginBottom: 0 },
-    minput: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: '#F8FAFC', color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
+    minput: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: C.surface2, color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
     itemsHeader: { flexDirection: 'row', gap: 6, marginBottom: 4 },
     itemHeaderText: { fontSize: 11, fontWeight: '600', color: C.sub },
     itemRow: { flexDirection: 'row', gap: 6, marginBottom: 6, alignItems: 'center' },
-    itemInput: { height: 40, borderWidth: 1, borderColor: C.border, borderRadius: 6, paddingHorizontal: 8, backgroundColor: '#F8FAFC', color: C.text, fontSize: 13, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
+    itemInput: { height: 40, borderWidth: 1, borderColor: C.border, borderRadius: 6, paddingHorizontal: 8, backgroundColor: C.surface2, color: C.text, fontSize: 13, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
     itemTotal: { fontSize: 13, fontWeight: '700', color: C.text, textAlign: 'right' },
     addItemBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8 },
     addItemText: { color: C.primary, fontSize: 13, fontWeight: '600' },
-    totalsBox: { backgroundColor: '#F8FAFC', borderRadius: 10, padding: 14, marginTop: 8, borderWidth: 1, borderColor: C.border },
+    totalsBox: { backgroundColor: C.surface2, borderRadius: 10, padding: 14, marginTop: 8, borderWidth: 1, borderColor: C.border },
     totalRows: { marginTop: 12 },
     totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
     totalLabel: { fontSize: 14, color: C.sub, fontWeight: '600' },

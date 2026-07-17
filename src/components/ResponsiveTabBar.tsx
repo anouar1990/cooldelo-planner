@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image, ScrollView, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid } from 'lucide-react-native';
+import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 
 const COLORS = {
@@ -20,6 +20,7 @@ const ICONS: Record<string, any> = {
     Orders: Calendar,
     'Laser Presets': Zap,
     'Quote Generator': FileText,
+    'Design Library': Library,
     'Nesting Estimator': Grid,
 };
 
@@ -92,6 +93,15 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         <Text style={styles.userRole}>Pro Member</Text>
                     </View>
                 </View>
+
+                <TouchableOpacity 
+                    onPress={() => Linking.openURL('https://0machine.com/privacy')} 
+                    style={[styles.sidebarLink, { marginBottom: 10 }]}
+                    activeOpacity={0.7}
+                >
+                    <HelpCircle color={COLORS.textSub} size={20} />
+                    <Text style={styles.sidebarLabel}>Privacy & Support</Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity onPress={signOut} style={styles.sidebarSignOut}>
                     <LogOut color={COLORS.textSub} size={22} />

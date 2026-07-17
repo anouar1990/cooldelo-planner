@@ -6,9 +6,10 @@ import {
 import { Grid, RotateCcw, Info } from 'lucide-react-native';
 
 const C = {
-    bg: '#F9FAFB', surface: '#FFFFFF', border: '#E5E7EB',
-    text: '#111827', sub: '#6B7280', primary: '#FF6B35',
+    bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
+    border: 'rgba(255,255,255,0.07)', primary: '#FF6B35',
     green: '#10B981', amber: '#F59E0B', red: '#EF4444', blue: '#3B82F6',
+    text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
 function n(v: string) { return parseFloat(v) || 0; }
@@ -268,11 +269,11 @@ const styles = StyleSheet.create({
     row: { flexDirection: 'row', gap: 12 },
     inputGroup: { flex: 1, marginBottom: 12 },
     label: { fontSize: 12, fontWeight: '600', color: C.text, marginBottom: 6 },
-    input: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: '#F8FAFC', color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
+    input: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: C.surface2, color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
     divider: { height: 1, backgroundColor: C.border, marginVertical: 16 },
     optionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
     optionLabel: { flex: 1 },
-    toggle: { width: 44, height: 24, borderRadius: 12, backgroundColor: C.border, justifyContent: 'center', paddingHorizontal: 2 },
+    toggle: { width: 44, height: 24, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', paddingHorizontal: 2 },
     toggleOn: { backgroundColor: C.primary },
     toggleThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff', alignSelf: 'flex-start' },
     toggleThumbOn: { alignSelf: 'flex-end' },
