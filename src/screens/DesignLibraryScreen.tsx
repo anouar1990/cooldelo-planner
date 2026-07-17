@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { 
     View, Text, StyleSheet, TextInput, FlatList, 
-    TouchableOpacity, Image, ActivityIndicator, useWindowDimensions 
+    TouchableOpacity, Image, ActivityIndicator, useWindowDimensions,
+    Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Filter, Download, FileType2, X } from 'lucide-react-native';
 import { useDesignLibrary, Design } from '../hooks/useDesignLibrary';
 import { AssetDetailsModal } from '../components/AssetDetailsModal';
+import { useAuth } from '../hooks/useAuth';
+import AdminUploadScreen from './AdminUploadScreen';
 
 const COLORS = {
     bg: '#0A0C12',
@@ -33,6 +36,9 @@ export default function DesignLibraryScreen() {
     } = useDesignLibrary();
 
     const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
+    const { session } = useAuth();
+    const isAdmin = session?.user?.user_metadata?.is_admin === true || session?.user?.user_metadata?.is_admin === 'true';
+    const [showAdminModal, setShowAdminModal] = useState(false);
 
     // Initial load
     useEffect(() => {
@@ -125,8 +131,20 @@ export default function DesignLibraryScreen() {
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Design Library</Text>
-                <Text style={styles.headerSubtitle}>Discover 20,000+ premium vector designs</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                    <View>
+                        <Text style={styles.headerTitle}>Design Library</Text>
+                        <Text style={styles.headerSubtitle}>Discover 20,000+ premium vector designs</Text>
+                    </View>
+                    {isAdmin && (
+                        <TouchableOpacity 
+                            style={styles.adminButton}
+                            onPress={() => setShowAdminModal(true)}
+                        >
+                            <Text style={styles.adminButtonText}>⚙️ Manage Library</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             <View style={styles.searchContainer}>
@@ -181,6 +199,14 @@ export default function DesignLibraryScreen() {
                     onClose={() => setSelectedDesign(null)} 
                 />
             )}
+
+            <Modal 
+                visible={showAdminModal} 
+                animationType="slide" 
+                onRequestClose={() => setShowAdminModal(false)}
+            >
+                <AdminUploadScreen onClose={() => { setShowAdminModal(false); fetchDesigns(true); }} />
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -343,5 +369,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.textSub,
         textAlign: 'center',
+    },
+    adminButton: {
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+    },
+    adminButtonText: {
+        color: COLORS.primary,
+        fontSize: 13,
+        fontWeight: '700',
     },
 });

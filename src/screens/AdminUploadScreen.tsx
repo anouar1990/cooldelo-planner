@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { UploadCloud, CheckCircle, AlertCircle } from 'lucide-react-native';
+import { UploadCloud, CheckCircle, AlertCircle, Link, FolderPlus, X, HelpCircle } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import JSZip from 'jszip';
 import { supabase } from '../lib/supabase';
@@ -17,10 +17,24 @@ const COLORS = {
     error: '#EF4444',
 };
 
-// Ensure this component is only accessible to Admins in production.
-export default function AdminUploadScreen() {
+interface AdminUploadScreenProps {
+    onClose?: () => void;
+}
+
+export default function AdminUploadScreen({ onClose }: AdminUploadScreenProps) {
+    const [activeTab, setActiveTab] = useState<'link' | 'zip'>('link');
+    
+    // Common fields
     const [category, setCategory] = useState('');
     const [tags, setTags] = useState('');
+    
+    // Link fields
+    const [title, setTitle] = useState('');
+    const [fileUrl, setFileUrl] = useState('');
+    const [fileType, setFileType] = useState('zip');
+    const [thumbnailUrl, setThumbnailUrl] = useState('');
+    
+    // Zip Upload state
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [statusText, setStatusText] = useState('');
@@ -28,6 +42,44 @@ export default function AdminUploadScreen() {
 
     const addLog = (type: 'success'|'error', msg: string) => {
         setLogs(prev => [...prev, { type, msg }]);
+    };
+
+    const handleAddLink = async () => {
+        if (!title.trim() || !fileUrl.trim()) {
+            Alert.alert('Error', 'Please fill in the Title and File URL.');
+            return;
+        }
+
+        try {
+            setUploading(true);
+            
+            const tagsArray = tags.split(',').map(t => t.trim()).filter(Boolean);
+            
+            const { error } = await supabase.from('designs').insert({
+                title: title.trim(),
+                category: category.trim() || 'Uncategorized',
+                tags: tagsArray,
+                file_url: fileUrl.trim(),
+                file_type: fileType.toLowerCase(),
+                thumbnail_url: thumbnailUrl.trim() || null,
+            });
+
+            if (error) throw error;
+
+            Alert.alert('Success', 'Design added successfully!');
+            // Reset link fields
+            setTitle('');
+            setFileUrl('');
+            setThumbnailUrl('');
+            if (onClose) {
+                onClose();
+            }
+        } catch (err: any) {
+            console.error(err);
+            Alert.alert('Error', err.message || 'Failed to add design');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleUploadZip = async () => {
@@ -49,11 +101,9 @@ export default function AdminUploadScreen() {
             let zipData: ArrayBuffer;
 
             if (Platform.OS === 'web') {
-                // On web, file.file is the actual File object
                 const webFile = file.file as File;
                 zipData = await webFile.arrayBuffer();
             } else {
-                // On native, we might need expo-file-system to read it as base64, then convert
                 throw new Error("Bulk ZIP upload is currently only supported on the Web Admin panel.");
             }
 
@@ -68,7 +118,6 @@ export default function AdminUploadScreen() {
 
             let processed = 0;
             const total = filesToProcess.length;
-
             const tagsArray = tags.split(',').map(t => t.trim()).filter(Boolean);
 
             for (const filename of filesToProcess) {
@@ -78,7 +127,6 @@ export default function AdminUploadScreen() {
                     const fileObj = zip.files[filename];
                     const blob = await fileObj.async('blob');
                     
-                    // Determine file type
                     const ext = filename.split('.').pop()?.toLowerCase() || '';
                     if (!['svg', 'dxf', 'pdf', 'png', 'ai'].includes(ext)) {
                         addLog('error', `Skipped ${filename} (unsupported format)`);
@@ -86,7 +134,6 @@ export default function AdminUploadScreen() {
                         continue;
                     }
 
-                    // Upload to Storage
                     const storagePath = `library/${Date.now()}_${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
                     const { error: uploadError } = await supabase.storage
                         .from('designs')
@@ -97,26 +144,20 @@ export default function AdminUploadScreen() {
 
                     if (uploadError) throw uploadError;
 
-                    // Generate a thumbnail URL (for images/svgs we can use the file url directly if public, 
-                    // but for a SaaS, storage is usually private. We'll use a signed URL strategy later, 
-                    // but for thumbnail we might need a public bucket or pre-generated thumbnails).
-                    // For now, we'll store the storage path.
-
-                    // Insert to DB
-                    const title = filename.split('/').pop()?.replace(`.${ext}`, '').replace(/[-_]/g, ' ') || 'Untitled';
+                    const designTitle = filename.split('/').pop()?.replace(`.${ext}`, '').replace(/[-_]/g, ' ') || 'Untitled';
 
                     const { error: dbError } = await supabase.from('designs').insert({
-                        title,
+                        title: designTitle,
                         category: category || 'Uncategorized',
                         tags: tagsArray,
                         file_url: storagePath,
                         file_type: ext,
-                        thumbnail_url: ['png', 'svg'].includes(ext) ? storagePath : null, // Assuming we can use the file as preview
+                        thumbnail_url: ['png', 'svg'].includes(ext) ? storagePath : null,
                     });
 
                     if (dbError) throw dbError;
 
-                    addLog('success', `Uploaded: ${title}`);
+                    addLog('success', `Uploaded: ${designTitle}`);
                 } catch (err: any) {
                     addLog('error', `Failed ${filename}: ${err.message}`);
                 }
@@ -126,7 +167,6 @@ export default function AdminUploadScreen() {
             }
 
             setStatusText('Upload Complete!');
-
         } catch (err: any) {
             console.error(err);
             setStatusText(`Error: ${err.message}`);
@@ -135,86 +175,204 @@ export default function AdminUploadScreen() {
         }
     };
 
-    if (Platform.OS !== 'web') {
-        return (
-            <View style={styles.container}>
-                <Text style={styles.errorText}>Admin Bulk Upload is only supported on the Web platform.</Text>
-            </View>
-        );
-    }
-
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
+            {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Admin Upload</Text>
-                <Text style={styles.headerSubtitle}>Bulk import designs from a ZIP file.</Text>
+                <View>
+                    <Text style={styles.headerTitle}>Admin Panel</Text>
+                    <Text style={styles.headerSubtitle}>Manage and add files to Design Library</Text>
+                </View>
+                {onClose && (
+                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                        <X color={COLORS.text} size={24} />
+                    </TouchableOpacity>
+                )}
             </View>
 
-            <View style={styles.form}>
-                <Text style={styles.label}>Default Category (Optional)</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="e.g. Ramadan"
-                    placeholderTextColor={COLORS.textSub}
-                    value={category}
-                    onChangeText={setCategory}
-                    editable={!uploading}
-                />
-
-                <Text style={styles.label}>Default Tags (Comma separated)</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="e.g. laser, vector, decor"
-                    placeholderTextColor={COLORS.textSub}
-                    value={tags}
-                    onChangeText={setTags}
-                    editable={!uploading}
-                />
-
+            {/* Tabs */}
+            <View style={styles.tabContainer}>
                 <TouchableOpacity 
-                    style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]}
-                    onPress={handleUploadZip}
-                    disabled={uploading}
+                    style={[styles.tab, activeTab === 'link' && styles.activeTab]}
+                    onPress={() => setActiveTab('link')}
                 >
-                    {uploading ? (
-                        <ActivityIndicator color="#FFF" />
-                    ) : (
-                        <>
-                            <UploadCloud color="#FFF" size={24} />
-                            <Text style={styles.uploadButtonText}>Select ZIP File</Text>
-                        </>
-                    )}
+                    <Link color={activeTab === 'link' ? COLORS.primary : COLORS.textSub} size={18} />
+                    <Text style={[styles.tabText, activeTab === 'link' && styles.activeTabText]}>Add Link (Drive)</Text>
                 </TouchableOpacity>
-
-                {uploading && (
-                    <View style={styles.progressContainer}>
-                        <Text style={styles.progressText}>{statusText}</Text>
-                        <View style={styles.progressBar}>
-                            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                        </View>
-                    </View>
-                )}
-
-                {logs.length > 0 && (
-                    <View style={styles.logsContainer}>
-                        <Text style={styles.logsTitle}>Upload Logs:</Text>
-                        <ScrollView style={styles.logsScroll}>
-                            {logs.map((log, i) => (
-                                <View key={i} style={styles.logRow}>
-                                    {log.type === 'success' ? (
-                                        <CheckCircle size={14} color={COLORS.success} />
-                                    ) : (
-                                        <AlertCircle size={14} color={COLORS.error} />
-                                    )}
-                                    <Text style={[styles.logText, log.type === 'error' && { color: COLORS.error }]}>
-                                        {log.msg}
-                                    </Text>
-                                </View>
-                            ))}
-                        </ScrollView>
-                    </View>
-                )}
+                <TouchableOpacity 
+                    style={[styles.tab, activeTab === 'zip' && styles.activeTab]}
+                    onPress={() => setActiveTab('zip')}
+                >
+                    <UploadCloud color={activeTab === 'zip' ? COLORS.primary : COLORS.textSub} size={18} />
+                    <Text style={[styles.tabText, activeTab === 'zip' && styles.activeTabText]}>Bulk ZIP Upload</Text>
+                </TouchableOpacity>
             </View>
+
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                {activeTab === 'link' ? (
+                    <View style={styles.form}>
+                        <Text style={styles.label}>Design Title *</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g. Light up Wall Art 11"
+                            placeholderTextColor={COLORS.textSub}
+                            value={title}
+                            onChangeText={setTitle}
+                            editable={!uploading}
+                        />
+
+                        <Text style={styles.label}>Category</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g. Light Up Wall Art"
+                            placeholderTextColor={COLORS.textSub}
+                            value={category}
+                            onChangeText={setCategory}
+                            editable={!uploading}
+                        />
+
+                        <Text style={styles.label}>Tags (Comma separated)</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g. wall art, laser cut, 3d"
+                            placeholderTextColor={COLORS.textSub}
+                            value={tags}
+                            onChangeText={setTags}
+                            editable={!uploading}
+                        />
+
+                        <View style={styles.row}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>File Type *</Text>
+                                <View style={styles.pickerContainer}>
+                                    {['zip', 'dxf', 'svg', 'pdf', 'png'].map((type) => (
+                                        <TouchableOpacity
+                                            key={type}
+                                            style={[styles.chip, fileType === type && styles.chipActive]}
+                                            onPress={() => setFileType(type)}
+                                        >
+                                            <Text style={[styles.chipText, fileType === type && styles.chipTextActive]}>
+                                                {type.toUpperCase()}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+                        </View>
+
+                        <Text style={styles.label}>File URL (Google Drive / External Link) *</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="https://drive.google.com/..."
+                            placeholderTextColor={COLORS.textSub}
+                            value={fileUrl}
+                            onChangeText={setFileUrl}
+                            editable={!uploading}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+
+                        <Text style={styles.label}>Preview Image URL (Optional)</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="https://images.unsplash.com/... or leave empty"
+                            placeholderTextColor={COLORS.textSub}
+                            value={thumbnailUrl}
+                            onChangeText={setThumbnailUrl}
+                            editable={!uploading}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+
+                        <TouchableOpacity 
+                            style={[styles.primaryButton, uploading && styles.buttonDisabled]}
+                            onPress={handleAddLink}
+                            disabled={uploading}
+                        >
+                            {uploading ? (
+                                <ActivityIndicator color="#FFF" />
+                            ) : (
+                                <>
+                                    <FolderPlus color="#FFF" size={20} />
+                                    <Text style={styles.primaryButtonText}>Save Design</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={styles.form}>
+                        {Platform.OS !== 'web' ? (
+                            <Text style={styles.errorText}>Bulk ZIP Upload is only supported on the Web platform. Please use the Add Link option on mobile.</Text>
+                        ) : (
+                            <>
+                                <Text style={styles.label}>Default Category (Optional)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="e.g. Light Up Wall Art"
+                                    placeholderTextColor={COLORS.textSub}
+                                    value={category}
+                                    onChangeText={setCategory}
+                                    editable={!uploading}
+                                />
+
+                                <Text style={styles.label}>Default Tags (Comma separated)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="e.g. wall art, laser cut"
+                                    placeholderTextColor={COLORS.textSub}
+                                    value={tags}
+                                    onChangeText={setTags}
+                                    editable={!uploading}
+                                />
+
+                                <TouchableOpacity 
+                                    style={[styles.primaryButton, uploading && styles.buttonDisabled]}
+                                    onPress={handleUploadZip}
+                                    disabled={uploading}
+                                >
+                                    {uploading ? (
+                                        <ActivityIndicator color="#FFF" />
+                                    ) : (
+                                        <>
+                                            <UploadCloud color="#FFF" size={20} />
+                                            <Text style={styles.primaryButtonText}>Select ZIP File</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+
+                                {uploading && (
+                                    <View style={styles.progressContainer}>
+                                        <Text style={styles.progressText}>{statusText}</Text>
+                                        <View style={styles.progressBar}>
+                                            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+                                        </View>
+                                    </View>
+                                )}
+
+                                {logs.length > 0 && (
+                                    <View style={styles.logsContainer}>
+                                        <Text style={styles.logsTitle}>Upload Logs:</Text>
+                                        <ScrollView style={styles.logsScroll}>
+                                            {logs.map((log, i) => (
+                                                <View key={i} style={styles.logRow}>
+                                                    {log.type === 'success' ? (
+                                                        <CheckCircle size={14} color={COLORS.success} />
+                                                    ) : (
+                                                        <AlertCircle size={14} color={COLORS.error} />
+                                                    )}
+                                                    <Text style={[styles.logText, log.type === 'error' && { color: COLORS.error }]}>
+                                                        {log.msg}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                )}
+                            </>
+                        )}
+                    </View>
+                )}
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -224,61 +382,137 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.bg,
     },
+    scrollContent: {
+        paddingBottom: 40,
+    },
     errorText: {
         color: COLORS.error,
         textAlign: 'center',
-        marginTop: 100,
-        fontSize: 16,
+        marginTop: 40,
+        fontSize: 14,
+        lineHeight: 20,
     },
     header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.border,
     },
     headerTitle: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: '800',
         color: COLORS.text,
-        marginBottom: 4,
+        marginBottom: 2,
     },
     headerSubtitle: {
-        fontSize: 14,
+        fontSize: 13,
         color: COLORS.textSub,
+    },
+    closeButton: {
+        padding: 8,
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        marginTop: 16,
+        gap: 12,
+    },
+    tab: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    activeTab: {
+        borderColor: COLORS.primary + '30',
+        backgroundColor: COLORS.primary + '10',
+    },
+    tabText: {
+        color: COLORS.textSub,
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    activeTabText: {
+        color: COLORS.primary,
     },
     form: {
         padding: 20,
         maxWidth: 600,
+        alignSelf: 'center',
+        width: '100%',
     },
     label: {
         color: COLORS.text,
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
         marginBottom: 8,
+        marginTop: 8,
     },
     input: {
         backgroundColor: COLORS.surface,
         borderWidth: 1,
         borderColor: COLORS.border,
         borderRadius: 12,
-        padding: 16,
+        padding: 14,
         color: COLORS.text,
-        fontSize: 16,
-        marginBottom: 20,
+        fontSize: 15,
+        marginBottom: 16,
         outlineStyle: 'none',
     },
-    uploadButton: {
+    row: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 16,
+    },
+    pickerContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 4,
+    },
+    chip: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    chipActive: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
+    chipText: {
+        color: COLORS.textSub,
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    chipTextActive: {
+        color: '#FFF',
+    },
+    primaryButton: {
         backgroundColor: COLORS.primary,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 16,
+        padding: 15,
         borderRadius: 12,
-        gap: 12,
+        gap: 10,
+        marginTop: 16,
     },
-    uploadButtonDisabled: {
+    buttonDisabled: {
         opacity: 0.7,
     },
-    uploadButtonText: {
+    primaryButtonText: {
         color: '#FFF',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '700',
     },
     progressContainer: {
@@ -307,7 +541,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderWidth: 1,
         borderColor: COLORS.border,
-        maxHeight: 300,
+        maxHeight: 250,
     },
     logsTitle: {
         color: COLORS.text,
