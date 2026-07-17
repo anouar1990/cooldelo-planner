@@ -16,6 +16,7 @@ import MaterialsScreen from './src/screens/MaterialsScreen';
 import OrdersScreen from './src/screens/OrdersScreen';
 import LaserPresetsScreen from './src/screens/LaserPresetsScreen';
 import QuoteGeneratorScreen from './src/screens/QuoteGeneratorScreen';
+import InvoiceGeneratorScreen from './src/screens/InvoiceGeneratorScreen';
 import NestingEstimatorScreen from './src/screens/NestingEstimatorScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import DesktopAuthScreen from './src/screens/DesktopAuthScreen';
@@ -146,6 +147,7 @@ export default function App() {
           <Tab.Screen name="Orders" component={OrdersScreen} />
           <Tab.Screen name="Laser Presets" component={LaserPresetsScreen} />
           <Tab.Screen name="Quote Generator" component={QuoteGeneratorScreen} />
+          <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
           <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
           <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
         </Tab.Navigator>
