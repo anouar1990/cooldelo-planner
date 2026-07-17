@@ -77,6 +77,22 @@ export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props
     };
 
     const handleDelete = async () => {
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm('Are you sure you want to permanently delete this design?');
+            if (confirmed) {
+                try {
+                    const { error } = await supabase.from('designs').delete().eq('id', design.id);
+                    if (error) throw error;
+                    window.alert('Design deleted successfully!');
+                    onClose();
+                    if (onRefresh) onRefresh();
+                } catch (err: any) {
+                    window.alert('Error: ' + (err.message || 'Failed to delete'));
+                }
+            }
+            return;
+        }
+
         Alert.alert(
             'Confirm Delete',
             'Are you sure you want to permanently delete this design?',

@@ -70,17 +70,25 @@ export default function AdminUploadScreen({ onClose, design }: AdminUploadScreen
         }
     }, [design]);
 
+    const showAlert = (title: string, message: string) => {
+        if (Platform.OS === 'web') {
+            window.alert(`${title}: ${message}`);
+        } else {
+            Alert.alert(title, message);
+        }
+    };
+
     const addLog = (type: 'success'|'error', msg: string) => {
         setLogs(prev => [...prev, { type, msg }]);
     };
 
     const handleSaveDesign = async () => {
         if (!title.trim()) {
-            Alert.alert('Error', 'Please fill f the Design Title.');
+            showAlert('Error', 'Please fill in the Design Title.');
             return;
         }
         if (!driveUrl.trim() && !megaUrl.trim()) {
-            Alert.alert('Error', 'Please enter at least one download link (Google Drive or Mega).');
+            showAlert('Error', 'Please enter at least one download link (Google Drive or Mega).');
             return;
         }
 
@@ -115,14 +123,14 @@ export default function AdminUploadScreen({ onClose, design }: AdminUploadScreen
                     .eq('id', design.id);
 
                 if (error) throw error;
-                Alert.alert('Success', 'Design updated successfully!');
+                showAlert('Success', 'Design updated successfully!');
             } else {
                 const { error } = await supabase
                     .from('designs')
                     .insert(designPayload);
 
                 if (error) throw error;
-                Alert.alert('Success', 'Design added successfully!');
+                showAlert('Success', 'Design added successfully!');
                 
                 // Clear fields
                 setTitle('');
@@ -134,7 +142,7 @@ export default function AdminUploadScreen({ onClose, design }: AdminUploadScreen
             if (onClose) onClose();
         } catch (err: any) {
             console.error(err);
-            Alert.alert('Error', err.message || 'Failed to save design');
+            showAlert('Error', err.message || 'Failed to save design');
         } finally {
             setUploading(false);
         }
