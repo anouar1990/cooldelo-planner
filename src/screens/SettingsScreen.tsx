@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-    ScrollView, TextInput, ActivityIndicator, Alert, Linking,
+    ScrollView, TextInput, ActivityIndicator, Alert, Linking, Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
@@ -42,6 +42,10 @@ export default function SettingsScreen() {
     const [bizBank, setBizBank] = useState('');
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    // Delete Modal State
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+    const [disclaimerChecked, setDisclaimerChecked] = useState(false);
 
     useEffect(() => {
         fetchBusinessSettings();
@@ -102,39 +106,28 @@ export default function SettingsScreen() {
         }
     };
 
-    const handleDeleteAccount = () => {
-        Alert.alert(
-            'Delete Account',
-            'Are you sure you want to permanently delete your account? This will erase all your projects, materials, client logs, invoices, and settings. This action is irreversible.',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete Permanently',
-                    style: 'destructive',
-                    onPress: async () => {
-                        if (!user) return;
-                        try {
-                            setLoading(true);
-                            // Delete from all database tables
-                            await supabase.from('projects').delete().eq('user_id', user.id);
-                            await supabase.from('materials').delete().eq('user_id', user.id);
-                            await supabase.from('clients').delete().eq('user_id', user.id);
-                            await supabase.from('machine_profiles').delete().eq('user_id', user.id);
-                            await supabase.from('business_settings').delete().eq('user_id', user.id);
-                            await supabase.from('user_settings').delete().eq('user_id', user.id);
-                            
-                            // Log out
-                            await signOut();
-                            Alert.alert('Account Deleted', 'Your profile and data have been removed.');
-                        } catch (err: any) {
-                            Alert.alert('Deletion Failed', err.message);
-                        } finally {
-                            setLoading(false);
-                        }
-                    }
-                }
-            ]
-        );
+    const executeAccountDeletion = async () => {
+        if (!user) return;
+        try {
+            setLoading(true);
+            setIsDeleteModalVisible(false);
+
+            // Delete from all database tables
+            await supabase.from('projects').delete().eq('user_id', user.id);
+            await supabase.from('materials').delete().eq('user_id', user.id);
+            await supabase.from('clients').delete().eq('user_id', user.id);
+            await supabase.from('machine_profiles').delete().eq('user_id', user.id);
+            await supabase.from('business_settings').delete().eq('user_id', user.id);
+            await supabase.from('user_settings').delete().eq('user_id', user.id);
+            
+            // Log out
+            await signOut();
+            Alert.alert('Account Deleted', 'Your profile and data have been removed.');
+        } catch (err: any) {
+            Alert.alert('Deletion Failed', err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleManageSubscription = () => {
@@ -338,13 +331,75 @@ export default function SettingsScreen() {
                             <Text style={styles.dangerText}>
                                 Deleting your account will permanently wipe all your data from our database. There is no way to recover your settings or projects once done.
                             </Text>
-                            <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount}>
+                            <TouchableOpacity 
+                                style={styles.deleteBtn} 
+                                onPress={() => {
+                                    setDisclaimerChecked(false);
+                                    setIsDeleteModalVisible(true);
+                                }}
+                            >
                                 <Trash2 color="#FFF" size={16} style={{ marginRight: 6 }} />
                                 <Text style={styles.deleteBtnText}>Delete My Account</Text>
                             </TouchableOpacity>
                         </View>
                     </ScrollView>
                 )}
+
+                {/* Custom Delete Confirmation Modal */}
+                <Modal
+                    visible={isDeleteModalVisible}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setIsDeleteModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalCard}>
+                            <Text style={styles.modalTitle}>⚠️ Permanent Account Deletion</Text>
+                            
+                            <Text style={styles.modalWarningText}>
+                                This action is permanent and absolute. 
+                                {"\n\n"}
+                                All of your projects, materials logs, client lists, invoices, machine profiles, templates, and settings will be deleted forever.
+                                {"\n\n"}
+                                For security and privacy reasons, we do not keep backups of deleted profiles. Your data <Text style={{ fontWeight: 'bold', color: '#FFF' }}>cannot be recovered</Text> under any circumstances.
+                            </Text>
+
+                            <TouchableOpacity
+                                style={styles.checkboxContainer}
+                                onPress={() => setDisclaimerChecked(!disclaimerChecked)}
+                                activeOpacity={0.8}
+                            >
+                                <View style={[styles.checkbox, disclaimerChecked && styles.checkboxActive]}>
+                                    {disclaimerChecked && <View style={styles.checkboxCheck} />}
+                                </View>
+                                <Text style={styles.checkboxLabel}>
+                                    I understand my data will be deleted forever, and I release 0Machine from any liability.
+                                </Text>
+                            </TouchableOpacity>
+
+                            <View style={styles.modalActions}>
+                                <TouchableOpacity 
+                                    style={styles.modalCancelBtn} 
+                                    onPress={() => setIsDeleteModalVisible(false)}
+                                >
+                                    <Text style={styles.modalCancelText}>Cancel</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    style={[
+                                        styles.modalDeleteBtn, 
+                                        !disclaimerChecked && { opacity: 0.4 }
+                                    ]} 
+                                    onPress={executeAccountDeletion}
+                                    disabled={!disclaimerChecked}
+                                >
+                                    <Text style={styles.modalDeleteText}>Delete Permanently</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+
             </ResponsiveContainer>
         </SafeAreaView>
     );
@@ -425,4 +480,101 @@ const styles = StyleSheet.create({
         backgroundColor: C.danger, borderRadius: 12, paddingVertical: 12,
     },
     deleteBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
+
+    // Modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+    },
+    modalCard: {
+        backgroundColor: C.surface,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: C.border,
+        padding: 24,
+        width: '100%',
+        maxWidth: 440,
+        gap: 16,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: C.text,
+    },
+    modalWarningText: {
+        fontSize: 13,
+        color: C.sub,
+        lineHeight: 19,
+    },
+    checkboxContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        backgroundColor: 'rgba(255,255,255,0.02)',
+        borderWidth: 1,
+        borderColor: C.border,
+        borderRadius: 12,
+        padding: 12,
+        marginVertical: 4,
+    },
+    checkbox: {
+        width: 18,
+        height: 18,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: C.sub,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    checkboxActive: {
+        borderColor: C.primary,
+        backgroundColor: C.primary,
+    },
+    checkboxCheck: {
+        width: 8,
+        height: 8,
+        backgroundColor: '#FFF',
+        borderRadius: 1.5,
+    },
+    checkboxLabel: {
+        flex: 1,
+        fontSize: 11,
+        color: C.text,
+        lineHeight: 15,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 8,
+    },
+    modalCancelBtn: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: C.border,
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalCancelText: {
+        color: C.sub,
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    modalDeleteBtn: {
+        flex: 2,
+        backgroundColor: C.danger,
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalDeleteText: {
+        color: '#FFF',
+        fontWeight: '700',
+        fontSize: 14,
+    },
 });
