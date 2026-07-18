@@ -5,7 +5,11 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
 // Stripe price ID for 0machine Planner Pro ($9/month)
-const STRIPE_PRICE_ID = process.env.EXPO_PUBLIC_STRIPE_PRICE_ID ?? 'price_1TAtn4GNkz6GTxuMwTn9DjU3';
+export const STRIPE_PRICE_ID = process.env.EXPO_PUBLIC_STRIPE_PRICE_ID ?? 'price_1TAtn4GNkz6GTxuMwTn9DjU3';
+export const HOBBY_PRICE_ID = STRIPE_PRICE_ID;
+export const PRO_PRICE_ID = process.env.EXPO_PUBLIC_STRIPE_PRO_PRICE_ID ?? 'price_1ProWorkshopPlanID';
+export const BIZ_PRICE_ID = process.env.EXPO_PUBLIC_STRIPE_BIZ_PRICE_ID ?? 'price_1IndustrialPlanID';
+
 // Hardcoded fallback in case env var isn't loaded by Expo
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'https://kfydsuuelaxaffntdjxh.supabase.co';
 // Direct payment link fallback if edge function is unavailable

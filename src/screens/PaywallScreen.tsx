@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
     ScrollView, ActivityIndicator, Animated,
@@ -6,7 +6,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { X, Zap, Layers, BarChart2, Clock, Shield, CheckCircle } from 'lucide-react-native';
-import { useSubscription } from '../hooks/useSubscription';
+import { useSubscription, HOBBY_PRICE_ID, PRO_PRICE_ID, BIZ_PRICE_ID } from '../hooks/useSubscription';
 
 const C = {
     bg: '#0F1117',
@@ -26,38 +26,39 @@ const FEATURES = [
     {
         icon: Layers,
         color: '#3B82F6',
-        title: 'Unlimited Projects',
-        desc: 'Create and manage as many projects as you need',
+        title: 'Project Tracking',
+        desc: 'Organize your laser cuts, costs, and materials in one place',
     },
     {
         icon: Zap,
         color: '#F59E0B',
-        title: 'Material Catalog',
-        desc: 'Full access to add, edit and organize your materials',
+        title: 'Material Inventory',
+        desc: 'Log plywood, acrylic sheets and get stock shortage alerts',
     },
     {
         icon: BarChart2,
         color: '#10B981',
-        title: 'Advanced Stats',
-        desc: 'Revenue tracking, completion rates, and cost analytics',
+        title: 'Cost & Profit Analytics',
+        desc: 'Calculate exact profit margins and recommended sale prices',
     },
     {
         icon: Clock,
         color: C.primary,
-        title: 'Time Tracking',
-        desc: 'Unlimited time logs across all your projects',
+        title: 'Laser Settings Presets',
+        desc: 'Load speed and power profiles for different materials instantly',
     },
     {
         icon: Shield,
         color: '#8B5CF6',
-        title: 'Priority Support',
-        desc: 'Get help fast when you need it',
+        title: 'Quote & Invoice PDFs',
+        desc: 'Send professional invoices directly to your clients',
     },
 ];
 
 export default function PaywallScreen() {
     const navigation = useNavigation();
     const { startCheckout, checkoutLoading, error, hasActiveTrial, daysLeftInTrial, isPro } = useSubscription();
+    const [selectedPlan, setSelectedPlan] = useState<'hobby' | 'pro' | 'biz'>('pro');
 
     // Determine the state of the user's trial
     const trialExpired = !hasActiveTrial && !isPro;
@@ -77,6 +78,18 @@ export default function PaywallScreen() {
         inputRange: [0, 1],
         outputRange: [0.35, 0.75],
     });
+
+    const getPriceId = () => {
+        if (selectedPlan === 'hobby') return HOBBY_PRICE_ID;
+        if (selectedPlan === 'biz') return BIZ_PRICE_ID;
+        return PRO_PRICE_ID;
+    };
+
+    const getPlanPriceText = () => {
+        if (selectedPlan === 'hobby') return '$9/mo';
+        if (selectedPlan === 'biz') return '$69/mo';
+        return '$19/mo';
+    };
 
     return (
         <SafeAreaView style={styles.safe}>
@@ -107,46 +120,83 @@ export default function PaywallScreen() {
                                 <View style={styles.badgeRow}>
                                     <Zap color={C.gold} size={14} fill={C.gold} />
                                     <Text style={styles.badge}>
-                                        {hasActiveTrial ? `${daysLeftInTrial} DAYS LEFT` : '3 DAYS FREE'}
+                                        {hasActiveTrial ? `${daysLeftInTrial} DAYS LEFT IN TRIAL` : '3 DAYS FREE TRIAL'}
                                     </Text>
                                 </View>
-                                <Text style={styles.heroTitle}>0machine Pro ⚡</Text>
+                                <Text style={styles.heroTitle}>0machine Planner ⚡</Text>
                                 <Text style={styles.heroSub}>
-                                    {hasActiveTrial
-                                        ? 'Subscribe now so you don’t lose access when your trial ends.'
-                                        : 'Full access to every Pro feature.'}
+                                    Choose the plan that matches your workshop size.
                                 </Text>
                             </>
                         )}
                     </View>
 
-                    {/* Pricing card */}
-                    <View style={styles.pricingCard}>
-                        {!trialExpired && (
-                            <View style={styles.trialBadge}>
-                                <Text style={styles.trialBadgeText}>
-                                    {hasActiveTrial ? 'TRIAL ACTIVE' : '🎉 3-DAY FREE TRIAL'}
-                                </Text>
-                            </View>
-                        )}
-                        <View style={styles.priceRow}>
-                            <Text style={styles.currency}>$</Text>
-                            <Text style={styles.price}>9</Text>
-                            <View style={styles.priceRight}>
-                                <Text style={styles.pricePeriod}>/month</Text>
-                                <Text style={styles.priceSub}>
-                                    {trialExpired ? 'billed monthly' : 'after trial ends'}
-                                </Text>
-                            </View>
-                        </View>
-                        <View style={styles.divider} />
-                        <Text style={styles.pricingNote}>
-                            Secure payment via Stripe · Cancel anytime
-                        </Text>
+                    {/* Plans list */}
+                    <View style={styles.plansContainer}>
+                        {[
+                            {
+                                id: 'hobby',
+                                name: 'Hobbyist',
+                                price: '$9',
+                                desc: '10 projects, basic calculator, presets, 10 free invoices ($0.50/each after), locked design library',
+                                popular: false,
+                            },
+                            {
+                                id: 'pro',
+                                name: 'Pro Workshop',
+                                price: '$19',
+                                desc: 'Unlimited projects, unlocked library, CRM, nesting estimator, inventory management',
+                                popular: true,
+                            },
+                            {
+                                id: 'biz',
+                                name: 'Industrial',
+                                price: '$69',
+                                desc: 'Multi-user team (5), custom invoice branding, unlimited machine profiles, priority support',
+                                popular: false,
+                            },
+                        ].map((plan) => {
+                            const isSelected = selectedPlan === plan.id;
+                            return (
+                                <TouchableOpacity
+                                    key={plan.id}
+                                    style={[
+                                        styles.planCard,
+                                        isSelected && styles.planCardSelected,
+                                        plan.popular && styles.planCardPopularBorder,
+                                    ]}
+                                    onPress={() => setSelectedPlan(plan.id as any)}
+                                    activeOpacity={0.8}
+                                >
+                                    {plan.popular && (
+                                        <View style={styles.popularBadge}>
+                                            <Text style={styles.popularBadgeText}>MOST POPULAR</Text>
+                                        </View>
+                                    )}
+                                    <View style={styles.planHeader}>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={[styles.planName, isSelected && { color: C.primary }]}>
+                                                {plan.name}
+                                            </Text>
+                                            <Text style={styles.planDesc}>{plan.desc}</Text>
+                                        </View>
+                                        <View style={styles.planPriceInfo}>
+                                            <Text style={styles.planPrice}>{plan.price}</Text>
+                                            <Text style={styles.planPeriod}>/mo</Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
 
-                    {/* Features */}
-                    <Text style={styles.sectionTitle}>EVERYTHING INCLUDED</Text>
+                    {/* Security note */}
+                    <Text style={styles.pricingNote}>
+                        🔒 Secure checkout via Stripe & PayPal · Cancel anytime
+                    </Text>
+
+                    {/* Features overview */}
+                    <Text style={styles.sectionTitle}>FEATURES OVERVIEW</Text>
                     {FEATURES.map((f, i) => (
                         <View key={i} style={styles.featureRow}>
                             <View style={[styles.featureIconWrap, { backgroundColor: `${f.color}18` }]}>
@@ -160,20 +210,6 @@ export default function PaywallScreen() {
                         </View>
                     ))}
 
-                    {/* Free plan comparison */}
-                    <View style={styles.freeNote}>
-                        <Text style={styles.freeNoteText}>
-                            Free plan includes 3 projects and basic time tracking.
-                        </Text>
-                    </View>
-
-                    {/* Error */}
-                    {error ? (
-                        <View style={styles.errorBox}>
-                            <Text style={styles.errorText}>{error}</Text>
-                        </View>
-                    ) : null}
-
                 </ScrollView>
 
                 {/* Sticky CTA */}
@@ -181,7 +217,7 @@ export default function PaywallScreen() {
                     <Animated.View style={[styles.ctaShadow, { shadowOpacity }]}>
                         <TouchableOpacity
                             style={styles.ctaBtn}
-                            onPress={() => startCheckout()}
+                            onPress={() => startCheckout(getPriceId())}
                             disabled={checkoutLoading}
                             activeOpacity={0.85}
                         >
@@ -191,7 +227,7 @@ export default function PaywallScreen() {
                                 <>
                                     <Zap color="#FFF" size={18} fill="#FFF" style={{ marginRight: 8 }} />
                                     <Text style={styles.ctaText}>
-                                        {trialExpired ? 'Subscribe for $9/mo' : 'Subscribe to Pro'}
+                                        Subscribe - {getPlanPriceText()}
                                     </Text>
                                 </>
                             )}
@@ -214,30 +250,78 @@ const styles = StyleSheet.create({
     scroll: { paddingHorizontal: 20, paddingBottom: 20 },
 
     // Hero
-    heroSection: { alignItems: 'center', paddingTop: 12, paddingBottom: 28 },
+    heroSection: { alignItems: 'center', paddingTop: 12, paddingBottom: 20 },
     badgeRow: {
         flexDirection: 'row', alignItems: 'center', gap: 5,
         backgroundColor: C.goldGlow, borderWidth: 1, borderColor: `${C.gold}50`,
         paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 16,
     },
-    badge: { fontSize: 12, fontWeight: '800', color: C.gold, letterSpacing: 2 },
-    heroTitle: { fontSize: 32, fontWeight: '800', color: C.text, textAlign: 'center', lineHeight: 38 },
-    heroSub: { fontSize: 15, color: C.sub, textAlign: 'center', marginTop: 10, lineHeight: 22 },
+    badge: { fontSize: 10, fontWeight: '800', color: C.gold, letterSpacing: 2 },
+    heroTitle: { fontSize: 30, fontWeight: '800', color: C.text, textAlign: 'center', lineHeight: 36 },
+    heroSub: { fontSize: 14, color: C.sub, textAlign: 'center', marginTop: 8, lineHeight: 20 },
 
-    // Pricing
-    pricingCard: {
-        backgroundColor: C.primaryGlow, borderRadius: 20,
-        borderWidth: 1, borderColor: `${C.primary}40`,
-        padding: 20, marginBottom: 24,
+    // Plans list
+    plansContainer: { gap: 12, marginBottom: 16 },
+    planCard: {
+        backgroundColor: C.surface,
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: C.border,
+        position: 'relative',
     },
-    priceRow: { flexDirection: 'row', alignItems: 'flex-start' },
-    currency: { fontSize: 22, fontWeight: '800', color: C.primary, marginTop: 6 },
-    price: { fontSize: 64, fontWeight: '900', color: C.primary, lineHeight: 70 },
-    priceRight: { justifyContent: 'center', marginLeft: 4 },
-    pricePeriod: { fontSize: 18, fontWeight: '600', color: C.text, marginTop: 20 },
-    priceSub: { fontSize: 12, color: C.sub, marginTop: 2 },
-    divider: { height: 1, backgroundColor: C.border, marginVertical: 14 },
-    pricingNote: { fontSize: 13, color: C.dim, textAlign: 'center' },
+    planCardSelected: {
+        borderColor: C.primary,
+        backgroundColor: 'rgba(255,107,53,0.06)',
+    },
+    planCardPopularBorder: {
+        borderColor: 'rgba(245,158,11,0.4)',
+    },
+    popularBadge: {
+        position: 'absolute',
+        top: -10,
+        right: 16,
+        backgroundColor: C.gold,
+        borderRadius: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+    },
+    popularBadgeText: {
+        color: C.bg,
+        fontSize: 8,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+    planHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    planName: {
+        fontSize: 16,
+        fontWeight: '800',
+        color: C.text,
+    },
+    planDesc: {
+        fontSize: 11,
+        color: C.sub,
+        marginTop: 4,
+        paddingRight: 10,
+        lineHeight: 15,
+    },
+    planPriceInfo: {
+        alignItems: 'flex-end',
+    },
+    planPrice: {
+        fontSize: 22,
+        fontWeight: '900',
+        color: C.text,
+    },
+    planPeriod: {
+        fontSize: 10,
+        color: C.sub,
+    },
+    pricingNote: { fontSize: 13, color: C.dim, textAlign: 'center', marginBottom: 20 },
 
     // Features
     sectionTitle: {
@@ -255,14 +339,6 @@ const styles = StyleSheet.create({
     featureName: { fontSize: 14, fontWeight: '700', color: C.text },
     featureDesc: { fontSize: 12, color: C.sub, marginTop: 2 },
 
-    // Free note
-    freeNote: { marginTop: 16, padding: 14, backgroundColor: C.surface2, borderRadius: 12 },
-    freeNoteText: { fontSize: 13, color: C.dim, textAlign: 'center' },
-
-    // Error
-    errorBox: { marginTop: 12, padding: 12, backgroundColor: 'rgba(239,68,68,0.12)', borderRadius: 10 },
-    errorText: { fontSize: 13, color: '#EF4444', textAlign: 'center' },
-
     // CTA
     ctaWrap: { padding: 20, paddingTop: 12, backgroundColor: C.bg, borderTopWidth: 1, borderTopColor: C.border },
     ctaShadow: {
@@ -275,11 +351,4 @@ const styles = StyleSheet.create({
         paddingVertical: 16, paddingHorizontal: 24,
     },
     ctaText: { fontSize: 17, fontWeight: '800', color: '#FFF' },
-    ctaNote: { fontSize: 12, color: C.dim, textAlign: 'center', marginTop: 10 },
-    trialBadge: {
-        alignSelf: 'center', backgroundColor: C.goldGlow,
-        borderWidth: 1, borderColor: `${C.gold}50`,
-        borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, marginBottom: 14,
-    },
-    trialBadgeText: { fontSize: 12, fontWeight: '800', color: C.gold, letterSpacing: 1 },
 });
