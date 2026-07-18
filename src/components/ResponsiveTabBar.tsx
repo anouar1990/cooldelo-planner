@@ -95,7 +95,11 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                 {/* Bottom section — always visible, never overlaps tabs */}
                 <View style={styles.sidebarBottom}>
                     {/* User profile pill */}
-                    <View style={styles.userPill}>
+                    <TouchableOpacity 
+                        style={styles.userPill}
+                        onPress={() => navigation.navigate('Dashboard', { screen: 'Settings' })}
+                        activeOpacity={0.8}
+                    >
                         {avatarUrl ? (
                             <Image source={{ uri: avatarUrl }} style={styles.sidebarAvatar} />
                         ) : (
@@ -107,7 +111,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                             <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
                             <Text style={styles.userRole}>Pro Member</Text>
                         </View>
-                    </View>
+                    </TouchableOpacity>
 
                     <TouchableOpacity 
                         onPress={() => Linking.openURL('https://0machine.com/privacy')} 

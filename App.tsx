@@ -26,6 +26,7 @@ import TemplatesScreen from './src/screens/TemplatesScreen';
 import DesignLibraryScreen from './src/screens/DesignLibraryScreen';
 import AdminUploadScreen from './src/screens/AdminUploadScreen';
 import ClientsScreen from './src/screens/ClientsScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 import { useAuth } from './src/hooks/useAuth';
 import { useSubscription } from './src/hooks/useSubscription';
 import { ResponsiveTabBar } from './src/components/ResponsiveTabBar';
@@ -47,6 +48,7 @@ function DashboardNavigator() {
     <DashStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
       <DashStack.Screen name="DashboardMain" component={DashboardScreen} />
       <DashStack.Screen name="ProjectDetails" component={ProjectDetailsScreen} />
+      <DashStack.Screen name="Settings" component={SettingsScreen} />
     </DashStack.Navigator>
   );
 }
@@ -63,6 +65,7 @@ function ProjectsNavigator() {
       <ProjectStack.Screen name="Templates" component={TemplatesScreen} />
       <ProjectStack.Screen name="AdminUpload" component={AdminUploadScreen} />
       <ProjectStack.Screen name="Stats" component={StatsScreen} />
+      <ProjectStack.Screen name="Settings" component={SettingsScreen} />
     </ProjectStack.Navigator>
   );
 }

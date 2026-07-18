@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image } from 'react-native';
 import { useProjects, ProjectRow } from '../hooks/useProjects';
 import { useMaterials } from '../hooks/useMaterials';
-import { Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut } from 'lucide-react-native';
+import { Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut, Settings } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 
@@ -105,9 +105,14 @@ export default function DashboardScreen({ navigation }: any) {
                                 <Text style={styles.subtitle}>Welcome, {displayName}</Text>
                             </View>
                         </View>
-                        <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
-                            <LogOut color="#8B95A8" size={20} />
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <TouchableOpacity style={styles.signOutBtn} onPress={() => navigation.navigate('Settings')}>
+                                <Settings color="#8B95A8" size={20} />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
+                                <LogOut color="#8B95A8" size={20} />
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     {/* Stats */}
