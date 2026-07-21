@@ -28,9 +28,9 @@ export function useProjects() {
             const { data, error } = await supabase
                 .from('projects')
                 .select('*')
-                // Filter by the authenticated user — never expose other users' projects
                 .eq('user_id', user.id)
-                .order('updated_at', { ascending: false });
+                .order('updated_at', { ascending: false })
+                .limit(100);
 
             if (error) throw error;
             setProjects(data || []);
@@ -66,11 +66,13 @@ export function useProjects() {
     };
 
     const updateProject = async (id: string, updates: ProjectUpdate) => {
+        if (!user) return { data: null, error: 'Not authenticated' };
         try {
             const { data, error } = await supabase
                 .from('projects')
                 .update(updates)
                 .eq('id', id)
+                .eq('user_id', user.id)
                 .select()
                 .single();
 
@@ -85,11 +87,13 @@ export function useProjects() {
     };
 
     const deleteProject = async (id: string) => {
+        if (!user) return { error: 'Not authenticated' };
         try {
             const { error } = await supabase
                 .from('projects')
                 .delete()
-                .eq('id', id);
+                .eq('id', id)
+                .eq('user_id', user.id);
 
             if (error) throw error;
             setProjects(prev => prev.filter(p => p.id !== id));

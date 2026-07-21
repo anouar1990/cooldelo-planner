@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
         color: COLORS.text,
         fontSize: 15,
         marginBottom: 16,
-        outlineStyle: 'none',
+        outlineStyle: 'none' as any,
     },
     row: {
         flexDirection: 'row',

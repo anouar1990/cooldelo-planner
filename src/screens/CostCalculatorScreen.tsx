@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Calculator, RotateCcw, Save, DollarSign, Zap, Wrench, Clock, UploadCloud, FileText, Check } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -74,99 +75,126 @@ export default function CostCalculatorScreen() {
     const [totalLengthMm, setTotalLengthMm] = useState(0); 
     const [estimatedTimeMin, setEstimatedTimeMin] = useState(0); 
 
+    const parsePathDataLength = (d: string): number => {
+        let len = 0;
+        const commands = d.match(/([a-df-z][^a-df-z]*)/gi) || [];
+        let curX = 0, curY = 0, startX = 0, startY = 0;
+        for (const cmd of commands) {
+            const type = cmd[0];
+            const nums = (cmd.slice(1).match(/[-+]?(?:\d*\.\d+|\d+)/g) || []).map(Number);
+            if (type === 'M' || type === 'm') {
+                if (nums.length >= 2) {
+                    curX = type === 'M' ? nums[0] : curX + nums[0];
+                    curY = type === 'M' ? nums[1] : curY + nums[1];
+                    startX = curX; startY = curY;
+                }
+            } else if (type === 'L' || type === 'l') {
+                for (let i = 0; i < nums.length - 1; i += 2) {
+                    const nx = type === 'L' ? nums[i] : curX + nums[i];
+                    const ny = type === 'L' ? nums[i+1] : curY + nums[i+1];
+                    len += Math.hypot(nx - curX, ny - curY);
+                    curX = nx; curY = ny;
+                }
+            } else if (type === 'H' || type === 'h') {
+                for (const nVal of nums) {
+                    const nx = type === 'H' ? nVal : curX + nVal;
+                    len += Math.abs(nx - curX);
+                    curX = nx;
+                }
+            } else if (type === 'V' || type === 'v') {
+                for (const nVal of nums) {
+                    const ny = type === 'V' ? nVal : curY + nVal;
+                    len += Math.abs(ny - curY);
+                    curY = ny;
+                }
+            } else if (type === 'Z' || type === 'z') {
+                len += Math.hypot(startX - curX, startY - curY);
+                curX = startX; curY = startY;
+            } else if (type.toUpperCase() === 'C' || type.toUpperCase() === 'S' || type.toUpperCase() === 'Q' || type.toUpperCase() === 'T' || type.toUpperCase() === 'A') {
+                if (nums.length >= 2) {
+                    const endX = type === type.toUpperCase() ? nums[nums.length - 2] : curX + nums[nums.length - 2];
+                    const endY = type === type.toUpperCase() ? nums[nums.length - 1] : curY + nums[nums.length - 1];
+                    len += Math.hypot(endX - curX, endY - curY) * 1.15;
+                    curX = endX; curY = endY;
+                }
+            }
+        }
+        return len;
+    };
+
     const recalculateSVG = (text: string, widthMm: number, speedMms: number) => {
-        if (!text || Platform.OS !== 'web') return;
-        
+        if (!text) return;
         try {
-            const parser = new DOMParser();
-            const svgDoc = parser.parseFromString(text, 'image/svg+xml');
-            
-            // 1. Find ViewBox or raw width
-            let viewBoxWidth = 0;
-            const viewBoxAttr = svgDoc.documentElement.getAttribute('viewBox');
-            if (viewBoxAttr) {
-                const parts = viewBoxAttr.split(/[\s,]+/).filter(Boolean);
-                if (parts.length >= 4) {
-                    viewBoxWidth = parseFloat(parts[2]) || 0;
+            let viewBoxWidth = 800;
+            const viewBoxMatch = text.match(/viewBox=["']([^"']+)["']/i);
+            if (viewBoxMatch) {
+                const parts = viewBoxMatch[1].trim().split(/[\s,]+/).map(Number);
+                if (parts.length >= 4 && parts[2] > 0) {
+                    viewBoxWidth = parts[2];
+                }
+            } else {
+                const widthMatch = text.match(/width=["']([^"']+)["']/i);
+                if (widthMatch) {
+                    const w = parseFloat(widthMatch[1]);
+                    if (!isNaN(w) && w > 0) viewBoxWidth = w;
                 }
             }
-            
-            if (viewBoxWidth <= 0) {
-                const widthAttr = svgDoc.documentElement.getAttribute('width');
-                if (widthAttr) {
-                    viewBoxWidth = parseFloat(widthAttr) || 800;
-                } else {
-                    viewBoxWidth = 800;
-                }
-            }
-            
-            // 2. Compute path lengths
+
             let totalLengthPx = 0;
-            const tempPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            
-            // Paths
-            const paths = svgDoc.getElementsByTagName('path');
-            for (let i = 0; i < paths.length; i++) {
-                const d = paths[i].getAttribute('d');
-                if (d) {
-                    tempPath.setAttribute('d', d);
-                    totalLengthPx += tempPath.getTotalLength() || 0;
-                }
+
+            // 1. Paths
+            const pathMatches = text.matchAll(/<path[^>]*\sd=["']([^"']+)["']/gi);
+            for (const match of pathMatches) {
+                totalLengthPx += parsePathDataLength(match[1]);
             }
-            
-            // Circles
-            const circles = svgDoc.getElementsByTagName('circle');
-            for (let i = 0; i < circles.length; i++) {
-                const r = parseFloat(circles[i].getAttribute('r') || '0');
+
+            // 2. Circles
+            const circleMatches = text.matchAll(/<circle[^>]*\sr=["']([^"']+)["']/gi);
+            for (const match of circleMatches) {
+                const r = parseFloat(match[1]) || 0;
                 totalLengthPx += 2 * Math.PI * r;
             }
-            
-            // Rectangles
-            const rects = svgDoc.getElementsByTagName('rect');
-            for (let i = 0; i < rects.length; i++) {
-                const w = parseFloat(rects[i].getAttribute('width') || '0');
-                const h = parseFloat(rects[i].getAttribute('height') || '0');
+
+            // 3. Rectangles
+            const rectMatches = text.matchAll(/<rect[^>]*\swidth=["']([^"']+)["'][^>]*\sheight=["']([^"']+)["']/gi);
+            for (const match of rectMatches) {
+                const w = parseFloat(match[1]) || 0;
+                const h = parseFloat(match[2]) || 0;
                 totalLengthPx += 2 * (w + h);
             }
-            
-            // Lines
-            const lines = svgDoc.getElementsByTagName('line');
-            for (let i = 0; i < lines.length; i++) {
-                const x1 = parseFloat(lines[i].getAttribute('x1') || '0');
-                const y1 = parseFloat(lines[i].getAttribute('y1') || '0');
-                const x2 = parseFloat(lines[i].getAttribute('x2') || '0');
-                const y2 = parseFloat(lines[i].getAttribute('y2') || '0');
-                totalLengthPx += Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+
+            // 4. Lines
+            const lineMatches = text.matchAll(/<line[^>]*\sx1=["']([^"']+)["'][^>]*\sy1=["']([^"']+)["'][^>]*\sx2=["']([^"']+)["'][^>]*\sy2=["']([^"']+)["']/gi);
+            for (const match of lineMatches) {
+                const x1 = parseFloat(match[1]) || 0; const y1 = parseFloat(match[2]) || 0;
+                const x2 = parseFloat(match[3]) || 0; const y2 = parseFloat(match[4]) || 0;
+                totalLengthPx += Math.hypot(x2 - x1, y2 - y1);
             }
-            
-            // Polylines & Polygons
-            const polylines = svgDoc.getElementsByTagName('polyline');
-            const polygons = svgDoc.getElementsByTagName('polygon');
-            const polyElements = [...Array.from(polylines), ...Array.from(polygons)];
-            
-            for (const poly of polyElements) {
-                const pointsStr = poly.getAttribute('points') || '';
-                const coords = pointsStr.trim().split(/[\s,]+/).map(parseFloat).filter(v => !isNaN(v));
+
+            // 5. Polygons / Polylines
+            const polyMatches = text.matchAll(/<(polygon|polyline)[^>]*\spoints=["']([^"']+)["']/gi);
+            for (const match of polyMatches) {
+                const isPolygon = match[1].toLowerCase() === 'polygon';
+                const coords = match[2].trim().split(/[\s,]+/).map(Number).filter(v => !isNaN(v));
                 let polyLen = 0;
                 for (let j = 0; j < coords.length - 3; j += 2) {
-                    polyLen += Math.sqrt((coords[j+2] - coords[j]) ** 2 + (coords[j+3] - coords[j+1]) ** 2);
+                    polyLen += Math.hypot(coords[j+2] - coords[j], coords[j+3] - coords[j+1]);
                 }
-                if (poly.tagName.toLowerCase() === 'polygon' && coords.length >= 4) {
+                if (isPolygon && coords.length >= 4) {
                     const len = coords.length;
-                    polyLen += Math.sqrt((coords[len-2] - coords[0]) ** 2 + (coords[len-1] - coords[1]) ** 2);
+                    polyLen += Math.hypot(coords[len-2] - coords[0], coords[len-1] - coords[1]);
                 }
                 totalLengthPx += polyLen;
             }
-            
-            // 3. Scale and estimate
-            const scale = widthMm / viewBoxWidth;
+
+            const scale = widthMm / Math.max(viewBoxWidth, 1);
             const finalLengthMm = totalLengthPx * scale;
             setTotalLengthMm(finalLengthMm);
-            
+
             const timeSeconds = finalLengthMm / Math.max(speedMms, 0.1);
             const timeMinutes = timeSeconds / 60;
             setEstimatedTimeMin(timeMinutes);
-            
+
         } catch (err) {
             console.error('Error recalculating SVG:', err);
         }
@@ -182,7 +210,7 @@ export default function CostCalculatorScreen() {
         try {
             const result = await DocumentPicker.getDocumentAsync({
                 type: 'image/svg+xml',
-                copyToCacheDirectory: false,
+                copyToCacheDirectory: true,
             });
             
             if (result.canceled || !result.assets || result.assets.length === 0) return;
@@ -196,15 +224,15 @@ export default function CostCalculatorScreen() {
                 const text = await webFile.text();
                 setRawSvgText(text);
             } else {
-                Alert.alert('Info', 'Vector file analysis is optimized for the Web version.');
-                setFileName('');
+                const text = await FileSystem.readAsStringAsync(file.uri);
+                setRawSvgText(text);
             }
         } catch (err: any) {
             console.error(err);
             if (Platform.OS === 'web') {
-                window.alert('Failed to read file: ' + err.message);
+                window.alert('Failed to read SVG file: ' + err.message);
             } else {
-                Alert.alert('Error', 'Failed to read file');
+                Alert.alert('Error', 'Failed to read SVG file');
             }
         } finally {
             setAnalyzing(false);

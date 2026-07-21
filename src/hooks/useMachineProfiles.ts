@@ -62,6 +62,7 @@ export function useMachineProfiles() {
             .from('machine_profiles')
             .update(updates)
             .eq('id', id)
+            .eq('user_id', session.user.id)
             .select()
             .single();
         if (!error && data) setMachines(prev => prev.map(m => m.id === id ? data as MachineProfile : m));
@@ -70,7 +71,7 @@ export function useMachineProfiles() {
 
     const deleteMachine = async (id: string) => {
         if (!session?.user) return { error: new Error('Not authenticated') };
-        const { error } = await supabase.from('machine_profiles').delete().eq('id', id);
+        const { error } = await supabase.from('machine_profiles').delete().eq('id', id).eq('user_id', session.user.id);
         if (!error) setMachines(prev => prev.filter(m => m.id !== id));
         return { error };
     };

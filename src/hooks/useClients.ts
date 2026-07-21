@@ -61,6 +61,7 @@ export function useClients() {
             .from('clients')
             .update(updates)
             .eq('id', id)
+            .eq('user_id', session.user.id)
             .select()
             .single();
         if (!error && data) setClients(prev => prev.map(c => c.id === id ? data : c));
@@ -69,7 +70,7 @@ export function useClients() {
 
     const deleteClient = async (id: string) => {
         if (!session?.user) return { error: new Error('Not authenticated') };
-        const { error } = await supabase.from('clients').delete().eq('id', id);
+        const { error } = await supabase.from('clients').delete().eq('id', id).eq('user_id', session.user.id);
         if (!error) setClients(prev => prev.filter(c => c.id !== id));
         return { error };
     };

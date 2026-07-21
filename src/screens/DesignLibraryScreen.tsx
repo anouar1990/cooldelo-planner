@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
         flex: 1,
         color: COLORS.text,
         fontSize: 16,
-        outlineStyle: 'none', // Web outline fix
+        outlineStyle: 'none' as any, // Web outline fix
     },
     clearSearch: {
         padding: 4,
