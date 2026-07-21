@@ -182,12 +182,6 @@ export default function InvoiceGeneratorScreen() {
             return;
         }
 
-        const proceed = Platform.OS === 'web' 
-            ? window.confirm('Generating this invoice will add a $0.50 charge to your monthly subscription. Do you want to proceed?')
-            : true;
-
-        if (!proceed) return;
-
         try {
             setLoading(true);
 

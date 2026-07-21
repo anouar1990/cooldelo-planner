@@ -80,7 +80,28 @@ export default function AddProjectScreen({ navigation }: any) {
         setIsSaving(false);
 
         if (error) {
-            Alert.alert('Error saving project', error);
+            if (typeof error === 'string' && error.includes('Free tier project limit reached')) {
+                if (Platform.OS === 'web') {
+                    if (window.confirm('Free Limit Reached: You have reached the maximum 3 projects allowed on the Free Plan. Upgrade to 0Machine Pro for unlimited projects?')) {
+                        navigation.navigate('Paywall');
+                    }
+                } else {
+                    Alert.alert(
+                        'Free Limit Reached',
+                        'You have reached the maximum 3 projects allowed on the Free Plan. Upgrade to 0Machine Pro for unlimited projects.',
+                        [
+                            { text: 'Upgrade to Pro', onPress: () => navigation.navigate('Paywall') },
+                            { text: 'Cancel', style: 'cancel' }
+                        ]
+                    );
+                }
+            } else {
+                if (Platform.OS === 'web') {
+                    window.alert('Error saving project: ' + error);
+                } else {
+                    Alert.alert('Error saving project', error);
+                }
+            }
         } else {
             trackEvent('btn_click', { action: 'add_project', title: title.trim(), material: selectedMaterial });
             navigation.goBack();

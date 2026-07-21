@@ -36,7 +36,7 @@ const DEFAULT: Inputs = {
     quantity: '1',
 };
 
-function n(v: string) { return parseFloat(v) || 0; }
+function n(v: string) { return Math.max(0, parseFloat(v) || 0); }
 
 function InputField({ label, value, onChange, placeholder, prefix }: {
     label: string; value: string; onChange: (v: string) => void;

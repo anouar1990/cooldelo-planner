@@ -12,7 +12,7 @@ const C = {
     text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
-function n(v: string) { return parseFloat(v) || 0; }
+function n(v: string) { return Math.max(0, parseFloat(v) || 0); }
 
 const PRESETS = [
     { label: '600×400', sw: '600', sh: '400' },
@@ -45,7 +45,7 @@ export default function NestingEstimatorScreen() {
         const m = n(margin);
         const qty = Math.max(1, parseInt(partQty) || 1);
 
-        if (!pw || !ph || !sw || !sh) return null;
+        if (sw <= 0 || sh <= 0 || pw <= 0 || ph <= 0) return null;
 
         const usableW = sw - 2 * m;
         const usableH = sh - 2 * m;
@@ -72,7 +72,7 @@ export default function NestingEstimatorScreen() {
             rotated = true;
         }
 
-        if (best === 0) return null;
+        if (best <= 0) return null;
 
         const sheetsNeeded = Math.ceil(qty / best);
         const partArea = pw * ph;
