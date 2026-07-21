@@ -49,6 +49,7 @@ function DashboardNavigator() {
       <DashStack.Screen name="DashboardMain" component={DashboardScreen} />
       <DashStack.Screen name="ProjectDetails" component={ProjectDetailsScreen} />
       <DashStack.Screen name="Settings" component={SettingsScreen} />
+      <DashStack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal' }} />
     </DashStack.Navigator>
   );
 }
