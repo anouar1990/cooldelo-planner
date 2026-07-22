@@ -9,6 +9,8 @@ import * as FileSystem from 'expo-file-system';
 import { trackEvent } from '../lib/analytics';
 import { useAuth } from '../hooks/useAuth';
 
+import { OnboardingModal } from '../components/OnboardingModal';
+
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
     border: 'rgba(255,255,255,0.07)', primary: '#FF6B35',
@@ -65,6 +67,16 @@ function InputField({ label, value, onChange, placeholder, prefix }: {
 
 export default function CostCalculatorScreen() {
     const [f, setF] = useState<Inputs>(DEFAULT);
+    const [showOnboarding, setShowOnboarding] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const hasDone = localStorage.getItem('0machine_onboarded');
+            if (!hasDone) {
+                setShowOnboarding(true);
+            }
+        }
+    }, []);
     const upd = (k: keyof Inputs) => (v: string) => setF(prev => ({ ...prev, [k]: v }));
 
     // SVG Analyzer State
@@ -499,6 +511,26 @@ export default function CostCalculatorScreen() {
                     </View>
                 </View>
             </ScrollView>
+
+            <OnboardingModal
+                visible={showOnboarding}
+                onComplete={(data) => {
+                    setShowOnboarding(false);
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem('0machine_onboarded', 'true');
+                    }
+                    // Auto-fill calculator with initial stock material & project
+                    setF(prev => ({
+                        ...prev,
+                        projectName: 'Sample Laser Sign Project',
+                        materialType: data.material === 'birch_3mm' ? 'Birch Plywood 3mm' : 'Cast Acrylic 3mm',
+                        sheetCost: data.material === 'birch_3mm' ? '12.00' : '18.50',
+                        laserTime: '15',
+                        machineWear: '2.50',
+                        laborCost: '10.00',
+                    }));
+                }}
+            />
         </SafeAreaView>
     );
 }
