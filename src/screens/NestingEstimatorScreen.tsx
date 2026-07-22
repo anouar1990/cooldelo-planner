@@ -3,7 +3,9 @@ import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TouchableOpacity, TextInput, Platform,
 } from 'react-native';
-import { Grid, RotateCcw, Info } from 'lucide-react-native';
+import { Grid, RotateCcw, Info, Lock, Zap } from 'lucide-react-native';
+import { useSubscription } from '../hooks/useSubscription';
+import { useNavigation } from '@react-navigation/native';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -22,6 +24,9 @@ const PRESETS = [
 ];
 
 export default function NestingEstimatorScreen() {
+    const navigation = useNavigation<any>();
+    const { isPro } = useSubscription();
+
     // Sheet
     const [sheetW, setSheetW] = useState('600');
     const [sheetH, setSheetH] = useState('400');
@@ -35,6 +40,40 @@ export default function NestingEstimatorScreen() {
 
     // Rotation — try both orientations
     const [allowRotation, setAllowRotation] = useState(true);
+
+    if (!isPro) {
+        return (
+            <SafeAreaView style={styles.safe}>
+                <View style={styles.lockedContainer}>
+                    <View style={styles.lockedIconWrap}>
+                        <Grid color={C.primary} size={36} />
+                        <View style={styles.lockBadge}>
+                            <Lock color="#FFF" size={14} />
+                        </View>
+                    </View>
+                    <Text style={styles.lockedBadgeText}>PRO FEATURE</Text>
+                    <Text style={styles.lockedTitle}>Nesting Tool 🔒 PRO</Text>
+                    <Text style={styles.lockedSub}>
+                        Optimize sheet layouts, calculate exact part yield per sheet, and eliminate raw material waste.
+                    </Text>
+                    
+                    <View style={styles.priceCard}>
+                        <Text style={styles.priceAmount}>$19<Text style={styles.pricePeriod}>/month</Text></Text>
+                        <Text style={styles.priceSub}>Unlock Nesting Tool + Design Library + Invoice Generator</Text>
+                    </View>
+
+                    <TouchableOpacity 
+                        style={styles.upgradeBtn}
+                        onPress={() => navigation.navigate('Paywall')}
+                        activeOpacity={0.8}
+                    >
+                        <Zap color="#FFF" size={18} fill="#FFF" />
+                        <Text style={styles.upgradeBtnText}>Upgrade to Pro ($19/mo)</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     const result = useMemo(() => {
         const sw = n(sheetW);
@@ -303,6 +342,103 @@ const styles = StyleSheet.create({
     resultValue: { fontSize: 14, fontWeight: '600', color: C.text },
     nestGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginVertical: 10 },
     nestCell: { width: 12, height: 12, borderRadius: 2 },
+    lockedContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+        maxWidth: 520,
+        alignSelf: 'center',
+        width: '100%',
+    },
+    lockedIconWrap: {
+        width: 80,
+        height: 80,
+        borderRadius: 24,
+        backgroundColor: 'rgba(255,107,53,0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,107,53,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        position: 'relative',
+    },
+    lockBadge: {
+        position: 'absolute',
+        bottom: -4,
+        right: -4,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: C.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: C.bg,
+    },
+    lockedBadgeText: {
+        color: C.primary,
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 1.5,
+        marginBottom: 8,
+    },
+    lockedTitle: {
+        fontSize: 26,
+        fontWeight: '800',
+        color: C.text,
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    lockedSub: {
+        fontSize: 14,
+        color: C.sub,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    priceCard: {
+        backgroundColor: C.surface,
+        borderWidth: 1,
+        borderColor: C.border,
+        borderRadius: 16,
+        padding: 20,
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    priceAmount: {
+        fontSize: 32,
+        fontWeight: '900',
+        color: C.text,
+    },
+    pricePeriod: {
+        fontSize: 16,
+        color: C.sub,
+        fontWeight: '500',
+    },
+    priceSub: {
+        fontSize: 12,
+        color: C.sub,
+        marginTop: 6,
+        textAlign: 'center',
+    },
+    upgradeBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        backgroundColor: C.primary,
+        borderRadius: 14,
+        paddingVertical: 14,
+        paddingHorizontal: 28,
+        width: '100%',
+    },
+    upgradeBtnText: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '700',
+    },
     emptyResult: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },
     emptyTitle: { fontSize: 16, fontWeight: '600', color: C.sub, marginTop: 12 },
     emptyText: { fontSize: 14, color: C.sub, marginTop: 8, textAlign: 'center' },

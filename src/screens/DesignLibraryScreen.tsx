@@ -5,10 +5,12 @@ import {
     Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Filter, Download, FileType2, X } from 'lucide-react-native';
+import { Search, Filter, Download, FileType2, X, Lock, Zap, Library } from 'lucide-react-native';
 import { useDesignLibrary, Design } from '../hooks/useDesignLibrary';
 import { AssetDetailsModal } from '../components/AssetDetailsModal';
 import { useAuth } from '../hooks/useAuth';
+import { useSubscription } from '../hooks/useSubscription';
+import { useNavigation } from '@react-navigation/native';
 import AdminUploadScreen from './AdminUploadScreen';
 
 const COLORS = {
@@ -24,7 +26,9 @@ const CATEGORIES = ['All', 'Ramadan', 'Eid', 'Wedding', 'Kids', 'School', 'Islam
 const FILE_TYPES = ['All', 'svg', 'dxf', 'pdf', 'png', 'ai'];
 
 export default function DesignLibraryScreen() {
+    const navigation = useNavigation<any>();
     const { width } = useWindowDimensions();
+    const { isPro } = useSubscription();
     const isDesktop = width > 768;
     const numColumns = isDesktop ? 4 : 2;
 
@@ -42,8 +46,42 @@ export default function DesignLibraryScreen() {
 
     // Initial load
     useEffect(() => {
-        fetchDesigns(true);
-    }, []);
+        if (isPro) fetchDesigns(true);
+    }, [isPro]);
+
+    if (!isPro) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.lockedContainer}>
+                    <View style={styles.lockedIconWrap}>
+                        <Library color={COLORS.primary} size={36} />
+                        <View style={styles.lockBadge}>
+                            <Lock color="#FFF" size={14} />
+                        </View>
+                    </View>
+                    <Text style={styles.lockedBadgeText}>PRO FEATURE</Text>
+                    <Text style={styles.lockedTitle}>Design Library 🔒 PRO</Text>
+                    <Text style={styles.lockedSub}>
+                        Access 500+ ready-to-cut vector designs (.dxf, .svg, .zip) curated for laser cutting & CNC workshops.
+                    </Text>
+                    
+                    <View style={styles.priceCard}>
+                        <Text style={styles.priceAmount}>$19<Text style={styles.pricePeriod}>/month</Text></Text>
+                        <Text style={styles.priceSub}>Unlock Design Library + Nesting Tool + Invoice Generator</Text>
+                    </View>
+
+                    <TouchableOpacity 
+                        style={styles.upgradeBtn}
+                        onPress={() => navigation.navigate('Paywall')}
+                        activeOpacity={0.8}
+                    >
+                        <Zap color="#FFF" size={18} fill="#FFF" />
+                        <Text style={styles.upgradeBtnText}>Upgrade to Pro ($19/mo)</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     const handleSearch = (text: string) => {
         setSearchQuery(text);
@@ -382,6 +420,103 @@ const styles = StyleSheet.create({
     adminButtonText: {
         color: COLORS.primary,
         fontSize: 13,
+        fontWeight: '700',
+    },
+    lockedContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+        maxWidth: 520,
+        alignSelf: 'center',
+        width: '100%',
+    },
+    lockedIconWrap: {
+        width: 80,
+        height: 80,
+        borderRadius: 24,
+        backgroundColor: 'rgba(255,107,53,0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,107,53,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        position: 'relative',
+    },
+    lockBadge: {
+        position: 'absolute',
+        bottom: -4,
+        right: -4,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: COLORS.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: COLORS.bg,
+    },
+    lockedBadgeText: {
+        color: COLORS.primary,
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 1.5,
+        marginBottom: 8,
+    },
+    lockedTitle: {
+        fontSize: 26,
+        fontWeight: '800',
+        color: COLORS.text,
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    lockedSub: {
+        fontSize: 14,
+        color: COLORS.textSub,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    priceCard: {
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: 16,
+        padding: 20,
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    priceAmount: {
+        fontSize: 32,
+        fontWeight: '900',
+        color: COLORS.text,
+    },
+    pricePeriod: {
+        fontSize: 16,
+        color: COLORS.textSub,
+        fontWeight: '500',
+    },
+    priceSub: {
+        fontSize: 12,
+        color: COLORS.textSub,
+        marginTop: 6,
+        textAlign: 'center',
+    },
+    upgradeBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        backgroundColor: COLORS.primary,
+        borderRadius: 14,
+        paddingVertical: 14,
+        paddingHorizontal: 28,
+        width: '100%',
+    },
+    upgradeBtnText: {
+        color: '#FFF',
+        fontSize: 16,
         fontWeight: '700',
     },
 });

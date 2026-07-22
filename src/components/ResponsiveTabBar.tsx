@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle, Receipt } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useSubscription } from '../hooks/useSubscription';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 const COLORS = {
@@ -30,9 +31,11 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
     const { width } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const { signOut, displayName, avatarUrl } = useAuth();
+    const { isPro } = useSubscription();
     const initials = displayName.charAt(0).toUpperCase();
 
     const isDesktop = width > 768;
+    const PRO_TABS = ['Design Library', 'Nesting Estimator', 'Invoice Generator'];
 
     const handlePress = (route: any, isFocused: boolean) => {
         const event = navigation.emit({
@@ -75,6 +78,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                     {state.routes.map((route: any, index: number) => {
                         const isFocused = state.index === index;
                         const Icon = ICONS[route.name] || LayoutDashboard;
+                        const isProTab = PRO_TABS.includes(route.name);
 
                         return (
                             <TouchableOpacity
@@ -84,9 +88,14 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                                 activeOpacity={0.7}
                             >
                                 <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={22} />
-                                <Text style={[styles.sidebarLabel, isFocused && styles.sidebarLabelActive]}>
+                                <Text style={[styles.sidebarLabel, isFocused && styles.sidebarLabelActive, { flex: 1 }]}>
                                     {route.name}
                                 </Text>
+                                {isProTab && !isPro && (
+                                    <View style={styles.proBadge}>
+                                        <Text style={styles.proBadgeText}>PRO</Text>
+                                    </View>
+                                )}
                             </TouchableOpacity>
                         );
                     })}
@@ -295,5 +304,20 @@ const styles = StyleSheet.create({
     },
     bottomLabelActive: {
         color: COLORS.primary,
+    },
+    proBadge: {
+        backgroundColor: 'rgba(255,107,53,0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,107,53,0.3)',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 6,
+        marginLeft: 6,
+    },
+    proBadgeText: {
+        color: COLORS.primary,
+        fontSize: 10,
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
 });

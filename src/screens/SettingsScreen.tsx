@@ -143,15 +143,14 @@ export default function SettingsScreen() {
         if (subscription.priceId === 'price_1TuaQPGNkz6GTxuMEEjO6kny') return 'Pro Workshop';
         if (subscription.priceId === 'price_1TuaQVGNkz6GTxuMi59lGKB5') return 'Industrial';
         if (subscription.status === 'active') return 'Pro Member';
-        if (hasActiveTrial) return `Free Trial (${daysLeftInTrial} days left)`;
-        return 'Free Plan';
+        return 'Free Plan (Permanent)';
     };
 
     const getPlanPrice = () => {
         if (subscription.priceId === 'price_1TuaQPGNkz6GTxuMEEjO6kny') return '$19/mo';
         if (subscription.priceId === 'price_1TuaQVGNkz6GTxuMi59lGKB5') return '$69/mo';
-        if (subscription.status === 'active') return '$9/mo';
-        return '$0';
+        if (subscription.status === 'active') return '$19/mo';
+        return '$0 (Free Forever)';
     };
 
     return (

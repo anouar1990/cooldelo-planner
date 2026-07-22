@@ -3,9 +3,11 @@ import {
     View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity,
     Platform, ActivityIndicator, Alert, useWindowDimensions, FlatList
 } from 'react-native';
-import { FileText, Plus, Trash2, Printer, Check, CreditCard, ChevronRight, Settings, Receipt } from 'lucide-react-native';
+import { FileText, Plus, Trash2, Printer, Check, CreditCard, ChevronRight, Settings, Receipt, Lock, Zap } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useSubscription } from '../hooks/useSubscription';
+import { useNavigation } from '@react-navigation/native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -28,13 +30,49 @@ interface InvoiceItem {
 }
 
 export default function InvoiceGeneratorScreen() {
+    const navigation = useNavigation<any>();
     const { user } = useAuth();
+    const { isPro } = useSubscription();
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
     const [activeTab, setActiveTab] = useState<'list' | 'new' | 'settings'>('list');
     const [loading, setLoading] = useState(false);
     const [invoices, setInvoices] = useState<any[]>([]);
+
+    if (!isPro) {
+        return (
+            <SafeAreaView style={styles.safe}>
+                <View style={styles.lockedContainer}>
+                    <View style={styles.lockedIconWrap}>
+                        <Receipt color={COLORS.primary} size={36} />
+                        <View style={styles.lockBadge}>
+                            <Lock color="#FFF" size={14} />
+                        </View>
+                    </View>
+                    <Text style={styles.lockedBadgeText}>PRO FEATURE</Text>
+                    <Text style={styles.lockedTitle}>Invoice Generator 🔒 PRO</Text>
+                    <Text style={styles.lockedSub}>
+                        Generate professional PDF invoices with custom business branding, tax rates, and client payment details.
+                    </Text>
+                    
+                    <View style={styles.priceCard}>
+                        <Text style={styles.priceAmount}>$19<Text style={styles.pricePeriod}>/month</Text></Text>
+                        <Text style={styles.priceSub}>Unlock Invoice Generator + Design Library + Nesting Tool</Text>
+                    </View>
+
+                    <TouchableOpacity 
+                        style={styles.upgradeBtn}
+                        onPress={() => navigation.navigate('Paywall')}
+                        activeOpacity={0.8}
+                    >
+                        <Zap color="#FFF" size={18} fill="#FFF" />
+                        <Text style={styles.upgradeBtnText}>Upgrade to Pro ($19/mo)</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     // Business settings state
     const [businessName, setBusinessName] = useState('');
@@ -830,6 +868,103 @@ const styles = StyleSheet.create({
     statusBadgeText: { fontSize: 10, fontWeight: '800' },
     invoiceCardDetails: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 12 },
     invoiceDateText: { fontSize: 12, color: COLORS.textSub },
+    lockedContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+        maxWidth: 520,
+        alignSelf: 'center',
+        width: '100%',
+    },
+    lockedIconWrap: {
+        width: 80,
+        height: 80,
+        borderRadius: 24,
+        backgroundColor: 'rgba(255,107,53,0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,107,53,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        position: 'relative',
+    },
+    lockBadge: {
+        position: 'absolute',
+        bottom: -4,
+        right: -4,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: COLORS.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: COLORS.bg,
+    },
+    lockedBadgeText: {
+        color: COLORS.primary,
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 1.5,
+        marginBottom: 8,
+    },
+    lockedTitle: {
+        fontSize: 26,
+        fontWeight: '800',
+        color: COLORS.text,
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    lockedSub: {
+        fontSize: 14,
+        color: COLORS.textSub,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 24,
+    },
+    priceCard: {
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: 16,
+        padding: 20,
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    priceAmount: {
+        fontSize: 32,
+        fontWeight: '900',
+        color: COLORS.text,
+    },
+    pricePeriod: {
+        fontSize: 16,
+        color: COLORS.textSub,
+        fontWeight: '500',
+    },
+    priceSub: {
+        fontSize: 12,
+        color: COLORS.textSub,
+        marginTop: 6,
+        textAlign: 'center',
+    },
+    upgradeBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        backgroundColor: COLORS.primary,
+        borderRadius: 14,
+        paddingVertical: 14,
+        paddingHorizontal: 28,
+        width: '100%',
+    },
+    upgradeBtnText: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '700',
+    },
     invoiceTotalText: { fontSize: 16, fontWeight: '900', color: COLORS.primary },
     invoiceCardActions: { flexDirection: 'row', gap: 12 },
     actionIconButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 36, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8 },

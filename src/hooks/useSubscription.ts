@@ -34,16 +34,12 @@ export function useSubscription() {
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Trial logic based on user creation date (3 days free without CC)
-    const trialDays = 3;
-    const createdAt = user?.created_at ? new Date(user.created_at) : new Date();
-    const trialEndDate = new Date(createdAt.getTime() + trialDays * 24 * 60 * 60 * 1000);
-    const now = new Date();
-    const hasActiveTrial = !!user && now < trialEndDate;
-    const daysLeftInTrial = hasActiveTrial ? Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    // Free Forever model: core app is permanently free. Pro features require an active paid subscription ($19/mo).
+    const hasActiveTrial = false;
+    const daysLeftInTrial = 0;
 
-    // Pro access applies if Stripe subscription is active OR if in free trial window
-    const isPro = subscription.status === 'active' || hasActiveTrial;
+    // Pro access applies if Stripe subscription status is 'active' or 'trialing'
+    const isPro = subscription.status === 'active';
 
     const fetchSubscription = useCallback(async () => {
         if (!user) {

@@ -105,48 +105,32 @@ export default function PaywallScreen() {
 
                     {/* Hero */}
                     <View style={styles.heroSection}>
-                        {trialExpired ? (
-                            <>
-                                <View style={[styles.badgeRow, { backgroundColor: 'rgba(239,68,68,0.15)', borderColor: 'rgba(239,68,68,0.5)' }]}>
-                                    <Text style={[styles.badge, { color: '#EF4444' }]}>TRIAL ENDED</Text>
-                                </View>
-                                <Text style={styles.heroTitle}>Upgrade to continue using Pro</Text>
-                                <Text style={styles.heroSub}>
-                                    Your 3-day free trial has expired. Subscribe to keep your premium features.
-                                </Text>
-                            </>
-                        ) : (
-                            <>
-                                <View style={styles.badgeRow}>
-                                    <Zap color={C.gold} size={14} fill={C.gold} />
-                                    <Text style={styles.badge}>
-                                        {hasActiveTrial ? `${daysLeftInTrial} DAYS LEFT IN TRIAL` : '3 DAYS FREE TRIAL'}
-                                    </Text>
-                                </View>
-                                <Text style={styles.heroTitle}>0machine Planner ⚡</Text>
-                                <Text style={styles.heroSub}>
-                                    Choose the plan that matches your workshop size.
-                                </Text>
-                            </>
-                        )}
+                        <View style={styles.badgeRow}>
+                            <Zap color={C.gold} size={14} fill={C.gold} />
+                            <Text style={styles.badge}>PRO WORKSHOP ACCESS</Text>
+                        </View>
+                        <Text style={styles.heroTitle}>Unlock 0machine Pro ⚡</Text>
+                        <Text style={styles.heroSub}>
+                            Upgrade to Pro ($19/mo) to unlock Design Library, Nesting Tool, and Invoice Generator.
+                        </Text>
                     </View>
 
                     {/* Plans list */}
                     <View style={styles.plansContainer}>
                         {[
                             {
-                                id: 'hobby',
-                                name: 'Hobbyist',
-                                price: '$9',
-                                desc: '10 projects, basic calculator, presets, 10 free invoices ($0.50/each after), locked design library',
-                                popular: false,
-                            },
-                            {
                                 id: 'pro',
                                 name: 'Pro Workshop',
                                 price: '$19',
-                                desc: 'Unlimited projects, unlocked library, CRM, nesting estimator, inventory management',
+                                desc: 'Design Library + Nesting Tool + Invoice Generator + Unlimited Projects & Analytics',
                                 popular: true,
+                            },
+                            {
+                                id: 'hobby',
+                                name: 'Hobbyist',
+                                price: '$9',
+                                desc: 'Core Planner tools for small workshops & hobbyists',
+                                popular: false,
                             },
                             {
                                 id: 'biz',
