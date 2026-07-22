@@ -3,9 +3,10 @@ import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TouchableOpacity, TextInput, Platform,
 } from 'react-native';
-import { Grid, RotateCcw, Info, Lock, Zap } from 'lucide-react-native';
+import { Grid, RotateCcw, Info, Lock, Zap, Play } from 'lucide-react-native';
 import { useSubscription } from '../hooks/useSubscription';
 import { useNavigation } from '@react-navigation/native';
+import { ProUpgradeModal } from '../components/ProUpgradeModal';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -40,40 +41,7 @@ export default function NestingEstimatorScreen() {
 
     // Rotation — try both orientations
     const [allowRotation, setAllowRotation] = useState(true);
-
-    if (!isPro) {
-        return (
-            <SafeAreaView style={styles.safe}>
-                <View style={styles.lockedContainer}>
-                    <View style={styles.lockedIconWrap}>
-                        <Grid color={C.primary} size={36} />
-                        <View style={styles.lockBadge}>
-                            <Lock color="#FFF" size={14} />
-                        </View>
-                    </View>
-                    <Text style={styles.lockedBadgeText}>PRO FEATURE</Text>
-                    <Text style={styles.lockedTitle}>Nesting Tool 🔒 PRO</Text>
-                    <Text style={styles.lockedSub}>
-                        Optimize sheet layouts, calculate exact part yield per sheet, and eliminate raw material waste.
-                    </Text>
-                    
-                    <View style={styles.priceCard}>
-                        <Text style={styles.priceAmount}>$19<Text style={styles.pricePeriod}>/month</Text></Text>
-                        <Text style={styles.priceSub}>Unlock Nesting Tool + Design Library + Invoice Generator</Text>
-                    </View>
-
-                    <TouchableOpacity 
-                        style={styles.upgradeBtn}
-                        onPress={() => navigation.navigate('Paywall')}
-                        activeOpacity={0.8}
-                    >
-                        <Zap color="#FFF" size={18} fill="#FFF" />
-                        <Text style={styles.upgradeBtnText}>Upgrade to Pro ($19/mo)</Text>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
-        );
-    }
+    const [showProModal, setShowProModal] = useState(false);
 
     const result = useMemo(() => {
         const sw = n(sheetW);
@@ -199,7 +167,22 @@ export default function NestingEstimatorScreen() {
 
                     {/* Results */}
                     <View style={styles.sidebar}>
-                        {result ? (
+                        {!isPro ? (
+                            <View style={styles.resultCard}>
+                                <Text style={styles.resultCardTitle}>Nesting Layout Optimization</Text>
+                                <Text style={{ color: C.sub, fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
+                                    Sheet and part parameters configured ({sheetW}×{sheetH}mm sheet, {partW || '0'}×{partH || '0'}mm part).
+                                </Text>
+                                <TouchableOpacity 
+                                    style={styles.runProBtn} 
+                                    onPress={() => setShowProModal(true)}
+                                    activeOpacity={0.8}
+                                >
+                                    <Zap color="#FFF" size={18} fill="#FFF" />
+                                    <Text style={styles.runProBtnText}>Run Nesting Calculation 🔒 PRO</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : result ? (
                             <>
                                 {/* Main result */}
                                 <View style={[styles.resultCard, { borderColor: C.primary + '50' }]}>
@@ -260,6 +243,14 @@ export default function NestingEstimatorScreen() {
                     </View>
                 </View>
             </ScrollView>
+
+            <ProUpgradeModal
+                visible={showProModal}
+                onClose={() => setShowProModal(false)}
+                featureName="Nesting Tool"
+                actionTitle="Run Nesting Calculation"
+                description="Nesting calculation & sheet layout optimization is a Pro feature ($19/mo). Upgrade to Pro to calculate exact sheet yield and layout."
+            />
         </SafeAreaView>
     );
 }
@@ -442,4 +433,20 @@ const styles = StyleSheet.create({
     emptyResult: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },
     emptyTitle: { fontSize: 16, fontWeight: '600', color: C.sub, marginTop: 12 },
     emptyText: { fontSize: 14, color: C.sub, marginTop: 8, textAlign: 'center' },
+    runProBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        backgroundColor: C.primary,
+        borderRadius: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        width: '100%',
+    },
+    runProBtnText: {
+        color: '#FFF',
+        fontSize: 14,
+        fontWeight: '700',
+    },
 });

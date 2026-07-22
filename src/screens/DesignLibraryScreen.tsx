@@ -44,44 +44,10 @@ export default function DesignLibraryScreen() {
     const isAdmin = session?.user?.user_metadata?.is_admin === true || session?.user?.user_metadata?.is_admin === 'true';
     const [showAdminModal, setShowAdminModal] = useState(false);
 
-    // Initial load
+    // Initial load for all users
     useEffect(() => {
-        if (isPro) fetchDesigns(true);
-    }, [isPro]);
-
-    if (!isPro) {
-        return (
-            <SafeAreaView style={styles.container}>
-                <View style={styles.lockedContainer}>
-                    <View style={styles.lockedIconWrap}>
-                        <Library color={COLORS.primary} size={36} />
-                        <View style={styles.lockBadge}>
-                            <Lock color="#FFF" size={14} />
-                        </View>
-                    </View>
-                    <Text style={styles.lockedBadgeText}>PRO FEATURE</Text>
-                    <Text style={styles.lockedTitle}>Design Library 🔒 PRO</Text>
-                    <Text style={styles.lockedSub}>
-                        Access 500+ ready-to-cut vector designs (.dxf, .svg, .zip) curated for laser cutting & CNC workshops.
-                    </Text>
-                    
-                    <View style={styles.priceCard}>
-                        <Text style={styles.priceAmount}>$19<Text style={styles.pricePeriod}>/month</Text></Text>
-                        <Text style={styles.priceSub}>Unlock Design Library + Nesting Tool + Invoice Generator</Text>
-                    </View>
-
-                    <TouchableOpacity 
-                        style={styles.upgradeBtn}
-                        onPress={() => navigation.navigate('Paywall')}
-                        activeOpacity={0.8}
-                    >
-                        <Zap color="#FFF" size={18} fill="#FFF" />
-                        <Text style={styles.upgradeBtnText}>Upgrade to Pro ($19/mo)</Text>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
-        );
-    }
+        fetchDesigns(true);
+    }, []);
 
     const handleSearch = (text: string) => {
         setSearchQuery(text);

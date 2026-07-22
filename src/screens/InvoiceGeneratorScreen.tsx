@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useNavigation } from '@react-navigation/native';
+import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -39,40 +40,7 @@ export default function InvoiceGeneratorScreen() {
     const [activeTab, setActiveTab] = useState<'list' | 'new' | 'settings'>('list');
     const [loading, setLoading] = useState(false);
     const [invoices, setInvoices] = useState<any[]>([]);
-
-    if (!isPro) {
-        return (
-            <SafeAreaView style={styles.safe}>
-                <View style={styles.lockedContainer}>
-                    <View style={styles.lockedIconWrap}>
-                        <Receipt color={COLORS.primary} size={36} />
-                        <View style={styles.lockBadge}>
-                            <Lock color="#FFF" size={14} />
-                        </View>
-                    </View>
-                    <Text style={styles.lockedBadgeText}>PRO FEATURE</Text>
-                    <Text style={styles.lockedTitle}>Invoice Generator 🔒 PRO</Text>
-                    <Text style={styles.lockedSub}>
-                        Generate professional PDF invoices with custom business branding, tax rates, and client payment details.
-                    </Text>
-                    
-                    <View style={styles.priceCard}>
-                        <Text style={styles.priceAmount}>$19<Text style={styles.pricePeriod}>/month</Text></Text>
-                        <Text style={styles.priceSub}>Unlock Invoice Generator + Design Library + Nesting Tool</Text>
-                    </View>
-
-                    <TouchableOpacity 
-                        style={styles.upgradeBtn}
-                        onPress={() => navigation.navigate('Paywall')}
-                        activeOpacity={0.8}
-                    >
-                        <Zap color="#FFF" size={18} fill="#FFF" />
-                        <Text style={styles.upgradeBtnText}>Upgrade to Pro ($19/mo)</Text>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
-        );
-    }
+    const [showProModal, setShowProModal] = useState(false);
 
     // Business settings state
     const [businessName, setBusinessName] = useState('');
@@ -206,6 +174,10 @@ export default function InvoiceGeneratorScreen() {
 
     const handleGenerateInvoice = async () => {
         if (!user) return;
+        if (!isPro) {
+            setShowProModal(true);
+            return;
+        }
         if (!businessName) {
             showAlert('Setup Required', 'Please set up your Business Profile f Settings first.');
             setActiveTab('settings');
@@ -813,6 +785,14 @@ export default function InvoiceGeneratorScreen() {
                     )}
                 </ScrollView>
             )}
+
+            <ProUpgradeModal
+                visible={showProModal}
+                onClose={() => setShowProModal(false)}
+                featureName="Invoice Generator"
+                actionTitle="Generate Invoice"
+                description="Your invoice is ready to generate! Upgrade to Pro ($19/mo) to generate and download professional PDF invoices."
+            />
         </SafeAreaView>
     );
 }

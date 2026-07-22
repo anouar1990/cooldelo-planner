@@ -8,6 +8,8 @@ import { X, Download, FileType2, Tag, Calendar, LayoutGrid, Edit3, Trash2 } from
 import { Design, useDesignLibrary } from '../hooks/useDesignLibrary';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { useSubscription } from '../hooks/useSubscription';
+import { ProUpgradeModal } from './ProUpgradeModal';
 import AdminUploadScreen from '../screens/AdminUploadScreen';
 
 interface Props {
@@ -29,8 +31,10 @@ const COLORS = {
 
 export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props) {
     const { incrementDownload } = useDesignLibrary();
+    const { isPro } = useSubscription();
     const [downloading, setDownloading] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showProModal, setShowProModal] = useState(false);
     const { session } = useAuth();
     const isAdmin = session?.user?.user_metadata?.is_admin === true || session?.user?.user_metadata?.is_admin === 'true';
     const { width } = useWindowDimensions();
@@ -60,6 +64,10 @@ export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props
     }
 
     const handleDirectDownload = async (url: string) => {
+        if (!isPro) {
+            setShowProModal(true);
+            return;
+        }
         try {
             setDownloading(true);
             if (Platform.OS === 'web') {
@@ -118,6 +126,10 @@ export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props
     };
 
     const handleDownload = async () => {
+        if (!isPro) {
+            setShowProModal(true);
+            return;
+        }
         const targetUrl = driveLink || megaLink;
         if (!targetUrl) return;
 
@@ -340,6 +352,14 @@ export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props
                     }} 
                 />
             </Modal>
+
+            <ProUpgradeModal
+                visible={showProModal}
+                onClose={() => setShowProModal(false)}
+                featureName="Design Library"
+                actionTitle="Download Vector File"
+                description="Download is a Pro feature ($19/mo). Upgrade to Pro to download ready-to-cut vector files (.dxf, .svg, .zip)."
+            />
         </Modal>
     );
 }
