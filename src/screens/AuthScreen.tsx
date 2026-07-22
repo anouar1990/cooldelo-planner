@@ -57,7 +57,7 @@ export default function AuthScreen() {
                 if (error) {
                     setEmailError(error.message);
                 } else if (!data?.session) {
-                    trackEvent('sign_up', { method: 'email' });
+                    trackEvent('signup_completed', { method: 'email' }, `signup_${email}`);
                     Alert.alert(
                         'Account created! ✅',
                         'Check your email to confirm your account, then sign in.',

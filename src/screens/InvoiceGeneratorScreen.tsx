@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useNavigation } from '@react-navigation/native';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { trackEvent } from '../lib/analytics';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -61,6 +62,7 @@ export default function InvoiceGeneratorScreen() {
     const [items, setItems] = useState<InvoiceItem[]>([{ description: '', quantity: 1, unitPrice: 0 }]);
 
     useEffect(() => {
+        trackEvent('pro_feature_viewed', { feature: 'invoice_generator' });
         if (user) {
             fetchBusinessSettings();
             fetchInvoices();

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TouchableOpacity, TextInput, Platform,
@@ -7,6 +7,7 @@ import { Grid, RotateCcw, Info, Lock, Zap, Play } from 'lucide-react-native';
 import { useSubscription } from '../hooks/useSubscription';
 import { useNavigation } from '@react-navigation/native';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { trackEvent } from '../lib/analytics';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -42,6 +43,10 @@ export default function NestingEstimatorScreen() {
     // Rotation — try both orientations
     const [allowRotation, setAllowRotation] = useState(true);
     const [showProModal, setShowProModal] = useState(false);
+
+    useEffect(() => {
+        trackEvent('pro_feature_viewed', { feature: 'nesting' });
+    }, []);
 
     const result = useMemo(() => {
         const sw = n(sheetW);

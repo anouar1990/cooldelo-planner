@@ -3,24 +3,61 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
 
 // GA4 Measurement ID
-export const GA_TRACKING_ID = 'G-8V921YKC8S';
+export const GA_TRACKING_ID = process.env.EXPO_PUBLIC_GA_TRACKING_ID || 'G-8V921YKC8S';
 
-// Ensure this only works on Web and only in production, unless running locally without localhost
 const IS_WEB = Platform.OS === 'web';
 const IS_PROD = 
     typeof process !== 'undefined' && 
     process.env && 
     process.env.NODE_ENV === 'production';
 
-// Type definitions for window.gtag
 declare global {
     interface Window {
         gtag?: (...args: any[]) => void;
         dataLayer?: any[];
+        fbq?: (...args: any[]) => void;
+        pintrk?: (...args: any[]) => void;
+        ttq?: any;
+        snaptr?: (...args: any[]) => void;
     }
 }
 
 let cachedSessionId: string | null = null;
+const firedEventsCache = new Set<string>();
+
+/**
+ * Capture and store UTM parameters from URL query params in browser storage.
+ */
+export function captureUTMs() {
+    if (!IS_WEB || typeof window === 'undefined') return;
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const utms: Record<string, string> = {};
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((key) => {
+            const val = urlParams.get(key);
+            if (val) utms[key] = val;
+        });
+
+        if (Object.keys(utms).length > 0) {
+            localStorage.setItem('0machine_utm', JSON.stringify(utms));
+        }
+    } catch (e) {
+        // Ignore storage errors
+    }
+}
+
+/**
+ * Retrieve saved UTM parameters.
+ */
+export function getSavedUTMs(): Record<string, string> {
+    if (!IS_WEB || typeof window === 'undefined') return {};
+    try {
+        const raw = localStorage.getItem('0machine_utm');
+        return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+        return {};
+    }
+}
 
 /**
  * Gets or initializes an anonymous unique session ID for tracking.
@@ -37,9 +74,7 @@ async function getSessionId(): Promise<string> {
             }
             cachedSessionId = sid;
             return sid;
-        } catch (e) {
-            // Fallback if localStorage is disabled
-        }
+        } catch (e) {}
     } else {
         try {
             let sid = await AsyncStorage.getItem('0machine_session_id');
@@ -49,9 +84,7 @@ async function getSessionId(): Promise<string> {
             }
             cachedSessionId = sid;
             return sid;
-        } catch (e) {
-            // Fallback if AsyncStorage fails
-        }
+        } catch (e) {}
     }
 
     const fallbackSid = 'sess_fallback_' + Math.random().toString(36).substring(2, 15);
@@ -60,30 +93,45 @@ async function getSessionId(): Promise<string> {
 }
 
 /**
- * Log a page view manually.
+ * Track a page view manually across GA4, Meta, Pinterest, TikTok, Snapchat & Supabase.
  */
 export const trackPageView = async (pageName: string, pagePath: string = '') => {
-    // 1. Web GA4 tracking
-    if (IS_WEB && IS_PROD) {
+    captureUTMs();
+    const path = pagePath || pageName;
+
+    if (IS_WEB) {
+        // GA4
         if (window.gtag) {
-            window.gtag('event', 'page_view', {
-                page_title: pageName,
-                page_path: pagePath,
-                send_to: GA_TRACKING_ID,
-            });
+            window.gtag('event', 'page_view', { page_title: pageName, page_path: path });
+        }
+        // Meta
+        if (window.fbq) {
+            window.fbq('track', 'PageView');
+        }
+        // Pinterest
+        if (window.pintrk) {
+            window.pintrk('track', 'PageVisit');
+        }
+        // TikTok
+        if (window.ttq && typeof window.ttq.page === 'function') {
+            window.ttq.page();
+        }
+        // Snapchat
+        if (window.snaptr) {
+            window.snaptr('track', 'PAGE_VIEW');
         }
     }
 
-    // 2. Custom Supabase Analytics logging
     try {
         const sessionId = await getSessionId();
+        const utms = getSavedUTMs();
         await supabase.from('analytics_events').insert({
             event_name: 'pageview',
-            page_path: pagePath || pageName,
+            page_path: path,
             referrer: Platform.OS === 'web' ? (document.referrer || 'direct') : `app_${Platform.OS}`,
             session_id: sessionId,
             user_agent: Platform.OS === 'web' ? navigator.userAgent : `App ${Platform.OS}`,
-            metadata: { title: pageName }
+            metadata: { title: pageName, ...utms }
         });
     } catch (err) {
         console.warn('Failed to log pageview to Supabase analytics:', err);
@@ -91,20 +139,81 @@ export const trackPageView = async (pageName: string, pagePath: string = '') => 
 };
 
 /**
- * Log a generic or custom event (e.g., sign_up, login, purchase, btn_click).
+ * Unified event tracker mapping internal funnel events to GA4, Meta, Pinterest, TikTok & Snapchat.
  */
-export const trackEvent = async (action: string, params: Record<string, any> = {}) => {
-    // 1. Web GA4 tracking
-    if (IS_WEB && IS_PROD) {
+export const trackEvent = async (action: string, params: Record<string, any> = {}, dedupeKey?: string) => {
+    if (dedupeKey) {
+        if (firedEventsCache.has(dedupeKey)) return;
+        firedEventsCache.add(dedupeKey);
+    }
+
+    const utms = getSavedUTMs();
+    const payload = { ...utms, ...params };
+
+    if (IS_WEB) {
+        // 1. GA4 Mapping
         if (window.gtag) {
-            window.gtag('event', action, {
-                ...params,
-                send_to: GA_TRACKING_ID,
-            });
+            let gaEventName = action;
+            if (action === 'subscription_paid') gaEventName = 'purchase';
+            window.gtag('event', gaEventName, { ...payload, send_to: GA_TRACKING_ID });
+        }
+
+        // 2. Meta Pixel Mapping
+        if (window.fbq) {
+            if (action === 'signup_completed') {
+                window.fbq('track', 'CompleteRegistration', payload);
+            } else if (action === 'pro_feature_viewed') {
+                window.fbq('track', 'ViewContent', { content_name: params.feature || 'pro_feature' });
+            } else if (action === 'checkout_started') {
+                window.fbq('track', 'InitiateCheckout', payload);
+            } else if (action === 'subscription_paid') {
+                window.fbq('track', 'Purchase', { value: params.amount || 19, currency: params.currency || 'USD' });
+            } else {
+                window.fbq('trackCustom', action, payload);
+            }
+        }
+
+        // 3. Pinterest Tag Mapping
+        if (window.pintrk) {
+            if (action === 'signup_completed') {
+                window.pintrk('track', 'Signup', payload);
+            } else if (action === 'checkout_started') {
+                window.pintrk('track', 'Checkout', payload);
+            } else if (action === 'subscription_paid') {
+                window.pintrk('track', 'Purchase', { value: params.amount || 19, currency: params.currency || 'USD' });
+            } else {
+                window.pintrk('track', 'PageVisit', payload);
+            }
+        }
+
+        // 4. TikTok Pixel Mapping
+        if (window.ttq && typeof window.ttq.track === 'function') {
+            if (action === 'signup_completed') {
+                window.ttq.track('CompleteRegistration', payload);
+            } else if (action === 'pro_feature_viewed') {
+                window.ttq.track('ViewContent', { content_name: params.feature || 'pro_feature' });
+            } else if (action === 'checkout_started') {
+                window.ttq.track('InitiateCheckout', payload);
+            } else if (action === 'subscription_paid') {
+                window.ttq.track('CompletePayment', { value: params.amount || 19, currency: params.currency || 'USD' });
+            }
+        }
+
+        // 5. Snapchat Pixel Mapping
+        if (window.snaptr) {
+            if (action === 'signup_completed') {
+                window.snaptr('track', 'SIGN_UP', payload);
+            } else if (action === 'pro_feature_viewed') {
+                window.snaptr('track', 'VIEW_CONTENT', payload);
+            } else if (action === 'checkout_started') {
+                window.snaptr('track', 'START_CHECKOUT', payload);
+            } else if (action === 'subscription_paid') {
+                window.snaptr('track', 'PURCHASE', { price: params.amount || 19, currency: params.currency || 'USD' });
+            }
         }
     }
 
-    // 2. Custom Supabase Analytics logging
+    // 6. Supabase Logging for Admin Conversion Funnel
     try {
         const sessionId = await getSessionId();
         await supabase.from('analytics_events').insert({
@@ -113,7 +222,7 @@ export const trackEvent = async (action: string, params: Record<string, any> = {
             referrer: Platform.OS === 'web' ? (document.referrer || 'direct') : `app_${Platform.OS}`,
             session_id: sessionId,
             user_agent: Platform.OS === 'web' ? navigator.userAgent : `App ${Platform.OS}`,
-            metadata: params
+            metadata: payload,
         });
     } catch (err) {
         console.warn(`Failed to log event ${action} to Supabase analytics:`, err);

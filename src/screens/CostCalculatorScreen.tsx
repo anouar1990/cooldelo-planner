@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TextInput, TouchableOpacity, Platform, ActivityIndicator, Alert
@@ -6,6 +6,8 @@ import {
 import { Calculator, RotateCcw, Save, DollarSign, Zap, Wrench, Clock, UploadCloud, FileText, Check } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
+import { trackEvent } from '../lib/analytics';
+import { useAuth } from '../hooks/useAuth';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -283,6 +285,14 @@ export default function CostCalculatorScreen() {
             effectiveMargin, qty,
         };
     }, [f]);
+
+    const { user } = useAuth();
+
+    useEffect(() => {
+        if (calc && calc.productionCostTotal > 0) {
+            trackEvent('activated', { feature: 'cost_calculator' }, `activated_${user?.id || 'guest'}`);
+        }
+    }, [calc?.productionCostTotal, user?.id]);
 
     const reset = () => setF(DEFAULT);
     const fmt = (v: number) => `$${v.toFixed(2)}`;

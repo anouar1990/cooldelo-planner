@@ -11,11 +11,13 @@ import { AssetDetailsModal } from '../components/AssetDetailsModal';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useNavigation } from '@react-navigation/native';
+import { trackEvent } from '../lib/analytics';
 import AdminUploadScreen from './AdminUploadScreen';
 
 const COLORS = {
     bg: '#0A0C12',
     surface: '#13151F',
+    surfaceHover: '#1A1D27',
     border: 'rgba(255,255,255,0.08)',
     primary: '#FF6B35',
     textSub: '#8B95A8',
@@ -47,6 +49,7 @@ export default function DesignLibraryScreen() {
     // Initial load for all users
     useEffect(() => {
         fetchDesigns(true);
+        trackEvent('pro_feature_viewed', { feature: 'design_library' });
     }, []);
 
     const handleSearch = (text: string) => {

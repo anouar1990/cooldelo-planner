@@ -90,11 +90,16 @@ export function useSubscription() {
                 },
                 (payload) => {
                     const newRow = payload.new as any;
+                    const status = newRow.subscription_status ?? 'free';
                     setSubscription({
-                        status: newRow.subscription_status ?? 'free',
+                        status,
                         stripeCustomerId: newRow.stripe_customer_id ?? null,
                         priceId: newRow.subscription_price_id ?? null,
                     });
+
+                    if (status === 'active') {
+                        trackEvent('subscription_paid', { price: 19, currency: 'USD' }, `paid_${user.id}_${newRow.subscription_price_id || 'active'}`);
+                    }
                 }
             )
             .subscribe();
@@ -107,7 +112,7 @@ export function useSubscription() {
     const startCheckout = async (priceId?: string) => {
         if (!user) return;
 
-        trackEvent('purchase_attempt', { priceId: priceId ?? STRIPE_PRICE_ID });
+        trackEvent('checkout_started', { priceId: priceId ?? STRIPE_PRICE_ID, price: 19, currency: 'USD' });
         setCheckoutLoading(true);
         setError(null);
 
