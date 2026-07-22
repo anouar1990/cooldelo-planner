@@ -56,14 +56,10 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                 {/* Brand Logo */}
                 <View style={styles.brandContainer}>
                     <View style={styles.brandIconWrap}>
-                        <Svg width={20} height={20} viewBox="0 0 28 28">
-                            <Circle cx={6} cy={22} r={3} fill="#FFFFFF" />
-                            <Path d="M9 22L19 6" stroke="#FFFFFF" strokeWidth={3.5} strokeLinecap="round" />
-                            <Path d="M18 6H24V12" stroke="#FFFFFF" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
-                        </Svg>
+                        <Zap size={18} color="#FFFFFF" />
                     </View>
                     <View>
-                        <Text style={styles.brandLogoText}>0machine</Text>
+                        <Text style={styles.brandLogoText}>0Machine</Text>
                         <Text style={styles.brandSub}>PLANNER</Text>
                     </View>
                 </View>
@@ -234,7 +230,7 @@ const styles = StyleSheet.create({
         marginTop: 1,
     },
     brandContainer: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, marginBottom: 32 },
-    brandIconWrap: { width: 36, height: 36, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
+    brandIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
     brandLogoText: { fontSize: 18, fontWeight: '800', color: COLORS.text, letterSpacing: -0.2 },
     brandSub: { fontSize: 10, fontWeight: '700', color: COLORS.textSub, letterSpacing: 1.5 },
     sidebarScrollArea: {
