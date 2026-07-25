@@ -140,16 +140,12 @@ export default function SettingsScreen() {
     };
 
     const getPlanName = () => {
-        if (subscription.priceId === 'price_1TuaQPGNkz6GTxuMEEjO6kny') return 'Pro Workshop';
-        if (subscription.priceId === 'price_1TuaQVGNkz6GTxuMi59lGKB5') return 'Industrial';
-        if (subscription.status === 'active') return 'Pro Member';
-        return 'Free Plan (Permanent)';
+        if (isPro || subscription.status === 'active') return 'Pro Workshop';
+        return 'Free Forever Core Account';
     };
 
     const getPlanPrice = () => {
-        if (subscription.priceId === 'price_1TuaQPGNkz6GTxuMEEjO6kny') return '$19/mo';
-        if (subscription.priceId === 'price_1TuaQVGNkz6GTxuMi59lGKB5') return '$69/mo';
-        if (subscription.status === 'active') return '$19/mo';
+        if (isPro || subscription.status === 'active') return '$19/mo';
         return '$0 (Free Forever)';
     };
 

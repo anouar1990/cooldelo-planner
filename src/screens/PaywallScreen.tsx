@@ -58,7 +58,7 @@ const FEATURES = [
 export default function PaywallScreen() {
     const navigation = useNavigation();
     const { startCheckout, checkoutLoading, error, hasActiveTrial, daysLeftInTrial, isPro } = useSubscription();
-    const [selectedPlan, setSelectedPlan] = useState<'hobby' | 'pro' | 'biz'>('pro');
+    const [selectedPlan, setSelectedPlan] = useState<'free' | 'pro'>('pro');
 
     // Determine the state of the user's trial
     const trialExpired = !hasActiveTrial && !isPro;
@@ -79,17 +79,8 @@ export default function PaywallScreen() {
         outputRange: [0.35, 0.75],
     });
 
-    const getPriceId = () => {
-        if (selectedPlan === 'hobby') return HOBBY_PRICE_ID;
-        if (selectedPlan === 'biz') return BIZ_PRICE_ID;
-        return PRO_PRICE_ID;
-    };
-
-    const getPlanPriceText = () => {
-        if (selectedPlan === 'hobby') return '$9/mo';
-        if (selectedPlan === 'biz') return '$69/mo';
-        return '$19/mo';
-    };
+    const getPriceId = () => PRO_PRICE_ID;
+    const getPlanPriceText = () => '$19/mo';
 
     return (
         <SafeAreaView style={styles.safe}>
@@ -115,32 +106,29 @@ export default function PaywallScreen() {
                         </Text>
                     </View>
 
-                    {/* Plans list */}
+                    {/* Plans comparison */}
                     <View style={styles.plansContainer}>
                         {[
                             {
+                                id: 'free',
+                                name: 'Free Forever Core Account',
+                                price: '$0',
+                                period: 'forever',
+                                desc: 'Core Cost Calculator, Material Inventory, Machine Presets & Order Tracker',
+                                popular: false,
+                                active: !isPro,
+                            },
+                            {
                                 id: 'pro',
-                                name: 'Pro Workshop',
+                                name: 'Pro Workshop Pass',
                                 price: '$19',
-                                desc: 'Design Library + Nesting Tool + Invoice Generator + Unlimited Projects & Analytics',
+                                period: '/month',
+                                desc: 'Unlocks 500+ Design Library DXF/SVG downloads, Sheet Nesting Yield Optimizer & PDF Invoices',
                                 popular: true,
-                            },
-                            {
-                                id: 'hobby',
-                                name: 'Hobbyist',
-                                price: '$9',
-                                desc: 'Core Planner tools for small workshops & hobbyists',
-                                popular: false,
-                            },
-                            {
-                                id: 'biz',
-                                name: 'Industrial',
-                                price: '$69',
-                                desc: 'Multi-user team (5), custom invoice branding, unlimited machine profiles, priority support',
-                                popular: false,
+                                active: isPro,
                             },
                         ].map((plan) => {
-                            const isSelected = selectedPlan === plan.id;
+                            const isSelected = selectedPlan === plan.id || (plan.id === 'pro' && selectedPlan !== 'free');
                             return (
                                 <TouchableOpacity
                                     key={plan.id}
@@ -149,12 +137,14 @@ export default function PaywallScreen() {
                                         isSelected && styles.planCardSelected,
                                         plan.popular && styles.planCardPopularBorder,
                                     ]}
-                                    onPress={() => setSelectedPlan(plan.id as any)}
+                                    onPress={() => {
+                                        if (plan.id === 'pro') setSelectedPlan('pro');
+                                    }}
                                     activeOpacity={0.8}
                                 >
                                     {plan.popular && (
                                         <View style={styles.popularBadge}>
-                                            <Text style={styles.popularBadgeText}>MOST POPULAR</Text>
+                                            <Text style={styles.popularBadgeText}>BEST VALUE FOR GROWING SHOPS</Text>
                                         </View>
                                     )}
                                     <View style={styles.planHeader}>
@@ -166,7 +156,7 @@ export default function PaywallScreen() {
                                         </View>
                                         <View style={styles.planPriceInfo}>
                                             <Text style={styles.planPrice}>{plan.price}</Text>
-                                            <Text style={styles.planPeriod}>/mo</Text>
+                                            <Text style={styles.planPeriod}>{plan.period}</Text>
                                         </View>
                                     </View>
                                 </TouchableOpacity>
