@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView, TextInput, TouchableOpacity,
-    Platform, ActivityIndicator, Alert, useWindowDimensions, FlatList
+    Platform, ActivityIndicator, Alert, useWindowDimensions, FlatList, Linking
 } from 'react-native';
-import { FileText, Plus, Trash2, Printer, Check, CreditCard, ChevronRight, Settings, Receipt, Lock, Zap } from 'lucide-react-native';
+import { FileText, Plus, Trash2, Printer, Check, CreditCard, ChevronRight, Settings, Receipt, Lock, Zap, MessageSquare } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
@@ -423,6 +423,29 @@ export default function InvoiceGeneratorScreen() {
         }
     };
 
+    const handleWhatsAppInvoice = (inv: any) => {
+        const parsedItems = typeof inv.items === 'string' ? JSON.parse(inv.items) : (inv.items || []);
+        
+        let text = `🧾 *INVOICE: ${inv.invoice_number}*\n`;
+        text += `Client: *${inv.client_name}*\n`;
+        if (businessName) text += `From: *${businessName}*\n`;
+        text += `\n*ITEMS:* \n`;
+        parsedItems.forEach((item: any, idx: number) => {
+            text += `${idx + 1}. ${item.description || 'Service'} (x${item.quantity || 1}) - $${((item.quantity || 1) * (item.unitPrice || 0)).toFixed(2)}\n`;
+        });
+        if (inv.tax_rate) text += `\n*Tax:* ${inv.tax_rate}%\n`;
+        text += `*TOTAL AMOUNT:* *$${parseFloat(inv.total).toFixed(2)}*\n`;
+        text += `*STATUS:* ${inv.status ? inv.status.toUpperCase() : 'PENDING'}\n\n`;
+        if (inv.due_date) text += `📅 *Due Date:* ${inv.due_date}\n`;
+        text += `Thank you for your business! ⚡\n_Sent via 0Machine Planner_`;
+
+        const encoded = encodeURIComponent(text);
+        const url = `https://wa.me/?text=${encoded}`;
+        Linking.openURL(url).catch(() => {
+            showAlert('Error', 'Unable to launch WhatsApp.');
+        });
+    };
+
     const renderInvoiceRow = ({ item }: { item: any }) => {
         return (
             <View style={styles.invoiceCard}>
@@ -455,6 +478,14 @@ export default function InvoiceGeneratorScreen() {
                 </View>
 
                 <View style={styles.invoiceCardActions}>
+                    <TouchableOpacity 
+                        style={[styles.actionIconButton, { borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.1)' }]}
+                        onPress={() => handleWhatsAppInvoice(item)}
+                    >
+                        <MessageSquare size={16} color="#10B981" />
+                        <Text style={[styles.actionIconText, { color: '#10B981', fontWeight: '700' }]}>WhatsApp</Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity 
                         style={styles.actionIconButton}
                         onPress={() => handlePrintInvoice(item)}

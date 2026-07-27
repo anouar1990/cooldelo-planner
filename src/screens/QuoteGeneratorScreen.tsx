@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
-    TouchableOpacity, TextInput, Modal, Platform, Alert,
+    TouchableOpacity, TextInput, Modal, Platform, Alert, Linking
 } from 'react-native';
-import { FileText, Plus, X, Check, Trash2, User, Calendar, Hash, Percent } from 'lucide-react-native';
+import { FileText, Plus, X, Check, Trash2, User, Calendar, Hash, Percent, MessageSquare } from 'lucide-react-native';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -116,6 +116,33 @@ export default function QuoteGeneratorScreen() {
 
     const setStatus = (id: string, status: Quote['status']) => setQuotes(prev => prev.map(q => q.id === id ? { ...q, status } : q));
 
+    const sendWhatsAppQuote = (q: Quote) => {
+        const sub = q.items.reduce((s, i) => s + i.qty * i.unit, 0);
+        const total = sub * (1 + q.vatPct / 100);
+        
+        let text = `📄 *QUOTATION: ${q.quoteNumber}*\n`;
+        text += `Hello *${q.clientName}*,\n\n`;
+        text += `Here is your requested quotation for: *${q.projectDescription || 'Laser Cutting & Engraving'}*\n\n`;
+        text += `*ITEMS:* \n`;
+        q.items.forEach((item, idx) => {
+            text += `${idx + 1}. ${item.description || 'Job item'} (x${item.qty}) - $${(item.qty * item.unit).toFixed(2)}\n`;
+        });
+        text += `\n*Subtotal:* $${sub.toFixed(2)}\n`;
+        if (q.vatPct > 0) {
+            text += `*VAT (${q.vatPct}%):* $${(sub * (q.vatPct / 100)).toFixed(2)}\n`;
+        }
+        text += `*TOTAL:* *$${total.toFixed(2)}*\n\n`;
+        if (q.deliveryDate) text += `📅 *Est. Delivery:* ${q.deliveryDate}\n`;
+        if (q.notes) text += `ℹ️ *Notes:* ${q.notes}\n`;
+        text += `\nThank you for choosing us! ⚡\n_Sent via 0Machine Planner_`;
+
+        const encoded = encodeURIComponent(text);
+        const url = `https://wa.me/?text=${encoded}`;
+        Linking.openURL(url).catch(() => {
+            Alert.alert('Error', 'Unable to launch WhatsApp.');
+        });
+    };
+
     const updItem = (id: string, k: keyof LineItem, v: any) => setItems(prev => prev.map(i => i.id === id ? { ...i, [k]: v } : i));
     const delItem = (id: string) => setItems(prev => prev.filter(i => i.id !== id));
 
@@ -168,6 +195,13 @@ export default function QuoteGeneratorScreen() {
                                     </View>
                                 </View>
                                 <View style={styles.quoteActions}>
+                                    <TouchableOpacity 
+                                        style={[styles.statusBtn, { backgroundColor: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)' }]} 
+                                        onPress={() => sendWhatsAppQuote(q)}
+                                    >
+                                        <MessageSquare color="#10B981" size={13} style={{ marginRight: 4 }} />
+                                        <Text style={[styles.statusBtnText, { color: '#10B981', fontWeight: '700' }]}>WhatsApp</Text>
+                                    </TouchableOpacity>
                                     {(['draft', 'sent', 'accepted', 'declined'] as Quote['status'][]).filter(s => s !== q.status).map(s => (
                                         <TouchableOpacity key={s} style={styles.statusBtn} onPress={() => setStatus(q.id, s)}>
                                             <Text style={[styles.statusBtnText, { color: STATUS_COLORS[s].color }]}>→ {s}</Text>
