@@ -9,6 +9,7 @@ import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink, Sun,
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useTheme } from '../context/ThemeContext';
+import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { supabase } from '../lib/supabase';
 import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
 
@@ -32,6 +33,7 @@ export default function SettingsScreen() {
     const { user, displayName, signOut } = useAuth();
     const { subscription, isPro, hasActiveTrial, daysLeftInTrial } = useSubscription();
     const { theme, toggleTheme } = useTheme();
+    const [showProModal, setShowProModal] = useState(false);
 
     // Account ID derived from User ID
     const accountId = user?.id ? `ACC-${user.id.substring(0, 8).toUpperCase()}` : 'N/A';
@@ -237,6 +239,7 @@ export default function SettingsScreen() {
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                                 <TouchableOpacity 
                                     onPress={async () => {
+                                        if (!isPro) { setShowProModal(true); return; }
                                         if (!user?.id) return;
                                         const { data } = await supabase.from('projects').select('*').eq('user_id', user.id);
                                         if (!data || data.length === 0) {
@@ -254,11 +257,12 @@ export default function SettingsScreen() {
                                     }}
                                 >
                                     <Download color="#10B981" size={14} />
-                                    <Text style={{ color: '#10B981', fontWeight: '700', fontSize: 12 }}>Export Projects CSV</Text>
+                                    <Text style={{ color: '#10B981', fontWeight: '700', fontSize: 12 }}>Export Projects CSV {!isPro ? '🔒' : ''}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity 
                                     onPress={async () => {
+                                        if (!isPro) { setShowProModal(true); return; }
                                         if (!user?.id) return;
                                         const { data } = await supabase.from('materials').select('*').eq('user_id', user.id);
                                         if (!data || data.length === 0) {
@@ -276,11 +280,12 @@ export default function SettingsScreen() {
                                     }}
                                 >
                                     <Download color="#3B82F6" size={14} />
-                                    <Text style={{ color: '#3B82F6', fontWeight: '700', fontSize: 12 }}>Export Materials CSV</Text>
+                                    <Text style={{ color: '#3B82F6', fontWeight: '700', fontSize: 12 }}>Export Materials CSV {!isPro ? '🔒' : ''}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity 
                                     onPress={async () => {
+                                        if (!isPro) { setShowProModal(true); return; }
                                         if (!user?.id) return;
                                         const { data } = await supabase.from('clients').select('*').eq('user_id', user.id);
                                         if (!data || data.length === 0) {
@@ -298,7 +303,7 @@ export default function SettingsScreen() {
                                     }}
                                 >
                                     <Download color="#8B5CF6" size={14} />
-                                    <Text style={{ color: '#8B5CF6', fontWeight: '700', fontSize: 12 }}>Export Clients CSV</Text>
+                                    <Text style={{ color: '#8B5CF6', fontWeight: '700', fontSize: 12 }}>Export Clients CSV {!isPro ? '🔒' : ''}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -512,6 +517,14 @@ export default function SettingsScreen() {
                         </View>
                     </View>
                 </Modal>
+
+                <ProUpgradeModal
+                    visible={showProModal}
+                    onClose={() => setShowProModal(false)}
+                    featureName="CSV & Excel Data Export"
+                    actionTitle="Export Projects, Materials & Clients"
+                    description="Upgrade to Pro ($19/mo) to download your full workshop data in Excel/CSV format for accounting, tax reporting, and offline backups!"
+                />
 
             </ResponsiveContainer>
         </SafeAreaView>

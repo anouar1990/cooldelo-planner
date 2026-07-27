@@ -4,6 +4,8 @@ import {
     TouchableOpacity, TextInput, Modal, Platform, Alert, Linking
 } from 'react-native';
 import { FileText, Plus, X, Check, Trash2, User, Calendar, Hash, Percent, MessageSquare } from 'lucide-react-native';
+import { useSubscription } from '../hooks/useSubscription';
+import { ProUpgradeModal } from '../components/ProUpgradeModal';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -51,8 +53,10 @@ function nextQuoteNum(quotes: Quote[]) {
 const BLANK_ITEM = (): LineItem => ({ id: Date.now().toString(), description: '', qty: 1, unit: 0 });
 
 export default function QuoteGeneratorScreen() {
+    const { isPro } = useSubscription();
     const [quotes, setQuotes] = useState<Quote[]>([]);
     const [showModal, setShowModal] = useState(false);
+    const [showProModal, setShowProModal] = useState(false);
     const [editing, setEditing] = useState<Quote | null>(null);
 
     // Form state
@@ -117,6 +121,11 @@ export default function QuoteGeneratorScreen() {
     const setStatus = (id: string, status: Quote['status']) => setQuotes(prev => prev.map(q => q.id === id ? { ...q, status } : q));
 
     const sendWhatsAppQuote = (q: Quote) => {
+        if (!isPro) {
+            setShowProModal(true);
+            return;
+        }
+
         const sub = q.items.reduce((s, i) => s + i.qty * i.unit, 0);
         const total = sub * (1 + q.vatPct / 100);
         
@@ -305,6 +314,14 @@ export default function QuoteGeneratorScreen() {
                     </View>
                 </View>
             </Modal>
+
+            <ProUpgradeModal
+                visible={showProModal}
+                onClose={() => setShowProModal(false)}
+                featureName="1-Click WhatsApp Direct Dispatch"
+                actionTitle="Send Quotes & Invoices via WhatsApp"
+                description="Upgrade to Pro ($19/mo) to send custom Quotes and Invoices directly to your clients via WhatsApp with 1 tap!"
+            />
         </SafeAreaView>
     );
 }

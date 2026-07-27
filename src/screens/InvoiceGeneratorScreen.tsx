@@ -424,6 +424,11 @@ export default function InvoiceGeneratorScreen() {
     };
 
     const handleWhatsAppInvoice = (inv: any) => {
+        if (!isPro) {
+            setShowProModal(true);
+            return;
+        }
+
         const parsedItems = typeof inv.items === 'string' ? JSON.parse(inv.items) : (inv.items || []);
         
         let text = `🧾 *INVOICE: ${inv.invoice_number}*\n`;

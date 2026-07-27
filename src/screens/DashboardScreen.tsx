@@ -11,8 +11,10 @@ import {
     Calculator, FileText, Layers, Zap, Folder, Users, Package, Grid, AlertTriangle, Download
 } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useSubscription } from '../hooks/useSubscription';
 import { useTheme } from '../context/ThemeContext';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
+import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -74,6 +76,7 @@ function QuickToolCard({
 
 export default function DashboardScreen({ navigation }: any) {
     const { signOut, displayName, avatarUrl, session } = useAuth();
+    const { isPro } = useSubscription();
     const { colors, theme } = useTheme();
     const { projects } = useProjects();
     const { materials, hourlyRate } = useMaterials();
@@ -83,6 +86,7 @@ export default function DashboardScreen({ navigation }: any) {
 
     const [invoicesCount, setInvoicesCount] = useState<number>(0);
     const [invoicesTotal, setInvoicesTotal] = useState<number>(0);
+    const [showProModal, setShowProModal] = useState(false);
 
     useEffect(() => {
         if (!session?.user?.id) return;
@@ -154,6 +158,11 @@ export default function DashboardScreen({ navigation }: any) {
     };
 
     const handleExportCSV = () => {
+        if (!isPro) {
+            setShowProModal(true);
+            return;
+        }
+
         const projectData = projects.map(p => {
             const mat = materials.find(m => m.id === p.material_id);
             return {
@@ -353,6 +362,14 @@ export default function DashboardScreen({ navigation }: any) {
                     )}
                 </ResponsiveContainer>
             </ScrollView>
+
+            <ProUpgradeModal
+                visible={showProModal}
+                onClose={() => setShowProModal(false)}
+                featureName="CSV & Excel Data Export"
+                actionTitle="Export Projects, Materials & Clients"
+                description="Upgrade to Pro ($19/mo) to download formatted CSV reports for accounting, tax reporting, and offline backups!"
+            />
         </SafeAreaView>
     );
 }
