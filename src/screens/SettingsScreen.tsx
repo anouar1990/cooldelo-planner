@@ -5,11 +5,12 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
-import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink, Sun, Moon } from 'lucide-react-native';
+import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink, Sun, Moon, Download } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../lib/supabase';
+import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
 
 const C = {
     bg: '#0F1117',
@@ -220,6 +221,84 @@ export default function SettingsScreen() {
                                     <Text style={{ color: theme === 'dark' ? '#3B82F6' : '#F59E0B', fontWeight: '700', fontSize: 13 }}>
                                         Switch to {theme === 'dark' ? 'Light' : 'Dark'}
                                     </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {/* Export Data & Accounting Reports */}
+                        <View style={styles.card}>
+                            <View style={styles.cardHeader}>
+                                <Download color="#10B981" size={20} />
+                                <Text style={styles.cardTitle}>Export Workshop Data (CSV / Excel)</Text>
+                            </View>
+                            <Text style={{ fontSize: 13, color: C.sub, marginBottom: 14, lineHeight: 18 }}>
+                                Download your workshop records in formatted CSV files for accounting, tax reporting, and offline backups.
+                            </Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                                <TouchableOpacity 
+                                    onPress={async () => {
+                                        if (!user?.id) return;
+                                        const { data } = await supabase.from('projects').select('*').eq('user_id', user.id);
+                                        if (!data || data.length === 0) {
+                                            Alert.alert('Export', 'No projects found to export.');
+                                            return;
+                                        }
+                                        const csv = objectsToCsv(data);
+                                        downloadCsv(`0Machine_Projects_${new Date().toISOString().slice(0,10)}.csv`, csv);
+                                    }}
+                                    style={{
+                                        backgroundColor: 'rgba(16,185,129,0.12)',
+                                        borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)',
+                                        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+                                        flexDirection: 'row', alignItems: 'center', gap: 6,
+                                    }}
+                                >
+                                    <Download color="#10B981" size={14} />
+                                    <Text style={{ color: '#10B981', fontWeight: '700', fontSize: 12 }}>Export Projects CSV</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    onPress={async () => {
+                                        if (!user?.id) return;
+                                        const { data } = await supabase.from('materials').select('*').eq('user_id', user.id);
+                                        if (!data || data.length === 0) {
+                                            Alert.alert('Export', 'No materials found to export.');
+                                            return;
+                                        }
+                                        const csv = objectsToCsv(data);
+                                        downloadCsv(`0Machine_Materials_${new Date().toISOString().slice(0,10)}.csv`, csv);
+                                    }}
+                                    style={{
+                                        backgroundColor: 'rgba(59,130,246,0.12)',
+                                        borderWidth: 1, borderColor: 'rgba(59,130,246,0.25)',
+                                        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+                                        flexDirection: 'row', alignItems: 'center', gap: 6,
+                                    }}
+                                >
+                                    <Download color="#3B82F6" size={14} />
+                                    <Text style={{ color: '#3B82F6', fontWeight: '700', fontSize: 12 }}>Export Materials CSV</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity 
+                                    onPress={async () => {
+                                        if (!user?.id) return;
+                                        const { data } = await supabase.from('clients').select('*').eq('user_id', user.id);
+                                        if (!data || data.length === 0) {
+                                            Alert.alert('Export', 'No clients found to export.');
+                                            return;
+                                        }
+                                        const csv = objectsToCsv(data);
+                                        downloadCsv(`0Machine_Clients_${new Date().toISOString().slice(0,10)}.csv`, csv);
+                                    }}
+                                    style={{
+                                        backgroundColor: 'rgba(139,92,246,0.12)',
+                                        borderWidth: 1, borderColor: 'rgba(139,92,246,0.25)',
+                                        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+                                        flexDirection: 'row', alignItems: 'center', gap: 6,
+                                    }}
+                                >
+                                    <Download color="#8B5CF6" size={14} />
+                                    <Text style={{ color: '#8B5CF6', fontWeight: '700', fontSize: 12 }}>Export Clients CSV</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

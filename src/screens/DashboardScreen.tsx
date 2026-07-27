@@ -8,11 +8,12 @@ import { useMachineProfiles } from '../hooks/useMachineProfiles';
 import { supabase } from '../lib/supabase';
 import { 
     Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut, Settings,
-    Calculator, FileText, Layers, Zap, Folder, Users, Package, Grid, AlertTriangle
+    Calculator, FileText, Layers, Zap, Folder, Users, Package, Grid, AlertTriangle, Download
 } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
+import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
 
 const STATUS_LABEL: Record<string, string> = {
     planned: 'Planned', 'in-progress': 'In Progress', completed: 'Completed',
@@ -152,6 +153,30 @@ export default function DashboardScreen({ navigation }: any) {
         }
     };
 
+    const handleExportCSV = () => {
+        const projectData = projects.map(p => {
+            const mat = materials.find(m => m.id === p.material_id);
+            return {
+                'Project Title': p.title,
+                'Status': p.status,
+                'Machine': p.machine || 'N/A',
+                'Material': mat ? mat.name : 'N/A',
+                'Thickness (mm)': p.material_thickness || (mat ? mat.thickness : 0),
+                'Unit Cost ($)': p.material_cost_per_unit || (mat ? mat.cost_per_unit : 0),
+                'Time Elapsed (mins)': Math.round((p.time_elapsed || 0) / 60),
+                'Created Date': new Date(p.created_at).toLocaleDateString(),
+            };
+        });
+
+        if (projectData.length === 0) {
+            if (typeof window !== 'undefined') window.alert('No projects available to export.');
+            return;
+        }
+
+        const csvString = objectsToCsv(projectData);
+        downloadCsv(`0Machine_Projects_Report_${new Date().toISOString().slice(0,10)}.csv`, csvString);
+    };
+
     return (
         <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -172,6 +197,12 @@ export default function DashboardScreen({ navigation }: any) {
                             </View>
                         </View>
                         <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <TouchableOpacity 
+                                style={[styles.topIconBtn, { backgroundColor: colors.primary + '18', borderColor: colors.primary + '40' }]} 
+                                onPress={handleExportCSV}
+                            >
+                                <Download color={colors.primary} size={18} />
+                            </TouchableOpacity>
                             <TouchableOpacity style={[styles.topIconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('Settings')}>
                                 <Settings color={colors.sub} size={18} />
                             </TouchableOpacity>
