@@ -5,9 +5,10 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
-import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink } from 'lucide-react-native';
+import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink, Sun, Moon } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
+import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../lib/supabase';
 
 const C = {
@@ -29,6 +30,7 @@ export default function SettingsScreen() {
     const navigation = useNavigation<any>();
     const { user, displayName, signOut } = useAuth();
     const { subscription, isPro, hasActiveTrial, daysLeftInTrial } = useSubscription();
+    const { theme, toggleTheme } = useTheme();
 
     // Account ID derived from User ID
     const accountId = user?.id ? `ACC-${user.id.substring(0, 8).toUpperCase()}` : 'N/A';
@@ -182,6 +184,43 @@ export default function SettingsScreen() {
                                     <Text style={styles.profileEmail}>{user?.email}</Text>
                                     <Text style={styles.accountIdText}>Account ID: {accountId}</Text>
                                 </View>
+                            </View>
+                        </View>
+
+                        {/* Theme Preferences */}
+                        <View style={styles.card}>
+                            <View style={styles.cardHeader}>
+                                {theme === 'dark' ? <Moon color="#3B82F6" size={20} /> : <Sun color="#F59E0B" size={20} />}
+                                <Text style={styles.cardTitle}>App Theme Preference</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <View>
+                                    <Text style={{ fontSize: 14, fontWeight: '700', color: C.text }}>
+                                        {theme === 'dark' ? '🌙 Dark Mode (Obsidian)' : '☀️ Light Mode (Workshop)'}
+                                    </Text>
+                                    <Text style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
+                                        {theme === 'dark' ? 'Sleek dark theme for low light' : 'High contrast light mode for bright workshops'}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={toggleTheme}
+                                    style={{
+                                        backgroundColor: theme === 'dark' ? 'rgba(59,130,246,0.15)' : 'rgba(245,158,11,0.15)',
+                                        borderWidth: 1,
+                                        borderColor: theme === 'dark' ? 'rgba(59,130,246,0.3)' : 'rgba(245,158,11,0.3)',
+                                        paddingHorizontal: 16,
+                                        paddingVertical: 8,
+                                        borderRadius: 12,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                    }}
+                                >
+                                    {theme === 'dark' ? <Sun color="#3B82F6" size={16} /> : <Moon color="#F59E0B" size={16} />}
+                                    <Text style={{ color: theme === 'dark' ? '#3B82F6' : '#F59E0B', fontWeight: '700', fontSize: 13 }}>
+                                        Switch to {theme === 'dark' ? 'Light' : 'Dark'}
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
 
