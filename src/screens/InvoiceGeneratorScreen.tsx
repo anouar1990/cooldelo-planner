@@ -490,30 +490,32 @@ export default function InvoiceGeneratorScreen() {
             </View>
 
             {/* Navigation Tabs */}
-            <View style={styles.tabContainer}>
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'list' && styles.activeTab]}
-                    onPress={() => setActiveTab('list')}
-                >
-                    <FileText color={activeTab === 'list' ? COLORS.primary : COLORS.textSub} size={16} />
-                    <Text style={[styles.tabText, activeTab === 'list' && styles.activeTabText]}>Invoices List</Text>
-                </TouchableOpacity>
+            <View style={{ marginBottom: 12 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContainer}>
+                    <TouchableOpacity 
+                        style={[styles.tab, activeTab === 'list' && styles.activeTab]}
+                        onPress={() => setActiveTab('list')}
+                    >
+                        <FileText color={activeTab === 'list' ? COLORS.primary : COLORS.textSub} size={16} />
+                        <Text style={[styles.tabText, activeTab === 'list' && styles.activeTabText]}>Invoices List</Text>
+                    </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'new' && styles.activeTab]}
-                    onPress={() => setActiveTab('new')}
-                >
-                    <Plus color={activeTab === 'new' ? COLORS.primary : COLORS.textSub} size={16} />
-                    <Text style={[styles.tabText, activeTab === 'new' && styles.activeTabText]}>Create Invoice</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.tab, activeTab === 'new' && styles.activeTab]}
+                        onPress={() => setActiveTab('new')}
+                    >
+                        <Plus color={activeTab === 'new' ? COLORS.primary : COLORS.textSub} size={16} />
+                        <Text style={[styles.tabText, activeTab === 'new' && styles.activeTabText]}>Create Invoice</Text>
+                    </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'settings' && styles.activeTab]}
-                    onPress={() => setActiveTab('settings')}
-                >
-                    <Settings color={activeTab === 'settings' ? COLORS.primary : COLORS.textSub} size={16} />
-                    <Text style={[styles.tabText, activeTab === 'settings' && styles.activeTabText]}>Business Profile</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.tab, activeTab === 'settings' && styles.activeTab]}
+                        onPress={() => setActiveTab('settings')}
+                    >
+                        <Settings color={activeTab === 'settings' ? COLORS.primary : COLORS.textSub} size={16} />
+                        <Text style={[styles.tabText, activeTab === 'settings' && styles.activeTabText]}>Business Profile</Text>
+                    </TouchableOpacity>
+                </ScrollView>
             </View>
 
             {/* Notification Banner */}
@@ -822,14 +824,14 @@ const styles = StyleSheet.create({
     emptySubtitle: { fontSize: 13, color: COLORS.textSub },
     formCard: { backgroundColor: COLORS.surface, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: COLORS.border },
     cardTitle: { fontSize: 16, fontWeight: '800', color: COLORS.text, marginBottom: 16 },
-    row: { flexDirection: 'row', gap: 12, marginBottom: 0 },
-    inputGroup: { flex: 1, marginBottom: 12 },
+    row: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 0 },
+    inputGroup: { flex: 1, minWidth: 200, marginBottom: 12 },
     label: { fontSize: 12, fontWeight: '600', color: COLORS.text, marginBottom: 6 },
     input: { height: 44, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, backgroundColor: COLORS.bg, color: COLORS.text, paddingHorizontal: 12, fontSize: 14, marginBottom: 12, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
     itemsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 },
     addRowButton: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.primary, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
     addRowButtonText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
-    itemRow: { flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 10 },
+    itemRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 10 },
     deleteRowBtn: { padding: 8, backgroundColor: COLORS.error + '10', borderRadius: 8, borderWidth: 1, borderColor: COLORS.error + '25' },
     divider: { height: 1, backgroundColor: COLORS.border, marginVertical: 20 },
     summaryContainer: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 },

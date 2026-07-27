@@ -1023,10 +1023,12 @@ const styles = StyleSheet.create({
     },
     rowTwo: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         gap: 12,
     },
     opRow: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         gap: 8,
         paddingVertical: 4,
     },
