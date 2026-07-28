@@ -8,6 +8,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { trackEvent } from '../lib/analytics';
 import { useAuth } from '../hooks/useAuth';
+import { useLanguage } from '../context/LanguageContext';
 
 import { OnboardingModal } from '../components/OnboardingModal';
 
@@ -304,7 +305,7 @@ export default function CostCalculatorScreen() {
         if (calc && calc.productionCostTotal > 0) {
             trackEvent('activated', { feature: 'cost_calculator' }, `activated_${user?.id || 'guest'}`);
         }
-    }, [calc?.productionCostTotal, user?.id]);
+    }, [calc?.productionCostTotal, user?.id]);    const { t } = useLanguage();
 
     const reset = () => setF(DEFAULT);
     const fmt = (v: number) => `$${v.toFixed(2)}`;
@@ -317,8 +318,8 @@ export default function CostCalculatorScreen() {
                         <Calculator color={C.primary} size={20} />
                     </View>
                     <View>
-                        <Text style={styles.title}>Cost Calculator</Text>
-                        <Text style={styles.subtitle}>Real-time project cost & profit calculation</Text>
+                        <Text style={styles.title}>{t('calc_title')}</Text>
+                        <Text style={styles.subtitle}>{t('calc_subtitle')}</Text>
                     </View>
                 </View>
             </View>

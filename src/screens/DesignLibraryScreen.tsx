@@ -137,8 +137,8 @@ export default function DesignLibraryScreen() {
             {/* Header */}
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.title}>Laser & CNC Vector Vault</Text>
-                    <Text style={styles.subtitle}>Curated production-ready DXF, SVG & AI design files</Text>
+                    <Text style={styles.title}>{t('design_title')}</Text>
+                    <Text style={styles.subtitle}>{t('design_subtitle')}</Text>
                 </View>
                 {isAdmin && (
                     <TouchableOpacity style={styles.adminBtn} onPress={() => setShowAdminModal(true)}>
@@ -153,7 +153,7 @@ export default function DesignLibraryScreen() {
                     <Search color={COLORS.textSub} size={18} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Search vector designs (e.g. Wall Art, Box, Sign)..."
+                        placeholder={t('design_search')}
                         placeholderTextColor={COLORS.textSub}
                         value={searchQuery}
                         onChangeText={setSearchQuery}

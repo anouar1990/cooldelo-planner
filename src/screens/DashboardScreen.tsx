@@ -256,7 +256,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <StatCard
                             icon={<Activity color={colors.primary} size={20} />}
                             value={projects.length}
-                            label="Active Projects"
+                            label={t('stat_projects')}
                             subtext={`${active} In Progress · ${done} Done`}
                             color={colors.primary}
                             colors={colors}
@@ -265,7 +265,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <StatCard
                             icon={<Package color="#F59E0B" size={20} />}
                             value={materials.length}
-                            label="Materials Stock"
+                            label={t('stat_materials')}
                             subtext={materials.length > 0 ? `$${totalStockValue.toFixed(0)} total stock value` : 'Wood, acrylic & MDF'}
                             color="#F59E0B"
                             colors={colors}
@@ -274,7 +274,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <StatCard
                             icon={<FileText color="#10B981" size={20} />}
                             value={invoicesCount}
-                            label="Invoices Issued"
+                            label={t('stat_invoices')}
                             subtext={invoicesTotal > 0 ? `$${invoicesTotal.toFixed(0)} billed` : 'Custom PDF invoices'}
                             color="#10B981"
                             colors={colors}
@@ -283,7 +283,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <StatCard
                             icon={<Users color="#3B82F6" size={20} />}
                             value={clients.length}
-                            label="Clients Ledger"
+                            label={t('stat_clients')}
                             subtext="Active customer profiles"
                             color="#3B82F6"
                             colors={colors}
@@ -293,12 +293,12 @@ export default function DashboardScreen({ navigation }: any) {
 
                     {/* Quick Tools Navigation Hub */}
                     <View style={styles.sectionRow}>
-                        <Text style={[styles.sectionTitle, { color: colors.sub }]}>WORKSHOP TOOLKITS</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.sub }]}>{t('dash_quick_start')}</Text>
                     </View>
                     <View style={styles.toolsGrid}>
                         <QuickToolCard
                             icon={<Calculator color="#FF6B35" size={20} />}
-                            title="Cost & Profit Calculator"
+                            title={t('calc_title')}
                             desc="Material, machine time & labor margin"
                             color="#FF6B35"
                             colors={colors}
@@ -306,7 +306,7 @@ export default function DashboardScreen({ navigation }: any) {
                         />
                         <QuickToolCard
                             icon={<FileText color="#10B981" size={20} />}
-                            title="Invoice & Quote Generator"
+                            title={t('nav_invoices')}
                             desc="Export professional PDF quotes & invoices"
                             color="#10B981"
                             colors={colors}
@@ -314,7 +314,7 @@ export default function DashboardScreen({ navigation }: any) {
                         />
                         <QuickToolCard
                             icon={<Layers color="#8B5CF6" size={20} />}
-                            title="Nesting Yield Estimator"
+                            title={t('nest_title')}
                             desc="Sheet layout & material waste optimizer"
                             color="#8B5CF6"
                             colors={colors}
@@ -322,7 +322,7 @@ export default function DashboardScreen({ navigation }: any) {
                         />
                         <QuickToolCard
                             icon={<Zap color="#F59E0B" size={20} />}
-                            title="Laser Presets"
+                            title={t('preset_title')}
                             desc={`${machines.length > 0 ? machines.length + ' machines registered' : 'Speed, power & frequency presets'}`}
                             color="#F59E0B"
                             colors={colors}
@@ -330,7 +330,7 @@ export default function DashboardScreen({ navigation }: any) {
                         />
                         <QuickToolCard
                             icon={<Folder color="#EC4899" size={20} />}
-                            title="Design Vector Library"
+                            title={t('design_title')}
                             desc={`${designs.length} laser cut SVG/DXF templates`}
                             color="#EC4899"
                             colors={colors}
@@ -338,7 +338,7 @@ export default function DashboardScreen({ navigation }: any) {
                         />
                         <QuickToolCard
                             icon={<Package color="#3B82F6" size={20} />}
-                            title="Material Stock Inventory"
+                            title={t('mat_title')}
                             desc="Track wood, acrylic, MDF & metal stock"
                             color="#3B82F6"
                             colors={colors}

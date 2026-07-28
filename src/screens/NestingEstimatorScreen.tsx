@@ -112,8 +112,8 @@ export default function NestingEstimatorScreen() {
             {/* Header */}
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.title}>{t('nav_nesting')}</Text>
-                    <Text style={styles.subtitle}>Production layout optimizer & material waste analysis</Text>
+                    <Text style={styles.title}>{t('nest_title')}</Text>
+                    <Text style={styles.subtitle}>{t('nest_subtitle')}</Text>
                 </View>
                 {!isPro && (
                     <View style={styles.tierBadge}>
