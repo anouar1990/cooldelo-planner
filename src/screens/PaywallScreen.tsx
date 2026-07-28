@@ -28,7 +28,7 @@ export default function PaywallScreen() {
 
     return (
         <SafeAreaView style={styles.safe}>
-            <ResponsiveContainer>
+            <ResponsiveContainer padded={false}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
                         <X color={C.text} size={20} />
@@ -37,7 +37,7 @@ export default function PaywallScreen() {
                     <View style={{ width: 40 }} />
                 </View>
 
-                <ScrollView contentContainerStyle={styles.scroll}>
+                <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                     {/* Hero Header */}
                     <View style={styles.heroWrap}>
                         <Zap color={C.primary} size={36} fill={C.primary} />
@@ -151,39 +151,39 @@ function Benefit({ text, bold }: { text: string; bold?: boolean }) {
 
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: C.bg },
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, height: 54, borderBottomWidth: 1, borderBottomColor: C.border },
-    closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, justifyContent: 'center', alignItems: 'center' },
-    headerTitle: { fontSize: 16, fontWeight: '800', color: C.text },
-    scroll: { padding: 16, gap: 16, paddingBottom: 40 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, height: 50, borderBottomWidth: 1, borderBottomColor: C.border },
+    closeBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: C.surface, justifyContent: 'center', alignItems: 'center' },
+    headerTitle: { fontSize: 15, fontWeight: '800', color: C.text },
+    scroll: { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 110, gap: 12 },
 
-    heroWrap: { alignItems: 'center', gap: 8, marginBottom: 8 },
-    heroTitle: { fontSize: 20, fontWeight: '900', color: C.text, textAlign: 'center' },
-    heroSub: { fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 18 },
+    heroWrap: { alignItems: 'center', gap: 6, marginBottom: 4 },
+    heroTitle: { fontSize: 18, fontWeight: '900', color: C.text, textAlign: 'center' },
+    heroSub: { fontSize: 12, color: C.sub, textAlign: 'center', lineHeight: 16 },
 
-    toggleRow: { flexDirection: 'row', backgroundColor: C.surface2, borderRadius: 12, padding: 4, alignSelf: 'center', width: '100%', maxWidth: 360 },
-    toggleBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
+    toggleRow: { flexDirection: 'row', backgroundColor: C.surface2, borderRadius: 10, padding: 3, alignSelf: 'center', width: '100%', maxWidth: 340, marginBottom: 4 },
+    toggleBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 7 },
     activeToggleBtn: { backgroundColor: C.primary },
-    toggleBtnText: { fontSize: 12, fontWeight: '700', color: C.sub },
+    toggleBtnText: { fontSize: 11, fontWeight: '700', color: C.sub },
     activeToggleText: { color: '#FFF' },
 
-    plansWrap: { gap: 14 },
-    planCard: { backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, position: 'relative' },
+    plansWrap: { gap: 12 },
+    planCard: { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 14, position: 'relative' },
     proCard: { borderColor: C.primary + '80', backgroundColor: '#1C120C' },
-    badgeWrap: { position: 'absolute', top: 12, right: 12, backgroundColor: C.surface2, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+    badgeWrap: { position: 'absolute', top: 10, right: 10, backgroundColor: C.surface2, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
     badgeText: { fontSize: 10, fontWeight: '800', color: '#FFF' },
-    planName: { fontSize: 18, fontWeight: '800', color: C.text },
-    price: { fontSize: 26, fontWeight: '900', color: C.text, marginTop: 4, marginBottom: 12 },
-    benefits: { gap: 8, marginBottom: 16 },
+    planName: { fontSize: 16, fontWeight: '800', color: C.text },
+    price: { fontSize: 24, fontWeight: '900', color: C.text, marginTop: 2, marginBottom: 8 },
+    benefits: { gap: 6, marginBottom: 12 },
     benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    benefitText: { fontSize: 13, color: C.sub },
+    benefitText: { fontSize: 12, color: C.sub },
 
-    freeBtn: { backgroundColor: C.surface2, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
-    freeBtnText: { color: C.text, fontWeight: '700', fontSize: 14 },
-    starterBtn: { backgroundColor: '#3B82F6', paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
-    starterBtnText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
-    proBtn: { backgroundColor: C.primary, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
-    proBtnText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
+    freeBtn: { backgroundColor: C.surface2, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
+    freeBtnText: { color: C.text, fontWeight: '700', fontSize: 13 },
+    starterBtn: { backgroundColor: '#3B82F6', paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
+    starterBtnText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
+    proBtn: { backgroundColor: C.primary, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
+    proBtnText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
 
-    footerWrap: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 8 },
-    footerText: { fontSize: 12, color: C.sub },
+    footerWrap: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 4, paddingBottom: 16 },
+    footerText: { fontSize: 11, color: C.sub, textAlign: 'center' },
 });
