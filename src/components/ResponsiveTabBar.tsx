@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle, Receipt } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
+import { useLanguage } from '../context/LanguageContext';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 const COLORS = {
@@ -32,10 +33,28 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
     const insets = useSafeAreaInsets();
     const { signOut, displayName, avatarUrl } = useAuth();
     const { isPro } = useSubscription();
+    const { t } = useLanguage();
     const initials = displayName.charAt(0).toUpperCase();
 
     const isDesktop = width > 768;
     const PRO_TABS = ['Design Library', 'Nesting Estimator', 'Invoice Generator'];
+
+    const routeTitleMap: Record<string, string> = {
+        'Dashboard': 'nav_dashboard',
+        'Cost Calculator': 'nav_calculator',
+        'Materials': 'nav_materials',
+        'Orders': 'nav_orders',
+        'Laser Presets': 'nav_presets',
+        'Quote Generator': 'nav_quotes',
+        'Invoice Generator': 'nav_invoices',
+        'Design Library': 'nav_designs',
+        'Nesting Estimator': 'nav_nesting',
+    };
+
+    const getRouteTitle = (name: string) => {
+        const key = routeTitleMap[name];
+        return key ? t(key) : name;
+    };
 
     const handlePress = (route: any, isFocused: boolean) => {
         const event = navigation.emit({
@@ -85,7 +104,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                             >
                                 <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={22} />
                                 <Text style={[styles.sidebarLabel, isFocused && styles.sidebarLabelActive, { flex: 1 }]}>
-                                    {route.name}
+                                    {getRouteTitle(route.name)}
                                 </Text>
                                 {isProTab && !isPro && (
                                     <View style={styles.proBadge}>
@@ -158,7 +177,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         >
                             <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={24} />
                             <Text style={[styles.bottomLabel, isFocused && styles.bottomLabelActive]} numberOfLines={1}>
-                                {route.name}
+                                {getRouteTitle(route.name)}
                             </Text>
                         </TouchableOpacity>
                     );

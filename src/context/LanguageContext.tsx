@@ -30,6 +30,7 @@ export const DICTIONARY: Translations = {
   nav_invoices: { en: 'Invoices', fr: 'Factures', es: 'Facturas' },
   nav_nesting: { en: 'Nesting Yield', fr: 'Imbrication / Nesting', es: 'Optimización Nesting' },
   nav_materials: { en: 'Material Stock', fr: 'Stock Matériaux', es: 'Stock de Materiales' },
+  nav_orders: { en: 'Orders Tracker', fr: 'Suivi des Commandes', es: 'Seguimiento Pedidos' },
   nav_presets: { en: 'Laser Presets', fr: 'Préréglages Laser', es: 'Ajustes Láser' },
   nav_designs: { en: 'Design Vault', fr: 'Bibliothèque Vectorielle', es: 'Biblioteca de Diseños' },
   nav_clients: { en: 'Clients CRM', fr: 'Clients CRM', es: 'Clientes CRM' },
