@@ -302,23 +302,25 @@ const styles = StyleSheet.create({
     bottomBarInner: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
+        paddingHorizontal: 8,
     },
     bottomTab: {
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
-        paddingHorizontal: 16,
-        paddingVertical: 4,
-        minWidth: 80,
+        gap: 3,
+        paddingHorizontal: 8,
+        paddingVertical: 6,
+        minWidth: 72,
     },
     bottomLabel: {
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: '600',
         color: COLORS.textSub,
+        textAlign: 'center',
     },
     bottomLabelActive: {
         color: COLORS.primary,
+        fontWeight: '700',
     },
     proBadge: {
         backgroundColor: 'rgba(255,107,53,0.15)',

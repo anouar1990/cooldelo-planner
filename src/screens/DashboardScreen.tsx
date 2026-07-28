@@ -202,8 +202,8 @@ export default function DashboardScreen({ navigation }: any) {
                                     <Text style={[styles.avatarInitial, { color: colors.primary }]}>{initials}</Text>
                                 </View>
                             )}
-                            <View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <View style={{ flexShrink: 1 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                     <Text style={[styles.brand, { color: colors.text }]}>⚡ <Text style={{ color: colors.primary }}>0machine</Text></Text>
                                     <View style={{
                                         backgroundColor: isPro ? '#FF6B35' : isStarter ? '#3B82F6' : '#242840',
@@ -214,10 +214,11 @@ export default function DashboardScreen({ navigation }: any) {
                                         </Text>
                                     </View>
                                 </View>
-                                <Text style={[styles.subtitle, { color: colors.sub }]}>Workshop Dashboard · {displayName}</Text>
+                                <Text style={[styles.subtitle, { color: colors.sub }]} numberOfLines={1}>Workshop Dashboard · {displayName}</Text>
                             </View>
                         </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             {/* Language Switcher */}
                             <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.border, padding: 2 }}>
                                 {(['en', 'fr', 'es'] as const).map(l => (
@@ -407,8 +408,8 @@ export default function DashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     safe: { flex: 1 },
     scroll: { paddingBottom: 32 },
-    header: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    headerUser: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    header: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 },
+    headerUser: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1, minWidth: 200 },
     avatar: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: '#FF6B35' },
     avatarFallback: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
     avatarInitial: { fontSize: 16, fontWeight: '800' },
