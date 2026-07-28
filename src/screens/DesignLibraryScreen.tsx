@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
 
     listContent: { paddingHorizontal: 12, paddingBottom: 40 },
     card: { flex: 1, margin: 6, backgroundColor: COLORS.surface, borderRadius: 14, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' },
-    thumbnailContainer: { height: 140, width: '100%', backgroundColor: '#181A26', position: 'relative' },
+    thumbnailContainer: { aspectRatio: 1, width: '100%', backgroundColor: '#181A26', position: 'relative' },
     thumbnail: { width: '100%', height: '100%' },
     placeholderThumbnail: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     favBtn: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 16, padding: 6 },
