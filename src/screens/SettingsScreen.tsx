@@ -31,7 +31,7 @@ const C = {
 export default function SettingsScreen() {
     const navigation = useNavigation<any>();
     const { user, displayName, signOut } = useAuth();
-    const { subscription, isPro, hasActiveTrial, daysLeftInTrial } = useSubscription();
+    const { subscription, isFree, isStarter, isPro } = useSubscription();
     const { theme, toggleTheme } = useTheme();
     const [showProModal, setShowProModal] = useState(false);
 
@@ -145,13 +145,15 @@ export default function SettingsScreen() {
     };
 
     const getPlanName = () => {
-        if (isPro || subscription.status === 'active') return 'Pro Workshop';
-        return 'Free Forever Core Account';
+        if (subscription.plan === 'pro') return 'Workshop Pro';
+        if (subscription.plan === 'starter') return 'Starter';
+        return 'Free Forever';
     };
 
     const getPlanPrice = () => {
-        if (isPro || subscription.status === 'active') return '$19/mo';
-        return '$0 (Free Forever)';
+        if (subscription.plan === 'pro') return subscription.billingCycle === 'annual' ? '$149/year' : '$19/month';
+        if (subscription.plan === 'starter') return subscription.billingCycle === 'annual' ? '$59/year' : '$9/month';
+        return '$0 Free';
     };
 
     return (

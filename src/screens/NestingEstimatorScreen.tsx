@@ -3,9 +3,9 @@ import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TouchableOpacity, TextInput, Platform,
 } from 'react-native';
-import { Grid, RotateCcw, Info, Lock, Zap, Play } from 'lucide-react-native';
+import { Grid, RotateCcw, Info, Lock, Zap, Check, AlertCircle } from 'lucide-react-native';
 import { useSubscription } from '../hooks/useSubscription';
-import { useNavigation } from '@react-navigation/native';
+import { useLanguage } from '../context/LanguageContext';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { trackEvent } from '../lib/analytics';
 
@@ -19,29 +19,27 @@ const C = {
 function n(v: string) { return Math.max(0, parseFloat(v) || 0); }
 
 const PRESETS = [
-    { label: '600×400', sw: '600', sh: '400' },
-    { label: '1200×600', sw: '1200', sh: '600' },
+    { label: '600×400 mm', sw: '600', sh: '400' },
+    { label: '1200×600 mm', sw: '1200', sh: '600' },
     { label: 'A4 (297×210)', sw: '297', sh: '210' },
     { label: 'A3 (420×297)', sw: '420', sh: '297' },
 ];
 
 export default function NestingEstimatorScreen() {
-    const navigation = useNavigation<any>();
-    const { isPro } = useSubscription();
+    const { isFree, isStarter, isPro } = useSubscription();
+    const { t } = useLanguage();
 
-    // Sheet
+    // Inputs
     const [sheetW, setSheetW] = useState('600');
     const [sheetH, setSheetH] = useState('400');
-    const [kerf, setKerf] = useState('0.2'); // mm kerf (gap between parts)
-
-    // Part
-    const [partW, setPartW] = useState('');
-    const [partH, setPartH] = useState('');
-    const [partQty, setPartQty] = useState('1');
-    const [margin, setMargin] = useState('2'); // border margin mm
-
-    // Rotation — try both orientations
+    const [partW, setPartW] = useState('80');
+    const [partH, setPartH] = useState('80');
+    const [partQty, setPartQty] = useState('24');
+    const [spacing, setSpacing] = useState('2');
+    const [sheetCost, setSheetCost] = useState('15');
+    const [partSellPrice, setPartSellPrice] = useState('3.50');
     const [allowRotation, setAllowRotation] = useState(true);
+
     const [showProModal, setShowProModal] = useState(false);
 
     useEffect(() => {
@@ -53,405 +51,234 @@ export default function NestingEstimatorScreen() {
         const sh = n(sheetH);
         const pw = n(partW);
         const ph = n(partH);
-        const k = n(kerf);
-        const m = n(margin);
+        const sp = n(spacing);
         const qty = Math.max(1, parseInt(partQty) || 1);
+        const cost = n(sheetCost);
+        const sellPrice = n(partSellPrice);
 
         if (sw <= 0 || sh <= 0 || pw <= 0 || ph <= 0) return null;
 
-        const usableW = sw - 2 * m;
-        const usableH = sh - 2 * m;
-        if (usableW <= 0 || usableH <= 0) return null;
-
-        // Normal orientation
-        const colsN = Math.floor((usableW + k) / (pw + k));
-        const rowsN = Math.floor((usableH + k) / (ph + k));
+        // Grid calculation
+        const colsN = Math.floor((sw + sp) / (pw + sp));
+        const rowsN = Math.floor((sh + sp) / (ph + sp));
         const perSheetNormal = colsN * rowsN;
 
-        // Rotated orientation
-        const colsR = Math.floor((usableW + k) / (ph + k));
-        const rowsR = Math.floor((usableH + k) / (pw + k));
+        const colsR = Math.floor((sw + sp) / (ph + sp));
+        const rowsR = Math.floor((sh + sp) / (pw + sp));
         const perSheetRotated = colsR * rowsR;
 
-        let best = perSheetNormal;
-        let bestCols = colsN;
-        let bestRows = rowsN;
+        let bestPerSheet = perSheetNormal;
+        let cols = colsN;
+        let rows = rowsN;
         let rotated = false;
+
         if (allowRotation && perSheetRotated > perSheetNormal) {
-            best = perSheetRotated;
-            bestCols = colsR;
-            bestRows = rowsR;
+            bestPerSheet = perSheetRotated;
+            cols = colsR;
+            rows = rowsR;
             rotated = true;
         }
 
-        if (best <= 0) return null;
+        if (bestPerSheet <= 0) return null;
 
-        const sheetsNeeded = Math.ceil(qty / best);
+        const sheetsNeeded = Math.ceil(qty / bestPerSheet);
+        const totalSheetCost = sheetsNeeded * cost;
+        const costPerPart = totalSheetCost / qty;
+        const totalRevenue = qty * sellPrice;
+        const totalProfit = totalRevenue - totalSheetCost;
+
         const partArea = pw * ph;
         const sheetArea = sw * sh;
-        const totalPartsArea = qty * partArea;
+        const totalPartArea = qty * partArea;
         const totalSheetArea = sheetsNeeded * sheetArea;
-        const efficiency = (totalPartsArea / totalSheetArea) * 100;
-        const waste = 100 - efficiency;
+        const usagePct = Math.min(100, (totalPartArea / totalSheetArea) * 100);
+        const wastePct = 100 - usagePct;
 
         return {
-            perSheet: best, cols: bestCols, rows: bestRows, rotated,
-            sheetsNeeded, efficiency, waste,
-            partArea, sheetArea,
-            totalPartsArea, totalSheetArea,
+            perSheet: bestPerSheet, cols, rows, rotated,
+            sheetsNeeded, totalSheetCost, costPerPart,
+            totalRevenue, totalProfit, usagePct, wastePct
         };
-    }, [sheetW, sheetH, kerf, partW, partH, partQty, margin, allowRotation]);
+    }, [sheetW, sheetH, partW, partH, partQty, spacing, sheetCost, partSellPrice, allowRotation]);
 
-    const reset = () => {
-        setSheetW('600'); setSheetH('400'); setKerf('0.2');
-        setPartW(''); setPartH(''); setPartQty('1'); setMargin('2');
+    const handleCalculateAction = () => {
+        if (!isPro) {
+            setShowProModal(true);
+        }
     };
-
-    const effColor = result ? (result.efficiency > 70 ? C.green : result.efficiency > 40 ? C.amber : C.red) : C.sub;
 
     return (
         <SafeAreaView style={styles.safe}>
+            {/* Header */}
             <View style={styles.header}>
                 <View>
-                    <View style={styles.titleRow}>
-                        <View style={styles.headerIcon}><Grid color={C.primary} size={20} /></View>
-                        <Text style={styles.title}>Nesting Estimator</Text>
-                    </View>
-                    <Text style={styles.subtitle}>Calculate how many parts fit on a sheet</Text>
+                    <Text style={styles.title}>{t('nav_nesting')}</Text>
+                    <Text style={styles.subtitle}>Production layout optimizer & material waste analysis</Text>
                 </View>
+                {!isPro && (
+                    <View style={styles.tierBadge}>
+                        <Lock size={12} color={C.primary} />
+                        <Text style={styles.tierBadgeText}>{isStarter ? 'STARTER (PREVIEW)' : 'FREE (PREVIEW)'}</Text>
+                    </View>
+                )}
             </View>
 
-            <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-                <View style={styles.grid}>
-                    {/* Form */}
-                    <View style={styles.formCard}>
-                        <Text style={styles.cardTitle}>Sheet Size</Text>
-                        <Text style={styles.hint}>Select a preset or enter custom dimensions</Text>
-                        <View style={styles.presetRow}>
-                            {PRESETS.map(p => (
-                                <TouchableOpacity key={p.label} onPress={() => { setSheetW(p.sw); setSheetH(p.sh); }}
-                                    style={[styles.presetChip, sheetW === p.sw && sheetH === p.sh && styles.presetChipActive]}>
-                                    <Text style={[styles.presetText, sheetW === p.sw && sheetH === p.sh && styles.presetTextActive]}>{p.label}</Text>
-                                </TouchableOpacity>
-                            ))}
+            <ScrollView contentContainerStyle={styles.scroll}>
+                {/* Upgrade Notification Banner if not Pro */}
+                {!isPro && (
+                    <TouchableOpacity style={styles.upgradeBanner} onPress={() => setShowProModal(true)}>
+                        <Zap color={C.primary} size={18} fill={C.primary} />
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.bannerTitle}>Unlock Unlimited Nesting Optimization</Text>
+                            <Text style={styles.bannerDesc}>
+                                {isStarter 
+                                    ? 'Upgrade to Workshop Pro ($19/mo) to unlock production nesting calculations and material waste analytics.'
+                                    : 'Preview mode. Upgrade to Pro to optimize full workshop sheet yields.'}
+                            </Text>
                         </View>
-                        <View style={styles.row}>
-                            <Field label="Sheet Width (mm)" value={sheetW} onChange={setSheetW} />
-                            <Field label="Sheet Height (mm)" value={sheetH} onChange={setSheetH} />
-                        </View>
-                        <View style={styles.row}>
-                            <Field label="Border Margin (mm)" value={margin} onChange={setMargin} placeholder="2" />
-                            <Field label="Kerf / Gap (mm)" value={kerf} onChange={setKerf} placeholder="0.2" />
-                        </View>
+                        <Text style={styles.bannerCTA}>Upgrade Pro →</Text>
+                    </TouchableOpacity>
+                )}
 
-                        <View style={styles.divider} />
-                        <Text style={styles.cardTitle}>Part Dimensions</Text>
-                        <View style={styles.row}>
-                            <Field label="Part Width (mm)" value={partW} onChange={setPartW} placeholder="50" />
-                            <Field label="Part Height (mm)" value={partH} onChange={setPartH} placeholder="50" />
-                        </View>
-                        <Field label="Quantity Needed" value={partQty} onChange={setPartQty} placeholder="10" />
-
-                        <View style={styles.divider} />
-                        <View style={styles.optionRow}>
-                            <View style={styles.optionLabel}>
-                                <Text style={styles.label}>Allow Part Rotation</Text>
-                                <Text style={styles.hint}>Tries both 0° and 90° to maximize fit</Text>
-                            </View>
-                            <TouchableOpacity onPress={() => setAllowRotation(p => !p)}
-                                style={[styles.toggle, allowRotation && styles.toggleOn]}>
-                                <View style={[styles.toggleThumb, allowRotation && styles.toggleThumbOn]} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <TouchableOpacity style={styles.resetBtn} onPress={reset}>
-                            <RotateCcw color={C.sub} size={16} />
-                            <Text style={styles.resetBtnText}>Reset</Text>
+                {/* Presets */}
+                <Text style={styles.sectionLabel}>Quick Sheet Sizes</Text>
+                <View style={styles.presetsRow}>
+                    {PRESETS.map((p, idx) => (
+                        <TouchableOpacity key={idx} style={styles.presetChip} onPress={() => { setSheetW(p.sw); setSheetH(p.sh); }}>
+                            <Text style={styles.presetText}>{p.label}</Text>
                         </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* Form inputs */}
+                <View style={styles.formGrid}>
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>📐 Sheet Dimensions</Text>
+                        <View style={styles.row}>
+                            <View style={styles.inputWrap}>
+                                <Text style={styles.label}>Width (mm)</Text>
+                                <TextInput style={styles.input} value={sheetW} onChangeText={setSheetW} keyboardType="numeric" />
+                            </View>
+                            <View style={styles.inputWrap}>
+                                <Text style={styles.label}>Height (mm)</Text>
+                                <TextInput style={styles.input} value={sheetH} onChangeText={setSheetH} keyboardType="numeric" />
+                            </View>
+                        </View>
+                        <View style={styles.row}>
+                            <View style={styles.inputWrap}>
+                                <Text style={styles.label}>Sheet Cost ($)</Text>
+                                <TextInput style={styles.input} value={sheetCost} onChangeText={setSheetCost} keyboardType="decimal-pad" />
+                            </View>
+                            <View style={styles.inputWrap}>
+                                <Text style={styles.label}>Part Spacing (mm)</Text>
+                                <TextInput style={styles.input} value={spacing} onChangeText={setSpacing} keyboardType="decimal-pad" />
+                            </View>
+                        </View>
                     </View>
 
-                    {/* Results */}
-                    <View style={styles.sidebar}>
-                        {!isPro ? (
-                            <View style={styles.resultCard}>
-                                <Text style={styles.resultCardTitle}>Nesting Layout Optimization</Text>
-                                <Text style={{ color: C.sub, fontSize: 13, textAlign: 'center', marginBottom: 16 }}>
-                                    Sheet and part parameters configured ({sheetW}×{sheetH}mm sheet, {partW || '0'}×{partH || '0'}mm part).
-                                </Text>
-                                <TouchableOpacity 
-                                    style={styles.runProBtn} 
-                                    onPress={() => setShowProModal(true)}
-                                    activeOpacity={0.8}
-                                >
-                                    <Zap color="#FFF" size={18} fill="#FFF" />
-                                    <Text style={styles.runProBtnText}>Run Nesting Calculation 🔒 PRO</Text>
-                                </TouchableOpacity>
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>🧩 Part Details</Text>
+                        <View style={styles.row}>
+                            <View style={styles.inputWrap}>
+                                <Text style={styles.label}>Part Width (mm)</Text>
+                                <TextInput style={styles.input} value={partW} onChangeText={setPartW} keyboardType="numeric" />
                             </View>
-                        ) : result ? (
-                            <>
-                                {/* Main result */}
-                                <View style={[styles.resultCard, { borderColor: C.primary + '50' }]}>
-                                    <Text style={styles.resultCardTitle}>Parts Per Sheet</Text>
-                                    <Text style={styles.bigNum}>{result.perSheet}</Text>
-                                    <Text style={styles.bigNumSub}>{result.cols} columns × {result.rows} rows{result.rotated ? ' (rotated)' : ''}</Text>
-                                </View>
-
-                                {/* Efficiency */}
-                                <View style={styles.card}>
-                                    <Text style={styles.cardTitle}>Material Efficiency</Text>
-                                    <View style={styles.effBar}>
-                                        <View style={[styles.effFill, { width: `${Math.min(result.efficiency, 100)}%` as any, backgroundColor: effColor }]} />
-                                    </View>
-                                    <View style={styles.effRow}>
-                                        <View style={[styles.effStat, { backgroundColor: effColor + '15' }]}>
-                                            <Text style={[styles.effStatValue, { color: effColor }]}>{result.efficiency.toFixed(1)}%</Text>
-                                            <Text style={styles.effStatLabel}>Used</Text>
-                                        </View>
-                                        <View style={[styles.effStat, { backgroundColor: C.red + '10' }]}>
-                                            <Text style={[styles.effStatValue, { color: C.red }]}>{result.waste.toFixed(1)}%</Text>
-                                            <Text style={styles.effStatLabel}>Waste</Text>
-                                        </View>
-                                    </View>
-                                </View>
-
-                                {/* Sheets needed */}
-                                <View style={styles.card}>
-                                    <Text style={styles.cardTitle}>Job Summary</Text>
-                                    <ResultRow label={`Quantity needed`} value={`${partQty} parts`} />
-                                    <ResultRow label="Sheets required" value={`${result.sheetsNeeded} sheet${result.sheetsNeeded !== 1 ? 's' : ''}`} highlight />
-                                    <View style={styles.divider} />
-                                    <ResultRow label="Part area" value={`${result.partArea.toFixed(0)} mm²`} />
-                                    <ResultRow label="Sheet area" value={`${result.sheetArea.toFixed(0)} mm²`} />
-                                    <ResultRow label="Total part area" value={`${result.totalPartsArea.toFixed(0)} mm²`} />
-                                    <ResultRow label="Total sheet area" value={`${result.totalSheetArea.toFixed(0)} mm²`} />
-                                </View>
-
-                                {/* Visual grid */}
-                                <View style={styles.card}>
-                                    <Text style={styles.cardTitle}>Layout Preview</Text>
-                                    <Text style={styles.hint}>Each cell = one part (rectangle nesting)</Text>
-                                    <View style={styles.nestGrid}>
-                                        {Array.from({ length: Math.min(result.perSheet, 100) }).map((_, i) => (
-                                            <View key={i} style={[styles.nestCell, { backgroundColor: C.primary + (i < parseInt(partQty) % result.perSheet || parseInt(partQty) >= result.perSheet ? 'E0' : '40') }]} />
-                                        ))}
-                                    </View>
-                                    <Text style={styles.hint}>Showing 1 sheet · {Math.min(result.perSheet, 100)} parts{result.perSheet > 100 ? ' (capped at 100)' : ''}</Text>
-                                </View>
-                            </>
-                        ) : (
-                            <View style={styles.emptyResult}>
-                                <Grid color={C.sub} size={40} opacity={0.4} />
-                                <Text style={styles.emptyTitle}>Enter dimensions</Text>
-                                <Text style={styles.emptyText}>Fill in the sheet and part sizes to see how many parts fit per sheet.</Text>
+                            <View style={styles.inputWrap}>
+                                <Text style={styles.label}>Part Height (mm)</Text>
+                                <TextInput style={styles.input} value={partH} onChangeText={setPartH} keyboardType="numeric" />
                             </View>
-                        )}
+                        </View>
+                        <View style={styles.row}>
+                            <View style={styles.inputWrap}>
+                                <Text style={styles.label}>Target Quantity</Text>
+                                <TextInput style={styles.input} value={partQty} onChangeText={setPartQty} keyboardType="number-pad" />
+                            </View>
+                            <View style={styles.inputWrap}>
+                                <Text style={styles.label}>Retail Sell / Part ($)</Text>
+                                <TextInput style={styles.input} value={partSellPrice} onChangeText={setPartSellPrice} keyboardType="decimal-pad" />
+                            </View>
+                        </View>
                     </View>
                 </View>
+
+                {/* Calculation Results Card */}
+                {result && (
+                    <View style={styles.resultsCard}>
+                        <Text style={styles.resultsTitle}>📊 Layout & Financial Metrics</Text>
+                        <View style={styles.metricsGrid}>
+                            <MetricBox label="Parts per Sheet" value={`${result.perSheet}`} color={C.primary} />
+                            <MetricBox label="Sheets Needed" value={`${result.sheetsNeeded}`} color={C.blue} />
+                            <MetricBox label="Material Usage %" value={`${result.usagePct.toFixed(1)}%`} color={C.green} />
+                            <MetricBox label="Material Waste %" value={`${result.wastePct.toFixed(1)}%`} color={C.amber} />
+                            <MetricBox label="Cost / Part" value={`$${result.costPerPart.toFixed(2)}`} color={C.text} />
+                            <MetricBox label="Total Material Cost" value={`$${result.totalSheetCost.toFixed(2)}`} color={C.text} />
+                            <MetricBox label="Est. Net Profit" value={`$${result.totalProfit.toFixed(2)}`} color={C.green} bold />
+                        </View>
+
+                        {!isPro && (
+                            <TouchableOpacity style={styles.lockOverlayBtn} onPress={handleCalculateAction}>
+                                <Lock color="#FFF" size={16} />
+                                <Text style={styles.lockOverlayText}>Unlock Full Production Nesting (Workshop Pro)</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
             </ScrollView>
 
             <ProUpgradeModal
                 visible={showProModal}
                 onClose={() => setShowProModal(false)}
-                featureName="Nesting Tool"
-                actionTitle="Run Nesting Calculation"
-                description="Nesting calculation & sheet layout optimization is a Pro feature ($19/mo). Upgrade to Pro to calculate exact sheet yield and layout."
+                featureName="Production Nesting Calculator"
+                actionTitle="Unlock Advanced Nesting Optimization"
+                description="Upgrade to Workshop Pro ($19/mo) to calculate full production sheet layouts, material waste %, cost per part, and profit metrics."
             />
         </SafeAreaView>
     );
 }
 
-function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+function MetricBox({ label, value, color, bold }: { label: string; value: string; color: string; bold?: boolean }) {
     return (
-        <View style={styles.inputGroup}>
-            <Text style={styles.label}>{label}</Text>
-            <TextInput style={styles.input} value={value} onChangeText={onChange}
-                placeholder={placeholder ?? '0'} placeholderTextColor={C.sub}
-                keyboardType="decimal-pad" />
-        </View>
-    );
-}
-
-function ResultRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-    return (
-        <View style={styles.resultRow}>
-            <Text style={styles.resultLabel}>{label}</Text>
-            <Text style={[styles.resultValue, highlight && { color: C.primary, fontWeight: '800', fontSize: 16 }]}>{value}</Text>
+        <View style={styles.metricBox}>
+            <Text style={styles.metricLabel}>{label}</Text>
+            <Text style={[styles.metricValue, { color }, bold && { fontSize: 20, fontWeight: '900' }]}>{value}</Text>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: C.bg },
-    header: { padding: 24, paddingBottom: 16 },
-    headerIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: C.primary + '15', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-    titleRow: { flexDirection: 'row', alignItems: 'center' },
-    title: { fontSize: 22, fontWeight: '800', color: C.text },
-    subtitle: { fontSize: 13, color: C.sub, marginTop: 4, marginLeft: 52 },
-    scroll: { padding: 24, paddingTop: 0, paddingBottom: 40 },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 24 },
-    formCard: {
-        flex: 1.5, minWidth: 280, backgroundColor: C.surface, borderRadius: 16, padding: 24,
-        borderWidth: 1, borderColor: C.border,
-        ...Platform.select({ web: { boxShadow: '0 1px 4px rgba(0,0,0,0.05)' } as any }),
-    },
-    cardTitle: { fontSize: 16, fontWeight: '700', color: C.text, marginBottom: 4 },
-    hint: { fontSize: 12, color: C.sub, marginBottom: 12 },
-    presetRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-    presetChip: { borderRadius: 8, borderWidth: 1, borderColor: C.border, paddingHorizontal: 10, paddingVertical: 6 },
-    presetChipActive: { backgroundColor: C.primary, borderColor: C.primary },
-    presetText: { fontSize: 12, fontWeight: '600', color: C.sub },
-    presetTextActive: { color: '#fff' },
-    row: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-    inputGroup: { flex: 1, minWidth: 140, marginBottom: 12 },
-    label: { fontSize: 12, fontWeight: '600', color: C.text, marginBottom: 6 },
-    input: { height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 12, backgroundColor: C.surface2, color: C.text, fontSize: 14, ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) },
-    divider: { height: 1, backgroundColor: C.border, marginVertical: 16 },
-    optionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-    optionLabel: { flex: 1 },
-    toggle: { width: 44, height: 24, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', paddingHorizontal: 2 },
-    toggleOn: { backgroundColor: C.primary },
-    toggleThumb: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff', alignSelf: 'flex-start' },
-    toggleThumbOn: { alignSelf: 'flex-end' },
-    resetBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 40, borderRadius: 10, borderWidth: 1, borderColor: C.border },
-    resetBtnText: { color: C.sub, fontSize: 14, fontWeight: '600' },
-    sidebar: { flex: 1, minWidth: 240, gap: 16 },
-    resultCard: {
-        backgroundColor: C.surface, borderRadius: 16, padding: 20, borderWidth: 2,
-        alignItems: 'center', borderColor: C.primary,
-        ...Platform.select({ web: { boxShadow: '0 2px 8px rgba(255,107,53,0.12)' } as any }),
-    },
-    resultCardTitle: { fontSize: 14, fontWeight: '700', color: C.sub, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
-    bigNum: { fontSize: 56, fontWeight: '900', color: C.primary },
-    bigNumSub: { fontSize: 13, color: C.sub, marginTop: 4, textAlign: 'center' },
-    card: {
-        backgroundColor: C.surface, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: C.border,
-        ...Platform.select({ web: { boxShadow: '0 1px 4px rgba(0,0,0,0.05)' } as any }),
-    },
-    effBar: { height: 10, backgroundColor: C.border, borderRadius: 5, overflow: 'hidden', marginVertical: 12 },
-    effFill: { height: '100%', borderRadius: 5 },
-    effRow: { flexDirection: 'row', gap: 10 },
-    effStat: { flex: 1, borderRadius: 10, padding: 10, alignItems: 'center' },
-    effStatValue: { fontSize: 20, fontWeight: '800' },
-    effStatLabel: { fontSize: 11, color: C.sub, marginTop: 2, fontWeight: '600' },
-    resultRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-    resultLabel: { fontSize: 14, color: C.sub },
-    resultValue: { fontSize: 14, fontWeight: '600', color: C.text },
-    nestGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginVertical: 10 },
-    nestCell: { width: 12, height: 12, borderRadius: 2 },
-    lockedContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-        maxWidth: 520,
-        alignSelf: 'center',
-        width: '100%',
-    },
-    lockedIconWrap: {
-        width: 80,
-        height: 80,
-        borderRadius: 24,
-        backgroundColor: 'rgba(255,107,53,0.12)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,107,53,0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 20,
-        position: 'relative',
-    },
-    lockBadge: {
-        position: 'absolute',
-        bottom: -4,
-        right: -4,
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: C.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: C.bg,
-    },
-    lockedBadgeText: {
-        color: C.primary,
-        fontSize: 11,
-        fontWeight: '800',
-        letterSpacing: 1.5,
-        marginBottom: 8,
-    },
-    lockedTitle: {
-        fontSize: 26,
-        fontWeight: '800',
-        color: C.text,
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    lockedSub: {
-        fontSize: 14,
-        color: C.sub,
-        textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: 24,
-    },
-    priceCard: {
-        backgroundColor: C.surface,
-        borderWidth: 1,
-        borderColor: C.border,
-        borderRadius: 16,
-        padding: 20,
-        width: '100%',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    priceAmount: {
-        fontSize: 32,
-        fontWeight: '900',
-        color: C.text,
-    },
-    pricePeriod: {
-        fontSize: 16,
-        color: C.sub,
-        fontWeight: '500',
-    },
-    priceSub: {
-        fontSize: 12,
-        color: C.sub,
-        marginTop: 6,
-        textAlign: 'center',
-    },
-    upgradeBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-        backgroundColor: C.primary,
-        borderRadius: 14,
-        paddingVertical: 14,
-        paddingHorizontal: 28,
-        width: '100%',
-    },
-    upgradeBtnText: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: '700',
-    },
-    emptyResult: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },
-    emptyTitle: { fontSize: 16, fontWeight: '600', color: C.sub, marginTop: 12 },
-    emptyText: { fontSize: 14, color: C.sub, marginTop: 8, textAlign: 'center' },
-    runProBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-        backgroundColor: C.primary,
-        borderRadius: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        width: '100%',
-    },
-    runProBtnText: {
-        color: '#FFF',
-        fontSize: 14,
-        fontWeight: '700',
-    },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
+    title: { fontSize: 20, fontWeight: '800', color: C.text },
+    subtitle: { fontSize: 12, color: C.sub, marginTop: 2 },
+    tierBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primary + '15', borderWidth: 1, borderColor: C.primary + '40', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+    tierBadgeText: { fontSize: 10, fontWeight: '800', color: C.primary },
+
+    scroll: { padding: 16, gap: 14 },
+    upgradeBanner: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1E1410', borderWidth: 1, borderColor: C.primary + '50', borderRadius: 14, padding: 14 },
+    bannerTitle: { fontSize: 14, fontWeight: '800', color: C.text },
+    bannerDesc: { fontSize: 11, color: C.sub, marginTop: 2, lineHeight: 15 },
+    bannerCTA: { fontSize: 12, fontWeight: '800', color: C.primary },
+
+    sectionLabel: { fontSize: 12, fontWeight: '700', color: C.sub, textTransform: 'uppercase' },
+    presetsRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+    presetChip: { backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+    presetText: { fontSize: 12, color: C.text, fontWeight: '600' },
+
+    formGrid: { gap: 12 },
+    card: { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, padding: 14, gap: 10 },
+    cardTitle: { fontSize: 14, fontWeight: '800', color: C.text, marginBottom: 4 },
+    row: { flexDirection: 'row', gap: 10 },
+    inputWrap: { flex: 1 },
+    label: { fontSize: 11, fontWeight: '600', color: C.sub, marginBottom: 4 },
+    input: { backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, color: C.text, fontSize: 13, fontWeight: '700' },
+
+    resultsCard: { backgroundColor: C.surface2, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, gap: 12 },
+    resultsTitle: { fontSize: 15, fontWeight: '800', color: C.text },
+    metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    metricBox: { flex: 1, minWidth: 120, backgroundColor: C.surface, borderRadius: 10, borderWidth: 1, borderColor: C.border, padding: 10 },
+    metricLabel: { fontSize: 11, color: C.sub, fontWeight: '600' },
+    metricValue: { fontSize: 17, fontWeight: '800', marginTop: 4 },
+
+    lockOverlayBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingVertical: 12, marginTop: 6 },
+    lockOverlayText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
 });

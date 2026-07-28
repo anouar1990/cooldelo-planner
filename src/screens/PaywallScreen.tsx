@@ -1,12 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-    ScrollView, ActivityIndicator, Animated,
+    ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
-import { X, Zap, Layers, BarChart2, Clock, Shield, CheckCircle } from 'lucide-react-native';
-import { useSubscription, HOBBY_PRICE_ID, PRO_PRICE_ID, BIZ_PRICE_ID } from '../hooks/useSubscription';
+import { X, Zap, Check, ShieldCheck } from 'lucide-react-native';
+import { useSubscription, BillingCycle } from '../hooks/useSubscription';
+import { useLanguage } from '../context/LanguageContext';
 
 const C = {
     bg: '#0F1117',
@@ -14,315 +15,175 @@ const C = {
     surface2: '#242840',
     border: 'rgba(255,255,255,0.08)',
     primary: '#FF6B35',
-    primaryGlow: 'rgba(255,107,53,0.15)',
-    gold: '#F59E0B',
-    goldGlow: 'rgba(245,158,11,0.12)',
     text: '#FFFFFF',
     sub: '#8B95A8',
-    dim: '#4B5568',
+    green: '#10B981',
 };
-
-const FEATURES = [
-    {
-        icon: Layers,
-        color: '#3B82F6',
-        title: 'Project Tracking',
-        desc: 'Organize your laser cuts, costs, and materials in one place',
-    },
-    {
-        icon: Zap,
-        color: '#F59E0B',
-        title: 'Material Inventory',
-        desc: 'Log plywood, acrylic sheets and get stock shortage alerts',
-    },
-    {
-        icon: BarChart2,
-        color: '#10B981',
-        title: 'Cost & Profit Analytics',
-        desc: 'Calculate exact profit margins and recommended sale prices',
-    },
-    {
-        icon: Clock,
-        color: C.primary,
-        title: 'Laser Settings Presets',
-        desc: 'Load speed and power profiles for different materials instantly',
-    },
-    {
-        icon: Shield,
-        color: '#8B5CF6',
-        title: 'Quote & Invoice PDFs',
-        desc: 'Send professional invoices directly to your clients',
-    },
-];
 
 export default function PaywallScreen() {
     const navigation = useNavigation();
-    const { startCheckout, checkoutLoading, error, hasActiveTrial, daysLeftInTrial, isPro } = useSubscription();
-    const [selectedPlan, setSelectedPlan] = useState<'free' | 'pro'>('pro');
-
-    // Determine the state of the user's trial
-    const trialExpired = !hasActiveTrial && !isPro;
-
-    // Subtle glow animation on the CTA button
-    const glowAnim = useRef(new Animated.Value(0)).current;
-    useEffect(() => {
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(glowAnim, { toValue: 1, duration: 1800, useNativeDriver: false }),
-                Animated.timing(glowAnim, { toValue: 0, duration: 1800, useNativeDriver: false }),
-            ])
-        ).start();
-    }, []);
-
-    const shadowOpacity = glowAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.35, 0.75],
-    });
-
-    const getPriceId = () => PRO_PRICE_ID;
-    const getPlanPriceText = () => '$19/mo';
+    const { createCheckoutSession, checkoutLoading } = useSubscription();
+    const { t } = useLanguage();
+    const [cycle, setCycle] = useState<BillingCycle>('annual');
 
     return (
         <SafeAreaView style={styles.safe}>
             <ResponsiveContainer>
-                {/* Close button */}
-                <View style={styles.closeRow}>
+                <View style={styles.header}>
                     <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
-                        <X color={C.sub} size={18} />
+                        <X color={C.text} size={20} />
                     </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Select Your 0Machine Plan</Text>
+                    <View style={{ width: 40 }} />
                 </View>
 
-                <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-
-                    {/* Hero */}
-                    <View style={styles.heroSection}>
-                        <View style={styles.badgeRow}>
-                            <Zap color={C.gold} size={14} fill={C.gold} />
-                            <Text style={styles.badge}>PRO WORKSHOP ACCESS</Text>
-                        </View>
-                        <Text style={styles.heroTitle}>Unlock 0machine Pro ⚡</Text>
-                        <Text style={styles.heroSub}>
-                            Upgrade to Pro ($19/mo) to unlock Design Library, Nesting Tool, and Invoice Generator.
-                        </Text>
+                <ScrollView contentContainerStyle={styles.scroll}>
+                    {/* Hero Header */}
+                    <View style={styles.heroWrap}>
+                        <Zap color={C.primary} size={36} fill={C.primary} />
+                        <Text style={styles.heroTitle}>{t('tagline')}</Text>
+                        <Text style={styles.heroSub}>{t('sub_tagline')}</Text>
                     </View>
 
-                    {/* Plans comparison */}
-                    <View style={styles.plansContainer}>
-                        {[
-                            {
-                                id: 'free',
-                                name: 'Free Forever Core Account',
-                                price: '$0',
-                                period: 'forever',
-                                desc: 'Core Cost Calculator, Material Inventory, Machine Presets & Order Tracker',
-                                popular: false,
-                                active: !isPro,
-                            },
-                            {
-                                id: 'pro',
-                                name: 'Pro Workshop Pass',
-                                price: '$19',
-                                period: '/month',
-                                desc: 'Unlocks 500+ Design Library DXF/SVG downloads, Sheet Nesting Yield Optimizer & PDF Invoices',
-                                popular: true,
-                                active: isPro,
-                            },
-                        ].map((plan) => {
-                            const isSelected = selectedPlan === plan.id || (plan.id === 'pro' && selectedPlan !== 'free');
-                            return (
-                                <TouchableOpacity
-                                    key={plan.id}
-                                    style={[
-                                        styles.planCard,
-                                        isSelected && styles.planCardSelected,
-                                        plan.popular && styles.planCardPopularBorder,
-                                    ]}
-                                    onPress={() => {
-                                        if (plan.id === 'pro') setSelectedPlan('pro');
-                                    }}
-                                    activeOpacity={0.8}
-                                >
-                                    {plan.popular && (
-                                        <View style={styles.popularBadge}>
-                                            <Text style={styles.popularBadgeText}>BEST VALUE FOR GROWING SHOPS</Text>
-                                        </View>
-                                    )}
-                                    <View style={styles.planHeader}>
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={[styles.planName, isSelected && { color: C.primary }]}>
-                                                {plan.name}
-                                            </Text>
-                                            <Text style={styles.planDesc}>{plan.desc}</Text>
-                                        </View>
-                                        <View style={styles.planPriceInfo}>
-                                            <Text style={styles.planPrice}>{plan.price}</Text>
-                                            <Text style={styles.planPeriod}>{plan.period}</Text>
-                                        </View>
-                                    </View>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-
-                    {/* Security note */}
-                    <Text style={styles.pricingNote}>
-                        🔒 Secure checkout via Stripe & PayPal · Cancel anytime
-                    </Text>
-
-                    {/* Features overview */}
-                    <Text style={styles.sectionTitle}>FEATURES OVERVIEW</Text>
-                    {FEATURES.map((f, i) => (
-                        <View key={i} style={styles.featureRow}>
-                            <View style={[styles.featureIconWrap, { backgroundColor: `${f.color}18` }]}>
-                                <f.icon color={f.color} size={18} />
-                            </View>
-                            <View style={styles.featureText}>
-                                <Text style={styles.featureName}>{f.title}</Text>
-                                <Text style={styles.featureDesc}>{f.desc}</Text>
-                            </View>
-                            <CheckCircle color={f.color} size={16} opacity={0.7} />
-                        </View>
-                    ))}
-
-                </ScrollView>
-
-                {/* Sticky CTA */}
-                <View style={styles.ctaWrap}>
-                    <Animated.View style={[styles.ctaShadow, { shadowOpacity }]}>
+                    {/* Cycle Toggle */}
+                    <View style={styles.toggleRow}>
                         <TouchableOpacity
-                            style={styles.ctaBtn}
-                            onPress={() => startCheckout(getPriceId())}
-                            disabled={checkoutLoading}
-                            activeOpacity={0.85}
+                            style={[styles.toggleBtn, cycle === 'monthly' && styles.activeToggleBtn]}
+                            onPress={() => setCycle('monthly')}
                         >
-                            {checkoutLoading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <>
-                                    <Zap color="#FFF" size={18} fill="#FFF" style={{ marginRight: 8 }} />
-                                    <Text style={styles.ctaText}>
-                                        Subscribe - {getPlanPriceText()}
-                                    </Text>
-                                </>
-                            )}
+                            <Text style={[styles.toggleBtnText, cycle === 'monthly' && styles.activeToggleText]}>
+                                {t('billing_monthly')}
+                            </Text>
                         </TouchableOpacity>
-                    </Animated.View>
-                </View>
+                        <TouchableOpacity
+                            style={[styles.toggleBtn, cycle === 'annual' && styles.activeToggleBtn]}
+                            onPress={() => setCycle('annual')}
+                        >
+                            <Text style={[styles.toggleBtnText, cycle === 'annual' && styles.activeToggleText]}>
+                                {t('billing_annual')}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Plans */}
+                    <View style={styles.plansWrap}>
+                        {/* Free Plan */}
+                        <View style={styles.planCard}>
+                            <Text style={styles.planName}>{t('plan_free')}</Text>
+                            <Text style={styles.price}>{t('price_free')}</Text>
+                            <View style={styles.benefits}>
+                                <Benefit text="3 Projects per Month" />
+                                <Benefit text="1 Machine Profile" />
+                                <Benefit text="Basic Job Cost Calculator" />
+                                <Benefit text="PDF Quote Export" />
+                            </View>
+                            <TouchableOpacity style={styles.freeBtn} onPress={() => navigation.goBack()}>
+                                <Text style={styles.freeBtnText}>{t('cta_start_free')}</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Starter Plan */}
+                        <View style={styles.planCard}>
+                            <View style={styles.badgeWrap}><Text style={styles.badgeText}>{t('most_popular')}</Text></View>
+                            <Text style={styles.planName}>{t('plan_starter')}</Text>
+                            <Text style={styles.price}>{cycle === 'annual' ? '$59/yr' : '$9/mo'}</Text>
+                            <View style={styles.benefits}>
+                                <Benefit text="Unlimited Projects & Machines" />
+                                <Benefit text="Material Stock Inventory" />
+                                <Benefit text="Laser Presets Library" />
+                                <Benefit text="PDF Quotes & Invoices" />
+                                <Benefit text="Design Library Access" />
+                            </View>
+                            <TouchableOpacity
+                                style={styles.starterBtn}
+                                onPress={() => createCheckoutSession('starter', cycle)}
+                                disabled={checkoutLoading}
+                            >
+                                <Text style={styles.starterBtnText}>{t('cta_upgrade_starter')}</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Workshop Pro Plan */}
+                        <View style={[styles.planCard, styles.proCard]}>
+                            <View style={[styles.badgeWrap, { backgroundColor: C.primary }]}><Text style={styles.badgeText}>{t('best_value')}</Text></View>
+                            <Text style={[styles.planName, { color: C.primary }]}>{t('plan_pro')}</Text>
+                            <Text style={styles.price}>{cycle === 'annual' ? '$149/yr' : '$19/mo'}</Text>
+                            <View style={styles.benefits}>
+                                <Benefit text="Everything in Starter +" bold />
+                                <Benefit text="Nesting Yield Calculator" bold />
+                                <Benefit text="1-Click WhatsApp Sharing" bold />
+                                <Benefit text="CSV & Excel Data Exports" bold />
+                                <Benefit text="Team Workspace (3 Users)" bold />
+                                <Benefit text="Commercial Vector Packs" bold />
+                            </View>
+                            <TouchableOpacity
+                                style={styles.proBtn}
+                                onPress={() => createCheckoutSession('pro', cycle)}
+                                disabled={checkoutLoading}
+                            >
+                                {checkoutLoading ? (
+                                    <ActivityIndicator color="#FFF" />
+                                ) : (
+                                    <Text style={styles.proBtnText}>{t('cta_upgrade_pro')}</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    <View style={styles.footerWrap}>
+                        <ShieldCheck color={C.green} size={16} />
+                        <Text style={styles.footerText}>All plans processed via Stripe SSL Secure Checkout. Cancel anytime.</Text>
+                    </View>
+                </ScrollView>
             </ResponsiveContainer>
         </SafeAreaView>
     );
 }
 
+function Benefit({ text, bold }: { text: string; bold?: boolean }) {
+    return (
+        <View style={styles.benefitRow}>
+            <Check color={bold ? C.primary : C.green} size={14} />
+            <Text style={[styles.benefitText, bold && { fontWeight: '700', color: C.text }]}>{text}</Text>
+        </View>
+    );
+}
+
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: C.bg },
-    closeRow: { paddingHorizontal: 16, paddingTop: 8, alignItems: 'flex-end' },
-    closeBtn: {
-        width: 36, height: 36, borderRadius: 18,
-        backgroundColor: C.surface, justifyContent: 'center', alignItems: 'center',
-        borderWidth: 1, borderColor: C.border,
-    },
-    scroll: { paddingHorizontal: 20, paddingBottom: 20 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, height: 54, borderBottomWidth: 1, borderBottomColor: C.border },
+    closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface, justifyContent: 'center', alignItems: 'center' },
+    headerTitle: { fontSize: 16, fontWeight: '800', color: C.text },
+    scroll: { padding: 16, gap: 16, paddingBottom: 40 },
 
-    // Hero
-    heroSection: { alignItems: 'center', paddingTop: 12, paddingBottom: 20 },
-    badgeRow: {
-        flexDirection: 'row', alignItems: 'center', gap: 5,
-        backgroundColor: C.goldGlow, borderWidth: 1, borderColor: `${C.gold}50`,
-        paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 16,
-    },
-    badge: { fontSize: 10, fontWeight: '800', color: C.gold, letterSpacing: 2 },
-    heroTitle: { fontSize: 30, fontWeight: '800', color: C.text, textAlign: 'center', lineHeight: 36 },
-    heroSub: { fontSize: 14, color: C.sub, textAlign: 'center', marginTop: 8, lineHeight: 20 },
+    heroWrap: { alignItems: 'center', gap: 8, marginBottom: 8 },
+    heroTitle: { fontSize: 20, fontWeight: '900', color: C.text, textAlign: 'center' },
+    heroSub: { fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 18 },
 
-    // Plans list
-    plansContainer: { gap: 12, marginBottom: 16 },
-    planCard: {
-        backgroundColor: C.surface,
-        borderRadius: 16,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: C.border,
-        position: 'relative',
-    },
-    planCardSelected: {
-        borderColor: C.primary,
-        backgroundColor: 'rgba(255,107,53,0.06)',
-    },
-    planCardPopularBorder: {
-        borderColor: 'rgba(245,158,11,0.4)',
-    },
-    popularBadge: {
-        position: 'absolute',
-        top: -10,
-        right: 16,
-        backgroundColor: C.gold,
-        borderRadius: 10,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-    },
-    popularBadgeText: {
-        color: C.bg,
-        fontSize: 8,
-        fontWeight: '800',
-        letterSpacing: 0.5,
-    },
-    planHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    planName: {
-        fontSize: 16,
-        fontWeight: '800',
-        color: C.text,
-    },
-    planDesc: {
-        fontSize: 11,
-        color: C.sub,
-        marginTop: 4,
-        paddingRight: 10,
-        lineHeight: 15,
-    },
-    planPriceInfo: {
-        alignItems: 'flex-end',
-    },
-    planPrice: {
-        fontSize: 22,
-        fontWeight: '900',
-        color: C.text,
-    },
-    planPeriod: {
-        fontSize: 10,
-        color: C.sub,
-    },
-    pricingNote: { fontSize: 13, color: C.dim, textAlign: 'center', marginBottom: 20 },
+    toggleRow: { flexDirection: 'row', backgroundColor: C.surface2, borderRadius: 12, padding: 4, alignSelf: 'center', width: '100%', maxWidth: 360 },
+    toggleBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
+    activeToggleBtn: { backgroundColor: C.primary },
+    toggleBtnText: { fontSize: 12, fontWeight: '700', color: C.sub },
+    activeToggleText: { color: '#FFF' },
 
-    // Features
-    sectionTitle: {
-        fontSize: 11, fontWeight: '700', color: C.dim,
-        letterSpacing: 1.5, marginBottom: 14, marginTop: 4,
-    },
-    featureRow: {
-        flexDirection: 'row', alignItems: 'center', gap: 14,
-        backgroundColor: C.surface, borderRadius: 14,
-        padding: 14, marginBottom: 8,
-        borderWidth: 1, borderColor: C.border,
-    },
-    featureIconWrap: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-    featureText: { flex: 1 },
-    featureName: { fontSize: 14, fontWeight: '700', color: C.text },
-    featureDesc: { fontSize: 12, color: C.sub, marginTop: 2 },
+    plansWrap: { gap: 14 },
+    planCard: { backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, position: 'relative' },
+    proCard: { borderColor: C.primary + '80', backgroundColor: '#1C120C' },
+    badgeWrap: { position: 'absolute', top: 12, right: 12, backgroundColor: C.surface2, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+    badgeText: { fontSize: 10, fontWeight: '800', color: '#FFF' },
+    planName: { fontSize: 18, fontWeight: '800', color: C.text },
+    price: { fontSize: 26, fontWeight: '900', color: C.text, marginTop: 4, marginBottom: 12 },
+    benefits: { gap: 8, marginBottom: 16 },
+    benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    benefitText: { fontSize: 13, color: C.sub },
 
-    // CTA
-    ctaWrap: { padding: 20, paddingTop: 12, backgroundColor: C.bg, borderTopWidth: 1, borderTopColor: C.border },
-    ctaShadow: {
-        borderRadius: 16, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 16, elevation: 12,
-    },
-    ctaBtn: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: C.primary, borderRadius: 16,
-        paddingVertical: 16, paddingHorizontal: 24,
-    },
-    ctaText: { fontSize: 17, fontWeight: '800', color: '#FFF' },
+    freeBtn: { backgroundColor: C.surface2, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+    freeBtnText: { color: C.text, fontWeight: '700', fontSize: 14 },
+    starterBtn: { backgroundColor: '#3B82F6', paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+    starterBtnText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
+    proBtn: { backgroundColor: C.primary, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+    proBtnText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
+
+    footerWrap: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 8 },
+    footerText: { fontSize: 12, color: C.sub },
 });

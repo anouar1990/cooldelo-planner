@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
@@ -76,7 +77,8 @@ function QuickToolCard({
 
 export default function DashboardScreen({ navigation }: any) {
     const { signOut, displayName, avatarUrl, session } = useAuth();
-    const { isPro } = useSubscription();
+    const { subscription, isFree, isStarter, isPro } = useSubscription();
+    const { language, setLanguage, t } = useLanguage();
     const { colors, theme } = useTheme();
     const { projects } = useProjects();
     const { materials, hourlyRate } = useMaterials();
@@ -201,11 +203,39 @@ export default function DashboardScreen({ navigation }: any) {
                                 </View>
                             )}
                             <View>
-                                <Text style={[styles.brand, { color: colors.text }]}>⚡ <Text style={{ color: colors.primary }}>0machine</Text></Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                    <Text style={[styles.brand, { color: colors.text }]}>⚡ <Text style={{ color: colors.primary }}>0machine</Text></Text>
+                                    <View style={{
+                                        backgroundColor: isPro ? '#FF6B35' : isStarter ? '#3B82F6' : '#242840',
+                                        borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
+                                    }}>
+                                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#FFF' }}>
+                                            {isPro ? 'WORKSHOP PRO' : isStarter ? 'STARTER' : 'FREE PLAN'}
+                                        </Text>
+                                    </View>
+                                </View>
                                 <Text style={[styles.subtitle, { color: colors.sub }]}>Workshop Dashboard · {displayName}</Text>
                             </View>
                         </View>
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            {/* Language Switcher */}
+                            <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.border, padding: 2 }}>
+                                {(['en', 'fr', 'es'] as const).map(l => (
+                                    <TouchableOpacity
+                                        key={l}
+                                        onPress={() => setLanguage(l)}
+                                        style={{
+                                            paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6,
+                                            backgroundColor: language === l ? colors.primary : 'transparent',
+                                        }}
+                                    >
+                                        <Text style={{ fontSize: 10, fontWeight: '800', color: language === l ? '#FFF' : colors.sub }}>
+                                            {l.toUpperCase()}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
                             <TouchableOpacity 
                                 style={[styles.topIconBtn, { backgroundColor: colors.primary + '18', borderColor: colors.primary + '40' }]} 
                                 onPress={handleExportCSV}

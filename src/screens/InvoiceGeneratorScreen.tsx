@@ -34,7 +34,7 @@ interface InvoiceItem {
 export default function InvoiceGeneratorScreen() {
     const navigation = useNavigation<any>();
     const { user } = useAuth();
-    const { isPro } = useSubscription();
+    const { isFree, isPro } = useSubscription();
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -281,6 +281,11 @@ export default function InvoiceGeneratorScreen() {
     };
 
     const handlePrintInvoice = async (invoice: any) => {
+        if (isFree) {
+            setShowProModal(true);
+            return;
+        }
+
         const itemsHtml = invoice.items.map((item: any) => `
             <tr>
                 <td style="padding: 12px; border-bottom: 1px solid #E2E8F0; text-align: left; font-size: 14px;">${item.description}</td>
@@ -520,46 +525,9 @@ export default function InvoiceGeneratorScreen() {
                     </View>
                     <View>
                         <Text style={styles.title}>Invoice Generator</Text>
-                        <Text style={styles.subtitle}>Create & manage invoices ($0.50 fee per invoice)</Text>
+                        <Text style={styles.subtitle}>Create & manage professional PDF invoices for your clients</Text>
                     </View>
                 </View>
-            </View>
-
-            {/* Navigation Tabs */}
-            <View style={{ marginBottom: 12 }}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContainer}>
-                    <TouchableOpacity 
-                        style={[styles.tab, activeTab === 'list' && styles.activeTab]}
-                        onPress={() => setActiveTab('list')}
-                    >
-                        <FileText color={activeTab === 'list' ? COLORS.primary : COLORS.textSub} size={16} />
-                        <Text style={[styles.tabText, activeTab === 'list' && styles.activeTabText]}>Invoices List</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity 
-                        style={[styles.tab, activeTab === 'new' && styles.activeTab]}
-                        onPress={() => setActiveTab('new')}
-                    >
-                        <Plus color={activeTab === 'new' ? COLORS.primary : COLORS.textSub} size={16} />
-                        <Text style={[styles.tabText, activeTab === 'new' && styles.activeTabText]}>Create Invoice</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity 
-                        style={[styles.tab, activeTab === 'settings' && styles.activeTab]}
-                        onPress={() => setActiveTab('settings')}
-                    >
-                        <Settings color={activeTab === 'settings' ? COLORS.primary : COLORS.textSub} size={16} />
-                        <Text style={[styles.tabText, activeTab === 'settings' && styles.activeTabText]}>Business Profile</Text>
-                    </TouchableOpacity>
-                </ScrollView>
-            </View>
-
-            {/* Notification Banner */}
-            <View style={styles.billingBanner}>
-                <CreditCard color={COLORS.primary} size={16} />
-                <Text style={styles.billingBannerText}>
-                    Metered pricing enabled. Every generated invoice adds $0.50 to your Stripe monthly invoice.
-                </Text>
             </View>
 
             {loading && invoices.length === 0 ? (
