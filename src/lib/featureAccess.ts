@@ -17,7 +17,7 @@ export const PRO_FEATURE_DETAILS: Record<ProFeatureKey, FeatureAccessInfo> = {
     DESIGN_LIBRARY: {
         key: 'DESIGN_LIBRARY',
         name: 'Design Library',
-        description: 'Access 500+ ready-to-cut vector files (.dxf, .svg, .zip) curated for laser cutting & CNC workshops.',
+        description: 'Access unlimited ready-to-cut vector files (.dxf, .svg, .zip) curated for laser cutting & CNC workshops.',
         iconName: 'Library',
     },
     NESTING: {

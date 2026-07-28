@@ -114,7 +114,7 @@ export const DICTIONARY: Translations = {
 
   // Design Library
   design_title: { en: 'Vector Design Vault', fr: 'Bibliothèque de Fichiers Vectoriels', es: 'Biblioteca de Diseños Vectores' },
-  design_subtitle: { en: 'Browse 500+ commercial laser-ready DXF & SVG templates', fr: 'Parcourez 500+ fichiers laser prêts à découper', es: 'Explora 500+ plantillas láser listas para cortar' },
+  design_subtitle: { en: 'Browse unlimited commercial laser-ready DXF & SVG templates', fr: 'Parcourez des fichiers laser illimités prêts à découper', es: 'Explora plantillas láser ilimitadas listas para cortar' },
   design_search: { en: 'Search vector designs...', fr: 'Rechercher des fichiers vectoriels...', es: 'Buscar diseños vectoriales...' },
   design_downloads: { en: 'Downloads', fr: 'Téléchargements', es: 'Descargas' },
 
