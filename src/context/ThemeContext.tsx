@@ -57,30 +57,18 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<ThemeMode>('dark');
+  const [theme] = useState<ThemeMode>('dark');
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('0machine_theme') as ThemeMode;
-      if (savedTheme === 'light' || savedTheme === 'dark') {
-        setThemeState(savedTheme);
-      }
+      localStorage.removeItem('0machine_theme');
     }
   }, []);
 
-  const setTheme = (mode: ThemeMode) => {
-    setThemeState(mode);
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      localStorage.setItem('0machine_theme', mode);
-    }
-  };
+  const setTheme = (_mode: ThemeMode) => {};
+  const toggleTheme = () => {};
 
-  const toggleTheme = () => {
-    const nextMode = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextMode);
-  };
-
-  const colors = theme === 'dark' ? DARK_THEME : LIGHT_THEME;
+  const colors = DARK_THEME;
 
   return (
     <ThemeContext.Provider value={{ theme, colors, toggleTheme, setTheme }}>

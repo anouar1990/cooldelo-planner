@@ -47,7 +47,7 @@ const COLORS = {
 
 function DashboardNavigator() {
   return (
-    <DashStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+    <DashStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: COLORS.bg } }}>
       <DashStack.Screen name="DashboardMain" component={DashboardScreen} />
       <DashStack.Screen name="ProjectDetails" component={ProjectDetailsScreen} />
       <DashStack.Screen name="Settings" component={SettingsScreen} />
@@ -58,7 +58,7 @@ function DashboardNavigator() {
 
 function ProjectsNavigator() {
   return (
-    <ProjectStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+    <ProjectStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: COLORS.bg } }}>
       <ProjectStack.Screen name="ProjectsList" component={ProjectsListScreen} />
       <ProjectStack.Screen name="AddProject" component={AddProjectScreen} options={{ presentation: 'modal' }} />
       <ProjectStack.Screen name="ProjectDetails" component={ProjectDetailsScreen} />
