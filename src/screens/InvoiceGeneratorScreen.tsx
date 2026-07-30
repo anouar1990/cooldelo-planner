@@ -13,6 +13,8 @@ import { trackEvent } from '../lib/analytics';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
+import { useWorkshop } from '../context/WorkshopContext';
+
 const COLORS = {
     bg: '#0A0C12',
     surface: '#13151F',
@@ -35,6 +37,7 @@ export default function InvoiceGeneratorScreen() {
     const navigation = useNavigation<any>();
     const { user } = useAuth();
     const { isFree, isPro } = useSubscription();
+    const { addInvoice } = useWorkshop();
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
 
@@ -219,9 +222,20 @@ export default function InvoiceGeneratorScreen() {
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error && error.code !== '42P01') console.error('Supabase invoice error:', error.message);
 
-            showAlert('Success', 'Invoice generated successfully! $0.50 has been recorded to your subscription usage.');
+            // Sync to WorkshopContext
+            if (addInvoice) {
+                addInvoice({
+                    clientName: clientName.trim() || 'Client',
+                    clientEmail: clientEmail.trim(),
+                    amount: total,
+                    status: 'Paid',
+                    date: new Date().toISOString().slice(0, 10),
+                });
+            }
+
+            showAlert('Success', 'Invoice generated successfully!');
             
             // Trigger print immediately on web
             if (Platform.OS === 'web' && data) {

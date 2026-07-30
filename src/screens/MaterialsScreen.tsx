@@ -12,16 +12,7 @@ const C = {
     text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
-interface Material {
-    id: string;
-    name: string;
-    type: string; // wood / acrylic / metal / fabric / other
-    thickness: string; // mm
-    costPerUnit: number; // $/sheet
-    sheetWidth: number; // mm
-    sheetHeight: number; // mm
-    stock: number; // sheets
-}
+import { useWorkshop, MaterialItem as Material } from '../context/WorkshopContext';
 
 const TYPES = ['Wood', 'Acrylic', 'Metal', 'Leather', 'Fabric', 'Cardboard', 'Other'];
 const TYPE_COLORS: Record<string, string> = {
@@ -29,19 +20,13 @@ const TYPE_COLORS: Record<string, string> = {
     Fabric: '#7C3AED', Cardboard: '#B45309', Other: '#6B7280',
 };
 
-const SEED: Material[] = [
-    { id: '1', name: 'Birch Plywood 3mm', type: 'Wood', thickness: '3', costPerUnit: 18, sheetWidth: 600, sheetHeight: 400, stock: 10 },
-    { id: '2', name: 'Clear Acrylic 4mm', type: 'Acrylic', thickness: '4', costPerUnit: 24, sheetWidth: 600, sheetHeight: 300, stock: 5 },
-    { id: '3', name: 'MDF 6mm', type: 'Wood', thickness: '6', costPerUnit: 14, sheetWidth: 600, sheetHeight: 400, stock: 8 },
-];
-
 const BLANK: Omit<Material, 'id'> = {
     name: '', type: 'Wood', thickness: '3', costPerUnit: 0,
     sheetWidth: 600, sheetHeight: 400, stock: 0,
 };
 
 export default function MaterialsScreen() {
-    const [materials, setMaterials] = useState<Material[]>(SEED);
+    const { materials, addMaterial, updateMaterial, deleteMaterial } = useWorkshop();
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Material | null>(null);
     const [form, setForm] = useState<Omit<Material, 'id'>>(BLANK);
@@ -61,9 +46,9 @@ export default function MaterialsScreen() {
     const save = () => {
         if (!form.name.trim()) return;
         if (editing) {
-            setMaterials(prev => prev.map(m => m.id === editing.id ? { ...editing, ...form } : m));
+            updateMaterial(editing.id, form);
         } else {
-            setMaterials(prev => [...prev, { id: Date.now().toString(), ...form }]);
+            addMaterial(form);
         }
         setShowModal(false);
     };
@@ -71,12 +56,12 @@ export default function MaterialsScreen() {
     const del = (id: string) => {
         if (Platform.OS === 'web') {
             if (window.confirm('Delete this material?')) {
-                setMaterials(prev => prev.filter(m => m.id !== id));
+                deleteMaterial(id);
             }
         } else {
             Alert.alert('Delete', 'Delete this material?', [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => setMaterials(prev => prev.filter(m => m.id !== id)) },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteMaterial(id) },
             ]);
         }
     };

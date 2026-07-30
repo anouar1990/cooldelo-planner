@@ -12,50 +12,28 @@ const C = {
     text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
-type Status = 'pending' | 'in-progress' | 'completed' | 'cancelled';
+import { useWorkshop, OrderItem as Order } from '../context/WorkshopContext';
 
-interface Order {
-    id: string;
-    orderNumber: string;
-    clientName: string;
-    projectName: string;
-    dueDate: string;
-    price: number;
-    status: Status;
-    notes: string;
-    createdAt: string;
-}
+type Status = Order['status'];
 
-const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
     'pending': { label: 'Pending', color: C.amber, bg: C.amber + '15' },
     'in-progress': { label: 'In Progress', color: C.blue, bg: C.blue + '15' },
     'completed': { label: 'Completed', color: C.green, bg: C.green + '15' },
+    'delivered': { label: 'Delivered', color: C.green, bg: C.green + '15' },
     'cancelled': { label: 'Cancelled', color: C.red, bg: C.red + '15' },
 };
 
-const STATUSES: Status[] = ['pending', 'in-progress', 'completed', 'cancelled'];
-
-const SEED: Order[] = [
-    { id: '1', orderNumber: 'ORD-001', clientName: 'John Smith', projectName: 'Custom Coaster Set (x12)', dueDate: '2026-04-20', price: 85, status: 'in-progress', notes: 'Birch 3mm, engraved logos', createdAt: '2026-04-10' },
-    { id: '2', orderNumber: 'ORD-002', clientName: 'Sarah Lee', projectName: 'Wedding Decorations', dueDate: '2026-04-28', price: 320, status: 'pending', notes: 'Acrylic 4mm, white paint', createdAt: '2026-04-12' },
-];
+const STATUSES: string[] = ['pending', 'in-progress', 'completed', 'delivered', 'cancelled'];
 
 const BLANK = { clientName: '', projectName: '', dueDate: '', price: '', status: 'pending' as Status, notes: '' };
 
-function nextOrderNum(orders: Order[]) {
-    const max = orders.reduce((m, o) => {
-        const n = parseInt(o.orderNumber.split('-')[1] ?? '0');
-        return n > m ? n : m;
-    }, 0);
-    return `ORD-${String(max + 1).padStart(3, '0')}`;
-}
-
 export default function OrdersScreen() {
-    const [orders, setOrders] = useState<Order[]>(SEED);
+    const { orders, addOrder, updateOrder, deleteOrder } = useWorkshop();
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Order | null>(null);
     const [form, setForm] = useState(BLANK);
-    const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
+    const [filterStatus, setFilterStatus] = useState<string>('all');
     const [search, setSearch] = useState('');
 
     const upd = (k: keyof typeof form) => (v: any) => setForm(p => ({ ...p, [k]: v }));
@@ -71,23 +49,22 @@ export default function OrdersScreen() {
         if (!form.clientName.trim() || !form.projectName.trim()) return;
         const price = parseFloat(form.price) || 0;
         if (editing) {
-            setOrders(prev => prev.map(o => o.id === editing.id ? { ...editing, ...form, price } : o));
+            updateOrder(editing.id, { ...form, price });
         } else {
-            const num = nextOrderNum(orders);
-            setOrders(prev => [...prev, { id: Date.now().toString(), orderNumber: num, ...form, price, createdAt: new Date().toISOString().split('T')[0] }]);
+            addOrder({ ...form, price });
         }
         setShowModal(false);
     };
 
     const del = (id: string) => {
         if (Platform.OS === 'web') {
-            if (window.confirm('Delete this order?')) setOrders(prev => prev.filter(o => o.id !== id));
+            if (window.confirm('Delete this order?')) deleteOrder(id);
         } else {
-            Alert.alert('Delete', 'Delete order?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => setOrders(prev => prev.filter(o => o.id !== id)) }]);
+            Alert.alert('Delete', 'Delete order?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => deleteOrder(id) }]);
         }
     };
 
-    const changeStatus = (id: string, s: Status) => setOrders(prev => prev.map(o => o.id === id ? { ...o, status: s } : o));
+    const changeStatus = (id: string, s: Status) => updateOrder(id, { status: s });
 
     const filtered = useMemo(() => orders.filter(o => {
         const matchStatus = filterStatus === 'all' || o.status === filterStatus;
@@ -231,7 +208,7 @@ function OrderRow({ order: o, onEdit, onDelete, onStatusChange }: { order: Order
                         <View style={styles.expandedActions}>
                             <View style={styles.statusQuick}>
                                 {STATUSES.filter(s => s !== o.status).map(s => (
-                                    <TouchableOpacity key={s} style={styles.quickBtn} onPress={() => { onStatusChange(s); }}>
+                                    <TouchableOpacity key={s} style={styles.quickBtn} onPress={() => { onStatusChange(s as Status); }}>
                                         <Text style={[styles.quickBtnText, { color: STATUS_CONFIG[s].color }]}>→ {STATUS_CONFIG[s].label}</Text>
                                     </TouchableOpacity>
                                 ))}

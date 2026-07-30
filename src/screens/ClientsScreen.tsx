@@ -7,6 +7,8 @@ import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useClients, Client } from '../hooks/useClients';
 import { Plus, ChevronLeft, Trash2, Edit2, X, Check, Mail, Phone, User } from 'lucide-react-native';
 
+import { useWorkshop } from '../context/WorkshopContext';
+
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
     border: 'rgba(255,255,255,0.07)', primary: '#FF6B35',
@@ -18,6 +20,7 @@ const EMPTY = { name: '', email: '', phone: '', notes: '' };
 
 export default function ClientsScreen({ navigation }: any) {
     const { clients, loading, addClient, updateClient, deleteClient } = useClients();
+    const workshop = useWorkshop();
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Client | null>(null);
     const [form, setForm] = useState(EMPTY);
@@ -41,8 +44,18 @@ export default function ClientsScreen({ navigation }: any) {
             phone: form.phone.trim() || undefined,
             notes: form.notes.trim() || undefined,
         };
-        if (editing) await updateClient(editing.id, payload);
-        else await addClient(payload);
+        if (editing) {
+            await updateClient(editing.id, payload);
+        } else {
+            await addClient(payload);
+            if (workshop.addClient) {
+                workshop.addClient({
+                    name: form.name.trim(),
+                    email: form.email.trim() || '',
+                    phone: form.phone.trim() || '',
+                });
+            }
+        }
         setSaving(false);
         setShowModal(false);
     };

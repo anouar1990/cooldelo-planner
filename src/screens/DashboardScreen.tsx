@@ -1,32 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image, useWindowDimensions } from 'react-native';
-import { useProjects, ProjectRow } from '../hooks/useProjects';
-import { useMaterials } from '../hooks/useMaterials';
-import { useClients } from '../hooks/useClients';
-import { useDesignLibrary } from '../hooks/useDesignLibrary';
-import { useMachineProfiles } from '../hooks/useMachineProfiles';
-import { supabase } from '../lib/supabase';
 import { 
     Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut, Settings,
-    Calculator, FileText, Layers, Zap, Folder, Users, Package, Grid, AlertTriangle, Download
+    Calculator, FileText, Layers, Zap, Folder, Users, Package, Grid, AlertTriangle, Download, DollarSign, MapPin
 } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useWorkshop } from '../context/WorkshopContext';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
 
-const STATUS_LABEL: Record<string, string> = {
-    planned: 'Planned', 'in-progress': 'In Progress', completed: 'Completed',
-};
-
 function StatusBadge({ status, isDark }: { status: string; isDark: boolean }) {
-    const color = status === 'completed' ? '#10B981' : status === 'in-progress' ? '#F59E0B' : '#3B82F6';
+    const color = status === 'completed' || status === 'delivered' ? '#10B981' : status === 'in-progress' ? '#F59E0B' : '#3B82F6';
     return (
         <View style={[styles.badge, { borderColor: color, backgroundColor: color + (isDark ? '18' : '10') }]}>
-            <Text style={[styles.badgeText, { color }]}>{STATUS_LABEL[status] ?? status}</Text>
+            <Text style={[styles.badgeText, { color }]}>{status.toUpperCase()}</Text>
         </View>
     );
 }
@@ -38,7 +29,7 @@ function StatCard({
 }) {
     return (
         <TouchableOpacity 
-            activeOpacity={onPress ? 0.7 : 1}
+            activeOpacity={onPress ? 0.75 : 1}
             onPress={onPress}
             style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
         >
@@ -76,79 +67,15 @@ function QuickToolCard({
 }
 
 export default function DashboardScreen({ navigation }: any) {
-    const { signOut, displayName, avatarUrl, session } = useAuth();
-    const { subscription, isFree, isStarter, isPro } = useSubscription();
+    const { signOut } = useAuth();
+    const { isFree, isStarter, isPro } = useSubscription();
     const { language, setLanguage, t } = useLanguage();
-    const { colors, theme } = useTheme();
-    const { projects } = useProjects();
-    const { materials, hourlyRate } = useMaterials();
-    const { clients } = useClients();
-    const { designs } = useDesignLibrary();
-    const { machines } = useMachineProfiles();
+    const { colors } = useTheme();
+    const { profile, stats, orders, materials, exportBackupData } = useWorkshop();
 
-    const [invoicesCount, setInvoicesCount] = useState<number>(0);
-    const [invoicesTotal, setInvoicesTotal] = useState<number>(0);
     const [showProModal, setShowProModal] = useState(false);
 
-    useEffect(() => {
-        if (!session?.user?.id) return;
-        supabase
-            .from('invoices')
-            .select('id, total_amount')
-            .eq('user_id', session.user.id)
-            .then(({ data, error }) => {
-                if (!error && data) {
-                    setInvoicesCount(data.length);
-                    const total = data.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
-                    setInvoicesTotal(total);
-                }
-            });
-    }, [session?.user?.id]);
-
-    // Avatar: first letter of displayName for initials fallback
-    const initials = displayName ? displayName.charAt(0).toUpperCase() : 'M';
-
-    const { active, done, planned, totalCost, totalStockValue, recent } = React.useMemo(() => {
-        let activeCount = 0;
-        let doneCount = 0;
-        let plannedCount = 0;
-        let sumCost = 0;
-
-        const matMap = new Map(materials.map(m => [m.id, m]));
-
-        for (const p of projects) {
-            if (p.status === 'in-progress') activeCount++;
-            else if (p.status === 'completed') doneCount++;
-            else if (p.status === 'planned') plannedCount++;
-
-            const mat = p.material_id ? matMap.get(p.material_id) : undefined;
-            const matCost = (p.material_cost_per_unit ?? mat?.cost_per_unit ?? 0) * (p.material_quantity ?? 1);
-            const timeCost = ((p.time_elapsed || 0) / 3600) * hourlyRate;
-            sumCost += matCost + timeCost;
-        }
-
-        let stockVal = 0;
-        for (const m of materials) {
-            stockVal += m.cost_per_unit ?? 0;
-        }
-
-        const recentList = [...projects].sort(
-            (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-        ).slice(0, 5);
-
-        return {
-            active: activeCount,
-            done: doneCount,
-            planned: plannedCount,
-            totalCost: sumCost,
-            totalStockValue: stockVal,
-            recent: recentList
-        };
-    }, [projects, materials, hourlyRate]);
-
-    const navigate = (p: ProjectRow) => {
-        navigation.navigate('ProjectDetails', { id: p.id });
-    };
+    const initials = profile.workshopName ? profile.workshopName.charAt(0).toUpperCase() : 'W';
 
     const navigateTab = (tabName: string) => {
         const parent = navigation.getParent();
@@ -164,28 +91,8 @@ export default function DashboardScreen({ navigation }: any) {
             setShowProModal(true);
             return;
         }
-
-        const projectData = projects.map(p => {
-            const mat = materials.find(m => m.id === p.material_id);
-            return {
-                'Project Title': p.title,
-                'Status': p.status,
-                'Machine': p.machine || 'N/A',
-                'Material': mat ? mat.name : 'N/A',
-                'Thickness (mm)': p.material_thickness || (mat ? mat.thickness : 0),
-                'Unit Cost ($)': p.material_cost_per_unit || (mat ? mat.cost_per_unit : 0),
-                'Time Elapsed (mins)': Math.round((p.time_elapsed || 0) / 60),
-                'Created Date': new Date(p.created_at).toLocaleDateString(),
-            };
-        });
-
-        if (projectData.length === 0) {
-            if (typeof window !== 'undefined') window.alert('No projects available to export.');
-            return;
-        }
-
-        const csvString = objectsToCsv(projectData);
-        downloadCsv(`0Machine_Projects_Report_${new Date().toISOString().slice(0,10)}.csv`, csvString);
+        const csvString = exportBackupData();
+        downloadCsv(`0Machine_Workshop_Report_${new Date().toISOString().slice(0,10)}.json`, csvString);
     };
 
     const { width } = useWindowDimensions();
@@ -198,8 +105,8 @@ export default function DashboardScreen({ navigation }: any) {
                     {/* Header */}
                     <View style={[styles.header, isMobile && styles.headerMobile]}>
                         <View style={[styles.headerUser, isMobile && { width: '100%' }]}>
-                            {avatarUrl ? (
-                                <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+                            {profile.logoUrl ? (
+                                <Image source={{ uri: profile.logoUrl }} style={styles.avatar} />
                             ) : (
                                 <View style={[styles.avatarFallback, { backgroundColor: colors.primary + '25', borderColor: colors.primary }]}>
                                     <Text style={[styles.avatarInitial, { color: colors.primary }]}>{initials}</Text>
@@ -207,7 +114,7 @@ export default function DashboardScreen({ navigation }: any) {
                             )}
                             <View style={{ flex: 1, minWidth: 0 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                    <Text style={[styles.brand, { color: colors.text }]}>⚡ <Text style={{ color: colors.primary }}>0machine</Text></Text>
+                                    <Text style={[styles.brand, { color: colors.text }]}>{profile.workshopName}</Text>
                                     <View style={{
                                         backgroundColor: isPro ? '#FF6B35' : isStarter ? '#3B82F6' : '#242840',
                                         borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
@@ -217,7 +124,9 @@ export default function DashboardScreen({ navigation }: any) {
                                         </Text>
                                     </View>
                                 </View>
-                                <Text style={[styles.subtitle, { color: colors.sub }]} numberOfLines={1}>Workshop Dashboard · {displayName}</Text>
+                                <Text style={[styles.subtitle, { color: colors.sub }]} numberOfLines={1}>
+                                    Owner: {profile.ownerName} · <MapPin size={12} color={colors.sub} /> {profile.city}, {profile.country}
+                                </Text>
                             </View>
                         </View>
 
@@ -259,45 +168,69 @@ export default function DashboardScreen({ navigation }: any) {
 
                     {/* Synchronized Live Metrics Grid */}
                     <View style={styles.statsGrid}>
-                        <StatCard
-                            icon={<Activity color={colors.primary} size={20} />}
-                            value={projects.length}
-                            label={t('stat_projects')}
-                            subtext={`${active} In Progress · ${done} Done`}
-                            color={colors.primary}
+                        <StatCard 
+                            icon={<Folder color="#3B82F6" size={20} />} 
+                            value={stats.totalProjects} 
+                            label="Total Projects" 
+                            subtext={`${stats.inProgressProjects} Active · ${stats.completedProjects} Done · ${stats.deliveredProjects} Delivered`} 
+                            color="#3B82F6" 
                             colors={colors}
-                            onPress={() => navigateTab('Projects')}
+                            onPress={() => navigateTab('Orders')}
                         />
-                        <StatCard
-                            icon={<Package color="#F59E0B" size={20} />}
-                            value={materials.length}
-                            label={t('stat_materials')}
-                            subtext={materials.length > 0 ? `$${totalStockValue.toFixed(0)} total stock value` : 'Wood, acrylic & MDF'}
-                            color="#F59E0B"
+                        <StatCard 
+                            icon={<Package color="#10B981" size={20} />} 
+                            value={stats.totalMaterials} 
+                            label="Materials Logged" 
+                            subtext={`$${stats.inventoryValue.toFixed(0)} Value · ${stats.lowStockCount} Low Stock ⚠`} 
+                            color="#10B981" 
                             colors={colors}
                             onPress={() => navigateTab('Materials')}
                         />
-                        <StatCard
-                            icon={<FileText color="#10B981" size={20} />}
-                            value={invoicesCount}
-                            label={t('stat_invoices')}
-                            subtext={invoicesTotal > 0 ? `$${invoicesTotal.toFixed(0)} billed` : 'Custom PDF invoices'}
-                            color="#10B981"
+                        <StatCard 
+                            icon={<FileText color="#FF6B35" size={20} />} 
+                            value={`$${stats.totalRevenue.toFixed(0)}`} 
+                            label="Revenue Issued" 
+                            subtext={`${stats.paidInvoicesCount} Paid · ${stats.pendingInvoicesCount} Pending`} 
+                            color="#FF6B35" 
                             colors={colors}
                             onPress={() => navigateTab('Invoice Generator')}
                         />
-                        <StatCard
-                            icon={<Users color="#3B82F6" size={20} />}
-                            value={clients.length}
-                            label={t('stat_clients')}
-                            subtext="Active customer profiles"
-                            color="#3B82F6"
+                        <StatCard 
+                            icon={<Users color="#8B5CF6" size={20} />} 
+                            value={stats.totalClients} 
+                            label="Active Clients" 
+                            subtext={`+${stats.newClientsThisMonth} New this month`} 
+                            color="#8B5CF6" 
                             colors={colors}
-                            onPress={() => navigation.navigate('Clients')}
+                            onPress={() => navigateTab('Orders')}
                         />
                     </View>
 
-                    {/* Quick Tools Navigation Hub */}
+                    {/* Revenue Breakdown Widget */}
+                    <View style={[styles.revenueWidget, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                        <View style={styles.revWidgetHeader}>
+                            <View style={styles.revIconWrap}>
+                                <TrendingUp color="#10B981" size={18} />
+                            </View>
+                            <Text style={[styles.revWidgetTitle, { color: colors.text }]}>Revenue Analytics & Order Value</Text>
+                        </View>
+                        <View style={styles.revWidgetRow}>
+                            <View style={styles.revWidgetStat}>
+                                <Text style={[styles.revWidgetValue, { color: '#10B981' }]}>{profile.currency}{stats.monthlyRevenue}</Text>
+                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Monthly Revenue</Text>
+                            </View>
+                            <View style={styles.revWidgetStat}>
+                                <Text style={[styles.revWidgetValue, { color: '#3B82F6' }]}>{profile.currency}{stats.weeklyRevenue}</Text>
+                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Weekly Avg</Text>
+                            </View>
+                            <View style={styles.revWidgetStat}>
+                                <Text style={[styles.revWidgetValue, { color: '#FF6B35' }]}>{profile.currency}{stats.averageOrderValue}</Text>
+                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Avg Order Value</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Quick Workshop Actions */}
                     <View style={styles.sectionRow}>
                         <Text style={[styles.sectionTitle, { color: colors.sub }]}>{t('dash_quick_start')}</Text>
                     </View>
@@ -329,7 +262,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<Zap color="#F59E0B" size={20} />}
                             title={t('preset_title')}
-                            desc={`${machines.length > 0 ? machines.length + ' machines registered' : 'Speed, power & frequency presets'}`}
+                            desc="Speed, power & frequency presets"
                             color="#F59E0B"
                             colors={colors}
                             onPress={() => navigateTab('Laser Presets')}
@@ -337,7 +270,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<Folder color="#EC4899" size={20} />}
                             title={t('design_title')}
-                            desc={`${designs.length} laser cut SVG/DXF templates`}
+                            desc="Laser cut SVG/DXF templates"
                             color="#EC4899"
                             colors={colors}
                             onPress={() => navigateTab('Design Library')}
@@ -352,48 +285,44 @@ export default function DashboardScreen({ navigation }: any) {
                         />
                     </View>
 
-                    {/* Recent Projects Activity */}
+                    {/* Recent Orders & Jobs */}
                     <View style={styles.sectionRow}>
-                        <Text style={[styles.sectionTitle, { color: colors.sub }]}>RECENT PROJECTS & JOBS</Text>
-                        <TouchableOpacity onPress={() => navigateTab('Projects')}>
+                        <Text style={[styles.sectionTitle, { color: colors.sub }]}>RECENT WORKSHOP ORDERS</Text>
+                        <TouchableOpacity onPress={() => navigateTab('Orders')}>
                             <Text style={[styles.seeAll, { color: colors.primary }]}>View All →</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {recent.length === 0 ? (
+                    {orders.length === 0 ? (
                         <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                             <Text style={styles.emptyIcon}>🔦</Text>
-                            <Text style={[styles.emptyTitle, { color: colors.text }]}>No active projects yet</Text>
+                            <Text style={[styles.emptyTitle, { color: colors.text }]}>No active orders yet</Text>
                             <Text style={[styles.emptySub, { color: colors.sub }]}>
-                                Head over to Projects or launch the Cost Calculator to start your first job.
+                                Head over to Orders Tracker to log your first client order.
                             </Text>
                         </View>
                     ) : (
                         <View style={styles.recentList}>
-                            {recent.map(p => {
-                                const mat = materials.find(m => m.id === p.material_id);
-                                return (
-                                    <TouchableOpacity 
-                                        key={p.id} 
-                                        style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]} 
-                                        onPress={() => navigate(p)} 
-                                        activeOpacity={0.75}
-                                    >
-                                        <View style={[styles.rowBar, { backgroundColor: p.status === 'completed' ? '#10B981' : p.status === 'in-progress' ? '#F59E0B' : '#3B82F6' }]} />
-                                        <View style={styles.rowBody}>
-                                            <View style={styles.rowTop}>
-                                                <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>{p.title}</Text>
-                                                <StatusBadge status={p.status} isDark={colors.isDark} />
-                                            </View>
-                                            <Text style={[styles.rowMeta, { color: colors.sub }]} numberOfLines={1}>
-                                                {mat ? `${mat.name} · ${p.material_thickness || mat.thickness}mm` : 'No material'}
-                                                {p.machine ? ` · ${p.machine}` : ''}
-                                            </Text>
+                            {orders.slice(0, 5).map(o => (
+                                <TouchableOpacity 
+                                    key={o.id} 
+                                    style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]} 
+                                    onPress={() => navigateTab('Orders')} 
+                                    activeOpacity={0.75}
+                                >
+                                    <View style={[styles.rowBar, { backgroundColor: o.status === 'completed' || o.status === 'delivered' ? '#10B981' : o.status === 'in-progress' ? '#F59E0B' : '#3B82F6' }]} />
+                                    <View style={styles.rowBody}>
+                                        <View style={styles.rowTop}>
+                                            <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>{o.projectName}</Text>
+                                            <StatusBadge status={o.status} isDark={colors.isDark} />
                                         </View>
-                                        <ArrowRight color={colors.dim} size={16} />
-                                    </TouchableOpacity>
-                                );
-                            })}
+                                        <Text style={[styles.rowMeta, { color: colors.sub }]} numberOfLines={1}>
+                                            {o.orderNumber} · {o.clientName} · ${o.price}
+                                        </Text>
+                                    </View>
+                                    <ArrowRight color={colors.dim} size={16} />
+                                </TouchableOpacity>
+                            ))}
                         </View>
                     )}
                 </ResponsiveContainer>
@@ -426,6 +355,14 @@ const styles = StyleSheet.create({
     topIconBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
     
     statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 12, marginBottom: 12 },
+    revenueWidget: { marginHorizontal: 16, marginBottom: 16, borderRadius: 16, borderWidth: 1, padding: 16 },
+    revWidgetHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+    revIconWrap: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#10B98120', justifyContent: 'center', alignItems: 'center' },
+    revWidgetTitle: { fontSize: 13, fontWeight: '700' },
+    revWidgetRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+    revWidgetStat: { flex: 1, alignItems: 'center' },
+    revWidgetValue: { fontSize: 18, fontWeight: '800' },
+    revWidgetLabel: { fontSize: 11, marginTop: 2, fontWeight: '600' },
     statCard: {
         flex: 1, minWidth: '45%',
         borderRadius: 16, padding: 16, alignItems: 'flex-start',

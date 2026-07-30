@@ -1,159 +1,152 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-    ScrollView, TextInput, ActivityIndicator, Alert, Linking, Modal,
+    ScrollView, TextInput, ActivityIndicator, Alert, Linking, Modal, Image, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
-import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink, Sun, Moon, Download } from 'lucide-react-native';
+import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink, Sun, Moon, Download, Upload, Cpu, Globe, Shield } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useWorkshop, WorkshopType } from '../context/WorkshopContext';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { supabase } from '../lib/supabase';
-import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
+import { downloadCsv } from '../lib/exportCsv';
 
-const C = {
-    bg: '#0F1117',
-    surface: '#1C2030',
-    surface2: '#242840',
-    border: 'rgba(255,255,255,0.08)',
-    primary: '#FF6B35',
-    primaryGlow: 'rgba(255,107,53,0.15)',
-    gold: '#F59E0B',
-    text: '#FFFFFF',
-    sub: '#8B95A8',
-    dim: '#4B5568',
-    danger: '#EF4444',
-    dangerGlow: 'rgba(239,68,68,0.12)',
-};
+const WORKSHOP_TYPES: WorkshopType[] = [
+    'Laser Cutting',
+    'CNC Fabrication',
+    '3D Printing',
+    'Engraving',
+    'Mixed Workshop',
+];
 
 export default function SettingsScreen() {
     const navigation = useNavigation<any>();
     const { user, displayName, signOut } = useAuth();
     const { subscription, isFree, isStarter, isPro } = useSubscription();
-    const { theme, toggleTheme } = useTheme();
+    const { theme } = useTheme();
+    const { language, setLanguage } = useLanguage();
+    const { profile, updateProfile, exportBackupData, importBackupData } = useWorkshop();
+
     const [showProModal, setShowProModal] = useState(false);
-
-    // Account ID derived from User ID
-    const accountId = user?.id ? `ACC-${user.id.substring(0, 8).toUpperCase()}` : 'N/A';
-
-    // Business Profile Fields
-    const [bizName, setBizName] = useState('');
-    const [bizEmail, setBizEmail] = useState('');
-    const [bizPhone, setBizPhone] = useState('');
-    const [bizAddress, setBizAddress] = useState('');
-    const [bizTaxId, setBizTaxId] = useState('');
-    const [bizBank, setBizBank] = useState('');
-    const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [importInput, setImportInput] = useState('');
+    const [showImportModal, setShowImportModal] = useState(false);
 
-    // Delete Modal State
+    // Form fields mapped to WorkshopProfile
+    const [workshopName, setWorkshopName] = useState(profile.workshopName);
+    const [ownerName, setOwnerName] = useState(profile.ownerName);
+    const [companyName, setCompanyName] = useState(profile.companyName);
+    const [email, setEmail] = useState(profile.email);
+    const [phone, setPhone] = useState(profile.phone);
+    const [country, setCountry] = useState(profile.country);
+    const [city, setCity] = useState(profile.city);
+    const [address, setAddress] = useState(profile.address);
+    const [taxId, setTaxId] = useState(profile.taxId);
+    const [currency, setCurrency] = useState(profile.currency);
+    const [workshopType, setWorkshopType] = useState<WorkshopType>(profile.workshopType);
+    const [logoUrl, setLogoUrl] = useState(profile.logoUrl);
+
+    // Machine fields
+    const [machineName, setMachineName] = useState(profile.machine.name);
+    const [machineBrand, setMachineBrand] = useState(profile.machine.brand);
+    const [machineModel, setMachineModel] = useState(profile.machine.model);
+    const [machinePower, setMachinePower] = useState(profile.machine.powerWatts.toString());
+    const [machineArea, setMachineArea] = useState(profile.machine.workingArea);
+
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [disclaimerChecked, setDisclaimerChecked] = useState(false);
 
     useEffect(() => {
-        fetchBusinessSettings();
-    }, [user]);
+        setWorkshopName(profile.workshopName);
+        setOwnerName(profile.ownerName);
+        setCompanyName(profile.companyName);
+        setEmail(profile.email);
+        setPhone(profile.phone);
+        setCountry(profile.country);
+        setCity(profile.city);
+        setAddress(profile.address);
+        setTaxId(profile.taxId);
+        setCurrency(profile.currency);
+        setWorkshopType(profile.workshopType);
+        setLogoUrl(profile.logoUrl);
+        setMachineName(profile.machine.name);
+        setMachineBrand(profile.machine.brand);
+        setMachineModel(profile.machine.model);
+        setMachinePower(profile.machine.powerWatts.toString());
+        setMachineArea(profile.machine.workingArea);
+    }, [profile]);
 
-    const fetchBusinessSettings = async () => {
-        if (!user) return;
-        try {
-            setLoading(true);
-            const { data, error } = await supabase
-                .from('business_settings')
-                .select('*')
-                .eq('user_id', user.id)
-                .single();
+    const handleSave = () => {
+        setSaving(true);
+        updateProfile({
+            workshopName: workshopName.trim(),
+            ownerName: ownerName.trim(),
+            companyName: companyName.trim(),
+            email: email.trim(),
+            phone: phone.trim(),
+            country: country.trim(),
+            city: city.trim(),
+            address: address.trim(),
+            taxId: taxId.trim(),
+            currency: currency.trim() || '$',
+            workshopType,
+            logoUrl: logoUrl.trim(),
+            machine: {
+                name: machineName.trim(),
+                brand: machineBrand.trim(),
+                model: machineModel.trim(),
+                powerWatts: parseFloat(machinePower) || 0,
+                workingArea: machineArea.trim(),
+            },
+        });
 
-            if (error && error.code !== 'PGRST116') throw error;
-
-            if (data) {
-                setBizName(data.name || '');
-                setBizEmail(data.email || '');
-                setBizPhone(data.phone || '');
-                setBizAddress(data.address || '');
-                setBizTaxId(data.tax_id || '');
-                setBizBank(data.bank_details || '');
-            }
-        } catch (err: any) {
-            console.error('Error fetching business info:', err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const saveBusinessSettings = async () => {
-        if (!user) return;
-        try {
-            setSaving(true);
-            const payload = {
-                user_id: user.id,
-                name: bizName.trim(),
-                email: bizEmail.trim(),
-                phone: bizPhone.trim(),
-                address: bizAddress.trim(),
-                tax_id: bizTaxId.trim(),
-                bank_details: bizBank.trim(),
-                updated_at: new Date().toISOString()
-            };
-
-            const { error } = await supabase
-                .from('business_settings')
-                .upsert(payload, { onConflict: 'user_id' });
-
-            if (error) throw error;
-            Alert.alert('Success', 'Business settings saved successfully!');
-        } catch (err: any) {
-            Alert.alert('Error', err.message || 'Failed to save settings');
-        } finally {
+        setTimeout(() => {
             setSaving(false);
+            if (Platform.OS === 'web') window.alert('Workshop settings saved successfully!');
+            else Alert.alert('Saved', 'Workshop settings saved successfully!');
+        }, 300);
+    };
+
+    const handleExportBackup = () => {
+        const jsonData = exportBackupData();
+        downloadCsv(`0Machine_Full_Backup_${new Date().toISOString().slice(0, 10)}.json`, jsonData);
+    };
+
+    const handleImportBackup = () => {
+        if (!importInput.trim()) return;
+        const success = importBackupData(importInput);
+        if (success) {
+            setShowImportModal(false);
+            setImportInput('');
+            if (Platform.OS === 'web') window.alert('Backup data imported successfully!');
+            else Alert.alert('Import Success', 'Backup data imported successfully!');
+        } else {
+            if (Platform.OS === 'web') window.alert('Invalid JSON backup file format.');
+            else Alert.alert('Import Error', 'Invalid JSON backup file format.');
         }
     };
+
+    const accountId = user?.id ? `ACC-${user.id.substring(0, 8).toUpperCase()}` : 'N/A';
 
     const executeAccountDeletion = async () => {
         if (!user) return;
         try {
-            setLoading(true);
             setIsDeleteModalVisible(false);
-
-            // Delete from all database tables
             await supabase.from('projects').delete().eq('user_id', user.id);
             await supabase.from('materials').delete().eq('user_id', user.id);
             await supabase.from('clients').delete().eq('user_id', user.id);
             await supabase.from('machine_profiles').delete().eq('user_id', user.id);
             await supabase.from('business_settings').delete().eq('user_id', user.id);
-            await supabase.from('user_settings').delete().eq('user_id', user.id);
-            
-            // Log out
             await signOut();
-            Alert.alert('Account Deleted', 'Your profile and data have been removed.');
+            if (Platform.OS === 'web') window.alert('Your profile and data have been removed.');
+            else Alert.alert('Account Deleted', 'Your profile and data have been removed.');
         } catch (err: any) {
             Alert.alert('Deletion Failed', err.message);
-        } finally {
-            setLoading(false);
         }
-    };
-
-    const handleManageSubscription = () => {
-        // Stripe Customer Portal link
-        const acctId = 'acct_1DrskaGNkz6GTxuM';
-        const portalUrl = `https://billing.stripe.com/p/login/${acctId}`;
-        Linking.openURL(portalUrl).catch(() => {
-            Alert.alert('Error', 'Could not open subscription portal link.');
-        });
-    };
-
-    const getPlanName = () => {
-        if (subscription.plan === 'pro') return 'Workshop Pro';
-        if (subscription.plan === 'starter') return 'Starter';
-        return 'Free Forever';
-    };
-
-    const getPlanPrice = () => {
-        if (subscription.plan === 'pro') return subscription.billingCycle === 'annual' ? '$149/year' : '$19/month';
-        if (subscription.plan === 'starter') return subscription.billingCycle === 'annual' ? '$59/year' : '$9/month';
-        return '$0 Free';
     };
 
     return (
@@ -162,308 +155,228 @@ export default function SettingsScreen() {
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-                        <ArrowLeft color={C.text} size={20} />
+                        <ArrowLeft color="#FFFFFF" size={20} />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Account Settings</Text>
-                    <View style={{ width: 40 }} />
+                    <Text style={styles.headerTitle}>Workshop Settings</Text>
+                    <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave} disabled={saving}>
+                        {saving ? <ActivityIndicator color="#FFF" size="small" /> : <Save color="#FFF" size={16} />}
+                        <Text style={styles.saveHeaderBtnText}>{saving ? 'Saving...' : 'Save'}</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {loading ? (
-                    <View style={styles.loadingWrap}>
-                        <ActivityIndicator color={C.primary} size="large" />
-                    </View>
-                ) : (
-                    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-                        {/* Profile Section */}
-                        <View style={styles.card}>
-                            <View style={styles.cardHeader}>
-                                <User color={C.primary} size={20} />
-                                <Text style={styles.cardTitle}>User Profile</Text>
-                            </View>
-                            <View style={styles.profileRow}>
-                                <View style={styles.avatar}>
-                                    <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
-                                </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.profileName}>{displayName}</Text>
-                                    <Text style={styles.profileEmail}>{user?.email}</Text>
-                                    <Text style={styles.accountIdText}>Account ID: {accountId}</Text>
-                                </View>
-                            </View>
+                <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+                    {/* General Information */}
+                    <View style={styles.card}>
+                        <View style={styles.cardHeader}>
+                            <User color="#FF6B35" size={20} />
+                            <Text style={styles.cardTitle}>General Workshop Profile</Text>
                         </View>
 
-                        {/* Theme Preferences */}
-                        <View style={styles.card}>
-                            <View style={styles.cardHeader}>
-                                {theme === 'dark' ? <Moon color="#3B82F6" size={20} /> : <Sun color="#F59E0B" size={20} />}
-                                <Text style={styles.cardTitle}>App Theme Preference</Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <View>
-                                    <Text style={{ fontSize: 14, fontWeight: '700', color: C.text }}>
-                                        {theme === 'dark' ? '🌙 Dark Mode (Obsidian)' : '☀️ Light Mode (Workshop)'}
-                                    </Text>
-                                    <Text style={{ fontSize: 12, color: C.sub, marginTop: 2 }}>
-                                        {theme === 'dark' ? 'Sleek dark theme for low light' : 'High contrast light mode for bright workshops'}
-                                    </Text>
+                        {/* Logo Preview & Input */}
+                        <Text style={styles.label}>Workshop Logo URL</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                            {logoUrl ? (
+                                <Image source={{ uri: logoUrl }} style={{ width: 48, height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#FF6B35' }} />
+                            ) : (
+                                <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#FF6B3520', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#FF6B35' }}>
+                                    <Text style={{ color: '#FF6B35', fontWeight: '800', fontSize: 18 }}>{workshopName ? workshopName.charAt(0) : 'W'}</Text>
                                 </View>
+                            )}
+                            <TextInput
+                                style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                                value={logoUrl}
+                                onChangeText={setLogoUrl}
+                                placeholder="https://example.com/logo.png"
+                                placeholderTextColor="#8B95A8"
+                            />
+                        </View>
+
+                        <Text style={styles.label}>Workshop Name</Text>
+                        <TextInput style={styles.input} value={workshopName} onChangeText={setWorkshopName} placeholder="Atlas FabWorks" placeholderTextColor="#8B95A8" />
+
+                        <Text style={styles.label}>Owner / Managing Engineer Name</Text>
+                        <TextInput style={styles.input} value={ownerName} onChangeText={setOwnerName} placeholder="John Doe" placeholderTextColor="#8B95A8" />
+
+                        <Text style={styles.label}>Workshop Type</Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                            {WORKSHOP_TYPES.map(type => (
                                 <TouchableOpacity
-                                    onPress={toggleTheme}
+                                    key={type}
+                                    onPress={() => setWorkshopType(type)}
                                     style={{
-                                        backgroundColor: theme === 'dark' ? 'rgba(59,130,246,0.15)' : 'rgba(245,158,11,0.15)',
-                                        borderWidth: 1,
-                                        borderColor: theme === 'dark' ? 'rgba(59,130,246,0.3)' : 'rgba(245,158,11,0.3)',
-                                        paddingHorizontal: 16,
-                                        paddingVertical: 8,
-                                        borderRadius: 12,
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        gap: 6,
+                                        paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1,
+                                        backgroundColor: workshopType === type ? '#FF6B35' : '#242840',
+                                        borderColor: workshopType === type ? '#FF6B35' : 'rgba(255,255,255,0.08)',
                                     }}
                                 >
-                                    {theme === 'dark' ? <Sun color="#3B82F6" size={16} /> : <Moon color="#F59E0B" size={16} />}
-                                    <Text style={{ color: theme === 'dark' ? '#3B82F6' : '#F59E0B', fontWeight: '700', fontSize: 13 }}>
-                                        Switch to {theme === 'dark' ? 'Light' : 'Dark'}
-                                    </Text>
+                                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFF' }}>{type}</Text>
                                 </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <Text style={styles.label}>Primary Currency</Text>
+                        <TextInput style={styles.input} value={currency} onChangeText={setCurrency} placeholder="$ / € / DH / £" placeholderTextColor="#8B95A8" />
+                    </View>
+
+                    {/* Company Details */}
+                    <View style={styles.card}>
+                        <View style={styles.cardHeader}>
+                            <Landmark color="#3B82F6" size={20} />
+                            <Text style={styles.cardTitle}>Company & Billing Info</Text>
+                        </View>
+
+                        <Text style={styles.label}>Company Legal Name</Text>
+                        <TextInput style={styles.input} value={companyName} onChangeText={setCompanyName} placeholder="Atlas Technologies SARL" placeholderTextColor="#8B95A8" />
+
+                        <Text style={styles.label}>VAT / Tax ID Number</Text>
+                        <TextInput style={styles.input} value={taxId} onChangeText={setTaxId} placeholder="MA-987654321" placeholderTextColor="#8B95A8" />
+
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>Email</Text>
+                                <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="contact@fab.com" placeholderTextColor="#8B95A8" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>Phone Number</Text>
+                                <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+212 600-000000" placeholderTextColor="#8B95A8" />
                             </View>
                         </View>
 
-                        {/* Export Data & Accounting Reports */}
-                        <View style={styles.card}>
-                            <View style={styles.cardHeader}>
-                                <Download color="#10B981" size={20} />
-                                <Text style={styles.cardTitle}>Export Workshop Data (CSV / Excel)</Text>
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>City</Text>
+                                <TextInput style={styles.input} value={city} onChangeText={setCity} placeholder="Casablanca" placeholderTextColor="#8B95A8" />
                             </View>
-                            <Text style={{ fontSize: 13, color: C.sub, marginBottom: 14, lineHeight: 18 }}>
-                                Download your workshop records in formatted CSV files for accounting, tax reporting, and offline backups.
-                            </Text>
-                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                                <TouchableOpacity 
-                                    onPress={async () => {
-                                        if (!isPro) { setShowProModal(true); return; }
-                                        if (!user?.id) return;
-                                        const { data } = await supabase.from('projects').select('*').eq('user_id', user.id);
-                                        if (!data || data.length === 0) {
-                                            Alert.alert('Export', 'No projects found to export.');
-                                            return;
-                                        }
-                                        const csv = objectsToCsv(data);
-                                        downloadCsv(`0Machine_Projects_${new Date().toISOString().slice(0,10)}.csv`, csv);
-                                    }}
-                                    style={{
-                                        backgroundColor: 'rgba(16,185,129,0.12)',
-                                        borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)',
-                                        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
-                                        flexDirection: 'row', alignItems: 'center', gap: 6,
-                                    }}
-                                >
-                                    <Download color="#10B981" size={14} />
-                                    <Text style={{ color: '#10B981', fontWeight: '700', fontSize: 12 }}>Export Projects CSV {!isPro ? '🔒' : ''}</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity 
-                                    onPress={async () => {
-                                        if (!isPro) { setShowProModal(true); return; }
-                                        if (!user?.id) return;
-                                        const { data } = await supabase.from('materials').select('*').eq('user_id', user.id);
-                                        if (!data || data.length === 0) {
-                                            Alert.alert('Export', 'No materials found to export.');
-                                            return;
-                                        }
-                                        const csv = objectsToCsv(data);
-                                        downloadCsv(`0Machine_Materials_${new Date().toISOString().slice(0,10)}.csv`, csv);
-                                    }}
-                                    style={{
-                                        backgroundColor: 'rgba(59,130,246,0.12)',
-                                        borderWidth: 1, borderColor: 'rgba(59,130,246,0.25)',
-                                        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
-                                        flexDirection: 'row', alignItems: 'center', gap: 6,
-                                    }}
-                                >
-                                    <Download color="#3B82F6" size={14} />
-                                    <Text style={{ color: '#3B82F6', fontWeight: '700', fontSize: 12 }}>Export Materials CSV {!isPro ? '🔒' : ''}</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity 
-                                    onPress={async () => {
-                                        if (!isPro) { setShowProModal(true); return; }
-                                        if (!user?.id) return;
-                                        const { data } = await supabase.from('clients').select('*').eq('user_id', user.id);
-                                        if (!data || data.length === 0) {
-                                            Alert.alert('Export', 'No clients found to export.');
-                                            return;
-                                        }
-                                        const csv = objectsToCsv(data);
-                                        downloadCsv(`0Machine_Clients_${new Date().toISOString().slice(0,10)}.csv`, csv);
-                                    }}
-                                    style={{
-                                        backgroundColor: 'rgba(139,92,246,0.12)',
-                                        borderWidth: 1, borderColor: 'rgba(139,92,246,0.25)',
-                                        paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
-                                        flexDirection: 'row', alignItems: 'center', gap: 6,
-                                    }}
-                                >
-                                    <Download color="#8B5CF6" size={14} />
-                                    <Text style={{ color: '#8B5CF6', fontWeight: '700', fontSize: 12 }}>Export Clients CSV {!isPro ? '🔒' : ''}</Text>
-                                </TouchableOpacity>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>Country</Text>
+                                <TextInput style={styles.input} value={country} onChangeText={setCountry} placeholder="Morocco" placeholderTextColor="#8B95A8" />
                             </View>
                         </View>
 
-                        {/* Subscription Section */}
-                        <View style={styles.card}>
-                            <View style={styles.cardHeader}>
-                                <CreditCard color={C.gold} size={20} />
-                                <Text style={styles.cardTitle}>Subscription Details</Text>
-                            </View>
-                            <View style={styles.subInfo}>
-                                <View>
-                                    <Text style={styles.subPlanLabel}>Active Plan</Text>
-                                    <Text style={styles.subPlanValue}>{getPlanName()}</Text>
-                                </View>
-                                <View style={{ alignItems: 'flex-end' }}>
-                                    <Text style={styles.subPlanLabel}>Price</Text>
-                                    <Text style={styles.subPlanValue}>{getPlanPrice()}</Text>
-                                </View>
-                            </View>
+                        <Text style={styles.label}>Street Address</Text>
+                        <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Boulevard Mohamed V" placeholderTextColor="#8B95A8" />
+                    </View>
 
-                            <View style={styles.subActions}>
-                                <TouchableOpacity 
-                                    style={styles.upgradeBtn} 
-                                    onPress={() => navigation.navigate('Paywall')}
-                                >
-                                    <Text style={styles.upgradeBtnText}>Upgrade / Change Plan</Text>
-                                </TouchableOpacity>
+                    {/* Machine Specs */}
+                    <View style={styles.card}>
+                        <View style={styles.cardHeader}>
+                            <Cpu color="#10B981" size={20} />
+                            <Text style={styles.cardTitle}>Primary Laser & CNC Machine</Text>
+                        </View>
 
-                                {subscription.status === 'active' && (
-                                    <TouchableOpacity 
-                                        style={styles.cancelBtn} 
-                                        onPress={handleManageSubscription}
-                                    >
-                                        <Text style={styles.cancelBtnText}>Manage / Cancel Subscription</Text>
-                                        <ExternalLink color={C.sub} size={14} style={{ marginLeft: 6 }} />
-                                    </TouchableOpacity>
-                                )}
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>Machine Name</Text>
+                                <TextInput style={styles.input} value={machineName} onChangeText={setMachineName} placeholder="Nova 51" placeholderTextColor="#8B95A8" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>Brand</Text>
+                                <TextInput style={styles.input} value={machineBrand} onChangeText={setMachineBrand} placeholder="Thunder Laser" placeholderTextColor="#8B95A8" />
                             </View>
                         </View>
 
-                        {/* Business Info Section */}
-                        <View style={styles.card}>
-                            <View style={styles.cardHeader}>
-                                <Landmark color="#10B981" size={20} />
-                                <Text style={styles.cardTitle}>Business Profile (for PDF Invoices)</Text>
+                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>Laser Power (Watts)</Text>
+                                <TextInput style={styles.input} value={machinePower} onChangeText={setMachinePower} keyboardType="numeric" placeholder="130" placeholderTextColor="#8B95A8" />
                             </View>
-                            
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Business Name</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={bizName}
-                                    onChangeText={setBizName}
-                                    placeholder="Enter your workshop or business name"
-                                    placeholderTextColor={C.dim}
-                                />
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.label}>Working Area</Text>
+                                <TextInput style={styles.input} value={machineArea} onChangeText={setMachineArea} placeholder="1300x900 mm" placeholderTextColor="#8B95A8" />
                             </View>
+                        </View>
+                    </View>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Business Email</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={bizEmail}
-                                    onChangeText={setBizEmail}
-                                    placeholder="invoices@yourbusiness.com"
-                                    placeholderTextColor={C.dim}
-                                    keyboardType="email-address"
-                                />
-                            </View>
+                    {/* Preferences & Languages */}
+                    <View style={styles.card}>
+                        <View style={styles.cardHeader}>
+                            <Globe color="#8B5CF6" size={20} />
+                            <Text style={styles.cardTitle}>Preferences & Language</Text>
+                        </View>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Phone Number</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={bizPhone}
-                                    onChangeText={setBizPhone}
-                                    placeholder="+1 (555) 019-2834"
-                                    placeholderTextColor={C.dim}
-                                    keyboardType="phone-pad"
-                                />
-                            </View>
+                        <Text style={styles.label}>Application Language</Text>
+                        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
+                            {[
+                                { code: 'en', label: 'English 🇺🇸' },
+                                { code: 'fr', label: 'Français 🇫🇷' },
+                                { code: 'es', label: 'Español 🇪🇸' },
+                            ].map(item => (
+                                <TouchableOpacity
+                                    key={item.code}
+                                    onPress={() => setLanguage(item.code as any)}
+                                    style={{
+                                        flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, alignItems: 'center',
+                                        backgroundColor: language === item.code ? '#FF6B35' : '#242840',
+                                        borderColor: language === item.code ? '#FF6B35' : 'rgba(255,255,255,0.08)',
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 12, fontWeight: '800', color: '#FFF' }}>{item.label}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Billing Address</Text>
-                                <TextInput
-                                    style={[styles.input, styles.textArea]}
-                                    value={bizAddress}
-                                    onChangeText={setBizAddress}
-                                    placeholder="Street address, City, State, ZIP"
-                                    placeholderTextColor={C.dim}
-                                    multiline
-                                    numberOfLines={3}
-                                />
-                            </View>
+                    {/* Backup & Restore */}
+                    <View style={styles.card}>
+                        <View style={styles.cardHeader}>
+                            <Download color="#F59E0B" size={20} />
+                            <Text style={styles.cardTitle}>Backup & Restore Data</Text>
+                        </View>
+                        <Text style={{ fontSize: 13, color: '#8B95A8', marginBottom: 14, lineHeight: 18 }}>
+                            Export full JSON backups of your materials, orders, invoices, and profile to restore anytime.
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                            <TouchableOpacity onPress={handleExportBackup} style={{ flex: 1, backgroundColor: 'rgba(245,158,11,0.15)', borderWidth: 1, borderColor: '#F59E0B', borderRadius: 10, paddingVertical: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+                                <Download color="#F59E0B" size={16} />
+                                <Text style={{ color: '#F59E0B', fontWeight: '800', fontSize: 12 }}>Export Backup JSON</Text>
+                            </TouchableOpacity>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Tax ID / VAT Registration</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={bizTaxId}
-                                    onChangeText={setBizTaxId}
-                                    placeholder="US-12345678 or VAT-987654"
-                                    placeholderTextColor={C.dim}
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Bank details (optional)</Text>
-                                <TextInput
-                                    style={[styles.input, styles.textArea]}
-                                    value={bizBank}
-                                    onChangeText={setBizBank}
-                                    placeholder="Bank Name, Routing #, Account #"
-                                    placeholderTextColor={C.dim}
-                                    multiline
-                                    numberOfLines={2}
-                                />
-                            </View>
-
-                            <TouchableOpacity 
-                                style={styles.saveBtn} 
-                                onPress={saveBusinessSettings}
-                                disabled={saving}
-                            >
-                                {saving ? (
-                                    <ActivityIndicator color="#fff" size="small" />
-                                ) : (
-                                    <>
-                                        <Save color="#FFF" size={16} style={{ marginRight: 6 }} />
-                                        <Text style={styles.saveBtnText}>Save Business Profile</Text>
-                                    </>
-                                )}
+                            <TouchableOpacity onPress={() => setShowImportModal(true)} style={{ flex: 1, backgroundColor: 'rgba(59,130,246,0.15)', borderWidth: 1, borderColor: '#3B82F6', borderRadius: 10, paddingVertical: 10, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+                                <Upload color="#3B82F6" size={16} />
+                                <Text style={{ color: '#3B82F6', fontWeight: '800', fontSize: 12 }}>Restore Backup</Text>
                             </TouchableOpacity>
                         </View>
+                    </View>
 
-                        {/* Danger Zone */}
-                        <View style={[styles.card, { borderColor: C.danger + '30' }]}>
-                            <View style={styles.cardHeader}>
-                                <Trash2 color={C.danger} size={20} />
-                                <Text style={[styles.cardTitle, { color: C.danger }]}>Danger Zone</Text>
-                            </View>
-                            <Text style={styles.dangerText}>
-                                Deleting your account will permanently wipe all your data from our database. There is no way to recover your settings or projects once done.
-                            </Text>
-                            <TouchableOpacity 
-                                style={styles.deleteBtn} 
-                                onPress={() => {
-                                    setDisclaimerChecked(false);
-                                    setIsDeleteModalVisible(true);
-                                }}
-                            >
-                                <Trash2 color="#FFF" size={16} style={{ marginRight: 6 }} />
-                                <Text style={styles.deleteBtnText}>Delete My Account</Text>
-                            </TouchableOpacity>
+                    {/* Subscription Details */}
+                    <View style={styles.card}>
+                        <View style={styles.cardHeader}>
+                            <CreditCard color="#F59E0B" size={20} />
+                            <Text style={styles.cardTitle}>Subscription Details</Text>
                         </View>
-                    </ScrollView>
-                )}
+                        <View style={styles.subInfo}>
+                            <View>
+                                <Text style={styles.subPlanLabel}>Active Plan</Text>
+                                <Text style={styles.subPlanValue}>{subscription.plan === 'pro' ? 'Workshop Pro' : subscription.plan === 'starter' ? 'Starter' : 'Free Plan'}</Text>
+                            </View>
+                            <View style={{ alignItems: 'flex-end' }}>
+                                <Text style={styles.subPlanLabel}>Billing</Text>
+                                <Text style={styles.subPlanValue}>{subscription.plan === 'pro' ? '$19/mo' : '$0 Free'}</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Danger Zone */}
+                    <View style={[styles.card, { borderColor: '#EF4444' + '30' }]}>
+                        <View style={styles.cardHeader}>
+                            <Trash2 color="#EF4444" size={20} />
+                            <Text style={[styles.cardTitle, { color: '#EF4444' }]}>Danger Zone</Text>
+                        </View>
+                        <Text style={styles.dangerText}>
+                            Deleting your account will permanently wipe all your data from our database. There is no way to recover your settings or projects once done.
+                        </Text>
+                        <TouchableOpacity 
+                            style={styles.deleteBtn} 
+                            onPress={() => {
+                                setDisclaimerChecked(false);
+                                setIsDeleteModalVisible(true);
+                            }}
+                        >
+                            <Trash2 color="#FFF" size={16} style={{ marginRight: 6 }} />
+                            <Text style={styles.deleteBtnText}>Delete My Account</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
 
                 {/* Custom Delete Confirmation Modal */}
                 <Modal
@@ -534,65 +447,36 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: C.bg },
+    safe: { flex: 1, backgroundColor: '#0F1117' },
     loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: C.border,
+        paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)',
         height: 56,
     },
     backBtn: {
         width: 40, height: 40, borderRadius: 20,
-        backgroundColor: C.surface, justifyContent: 'center', alignItems: 'center',
-        borderWidth: 1, borderColor: C.border,
+        backgroundColor: '#1C2030', justifyContent: 'center', alignItems: 'center',
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     },
-    headerTitle: { fontSize: 18, fontWeight: '800', color: C.text },
+    headerTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
+    saveHeaderBtn: {
+        backgroundColor: '#FF6B35', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+    },
+    saveHeaderBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
     scroll: { padding: 16, gap: 16, paddingBottom: 40 },
     card: {
-        backgroundColor: C.surface, borderRadius: 16,
-        borderWidth: 1, borderColor: C.border, padding: 16,
+        backgroundColor: '#1C2030', borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 16,
     },
     cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-    cardTitle: { fontSize: 15, fontWeight: '700', color: C.text },
-    profileRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-    avatar: {
-        width: 56, height: 56, borderRadius: 28,
-        backgroundColor: C.primary + '20', borderWidth: 2, borderColor: C.primary,
-        justifyContent: 'center', alignItems: 'center',
-    },
-    avatarText: { fontSize: 22, fontWeight: '800', color: C.primary },
-    profileName: { fontSize: 18, fontWeight: '800', color: C.text },
-    profileEmail: { fontSize: 13, color: C.sub, marginTop: 2 },
-    accountIdText: { fontSize: 11, color: C.dim, marginTop: 4, letterSpacing: 0.5 },
-    
-    // Subscription
-    subInfo: { 
-        flexDirection: 'row', justifyContent: 'space-between', 
-        backgroundColor: 'rgba(255,255,255,0.02)', padding: 12, borderRadius: 12,
-        borderWidth: 1, borderColor: C.border,
-    },
-    subPlanLabel: { fontSize: 11, color: C.sub, fontWeight: '600' },
-    subPlanValue: { fontSize: 15, fontWeight: '800', color: C.text, marginTop: 4 },
-    subActions: { marginTop: 14, gap: 10 },
-    upgradeBtn: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: C.primary, borderRadius: 12, paddingVertical: 12,
-    },
-    upgradeBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-    cancelBtn: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: 'transparent', borderRadius: 12, paddingVertical: 12,
-        borderWidth: 1, borderColor: C.border,
-    },
-    cancelBtnText: { color: C.sub, fontWeight: '600', fontSize: 13 },
-
-    // Inputs
-    inputGroup: { marginBottom: 12 },
-    inputLabel: { fontSize: 12, fontWeight: '600', color: C.sub, marginBottom: 6 },
+    cardTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+    label: { fontSize: 12, fontWeight: '700', color: '#8B95A8', marginBottom: 6 },
     input: {
-        backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: C.border,
-        borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, color: C.text,
-        fontSize: 14,
+        backgroundColor: '#0F1117', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+        borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, color: '#FFFFFF',
+        fontSize: 14, marginBottom: 14,
     },
     textArea: { height: 60, textAlignVertical: 'top' },
     saveBtn: {
@@ -601,15 +485,21 @@ const styles = StyleSheet.create({
     },
     saveBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
 
-    // Danger
-    dangerText: { fontSize: 13, color: C.sub, lineHeight: 18, marginBottom: 14 },
+    subInfo: {
+        flexDirection: 'row', justifyContent: 'space-between',
+        backgroundColor: 'rgba(255,255,255,0.02)', padding: 12, borderRadius: 12,
+        borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    },
+    subPlanLabel: { fontSize: 11, color: '#8B95A8', fontWeight: '600' },
+    subPlanValue: { fontSize: 15, fontWeight: '800', color: '#FFFFFF', marginTop: 4 },
+
+    dangerText: { fontSize: 13, color: '#8B95A8', lineHeight: 18, marginBottom: 14 },
     deleteBtn: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        backgroundColor: C.danger, borderRadius: 12, paddingVertical: 12,
+        backgroundColor: '#EF4444', borderRadius: 12, paddingVertical: 12,
     },
     deleteBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
 
-    // Modal
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -618,10 +508,10 @@ const styles = StyleSheet.create({
         padding: 24,
     },
     modalCard: {
-        backgroundColor: C.surface,
+        backgroundColor: '#1C2030',
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: C.border,
+        borderColor: 'rgba(255,255,255,0.08)',
         padding: 24,
         width: '100%',
         maxWidth: 440,
@@ -630,11 +520,11 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: C.text,
+        color: '#FFFFFF',
     },
     modalWarningText: {
         fontSize: 13,
-        color: C.sub,
+        color: '#8B95A8',
         lineHeight: 19,
     },
     checkboxContainer: {
@@ -643,7 +533,7 @@ const styles = StyleSheet.create({
         gap: 10,
         backgroundColor: 'rgba(255,255,255,0.02)',
         borderWidth: 1,
-        borderColor: C.border,
+        borderColor: 'rgba(255,255,255,0.08)',
         borderRadius: 12,
         padding: 12,
         marginVertical: 4,
@@ -653,13 +543,13 @@ const styles = StyleSheet.create({
         height: 18,
         borderRadius: 4,
         borderWidth: 2,
-        borderColor: C.sub,
+        borderColor: '#8B95A8',
         justifyContent: 'center',
         alignItems: 'center',
     },
     checkboxActive: {
-        borderColor: C.primary,
-        backgroundColor: C.primary,
+        borderColor: '#FF6B35',
+        backgroundColor: '#FF6B35',
     },
     checkboxCheck: {
         width: 8,
@@ -670,7 +560,7 @@ const styles = StyleSheet.create({
     checkboxLabel: {
         flex: 1,
         fontSize: 11,
-        color: C.text,
+        color: '#FFFFFF',
         lineHeight: 15,
     },
     modalActions: {
@@ -681,20 +571,20 @@ const styles = StyleSheet.create({
     modalCancelBtn: {
         flex: 1,
         borderWidth: 1,
-        borderColor: C.border,
+        borderColor: 'rgba(255,255,255,0.08)',
         borderRadius: 12,
         paddingVertical: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
     modalCancelText: {
-        color: C.sub,
+        color: '#8B95A8',
         fontWeight: '700',
         fontSize: 14,
     },
     modalDeleteBtn: {
         flex: 2,
-        backgroundColor: C.danger,
+        backgroundColor: '#EF4444',
         borderRadius: 12,
         paddingVertical: 12,
         alignItems: 'center',

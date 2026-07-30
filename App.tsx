@@ -32,6 +32,7 @@ import { useSubscription } from './src/hooks/useSubscription';
 import { ResponsiveTabBar } from './src/components/ResponsiveTabBar';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { LanguageProvider } from './src/context/LanguageContext';
+import { WorkshopProvider } from './src/context/WorkshopContext';
 
 const Tab = createBottomTabNavigator();
 const DashStack = createNativeStackNavigator();
@@ -102,65 +103,67 @@ export default function App() {
   return (
     <LanguageProvider>
       <ThemeProvider>
-        <SafeAreaProvider>
-          <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
-          <NavigationContainer
-            ref={navigationRef}
-            onReady={() => {
-              routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
-              const currentRouteName = routeNameRef.current;
-              if (currentRouteName) trackPageView(currentRouteName);
-            }}
-            onStateChange={async () => {
-              const previousRouteName = routeNameRef.current;
-              const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
-              
-              if (previousRouteName !== currentRouteName && currentRouteName) {
-                trackPageView(currentRouteName);
-              }
-              routeNameRef.current = currentRouteName;
-            }}
-            theme={{
-              dark: true,
-              colors: {
-                primary: COLORS.primary,
-                background: COLORS.bg,
-                card: COLORS.surface,
-                text: '#FFFFFF',
-                border: COLORS.border,
-                notification: COLORS.primary,
-              },
-              fonts: {
-                regular: { fontFamily: 'System', fontWeight: '400' as const },
-                medium: { fontFamily: 'System', fontWeight: '500' as const },
-                bold: { fontFamily: 'System', fontWeight: '700' as const },
-                heavy: { fontFamily: 'System', fontWeight: '900' as const },
-              },
-            }}
-          >
-            <Tab.Navigator
-              tabBar={(props) => <ResponsiveTabBar {...props} />}
-              screenOptions={{
-                headerShown: false,
-                sceneStyle: {
-                  backgroundColor: COLORS.bg,
-                  marginLeft: isDesktop ? 260 : 0,
-                  flex: 1
+        <WorkshopProvider>
+          <SafeAreaProvider>
+            <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+            <NavigationContainer
+              ref={navigationRef}
+              onReady={() => {
+                routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
+                const currentRouteName = routeNameRef.current;
+                if (currentRouteName) trackPageView(currentRouteName);
+              }}
+              onStateChange={async () => {
+                const previousRouteName = routeNameRef.current;
+                const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
+                
+                if (previousRouteName !== currentRouteName && currentRouteName) {
+                  trackPageView(currentRouteName);
                 }
+                routeNameRef.current = currentRouteName;
+              }}
+              theme={{
+                dark: true,
+                colors: {
+                  primary: COLORS.primary,
+                  background: COLORS.bg,
+                  card: COLORS.surface,
+                  text: '#FFFFFF',
+                  border: COLORS.border,
+                  notification: COLORS.primary,
+                },
+                fonts: {
+                  regular: { fontFamily: 'System', fontWeight: '400' as const },
+                  medium: { fontFamily: 'System', fontWeight: '500' as const },
+                  bold: { fontFamily: 'System', fontWeight: '700' as const },
+                  heavy: { fontFamily: 'System', fontWeight: '900' as const },
+                },
               }}
             >
-              <Tab.Screen name="Dashboard" component={DashboardNavigator} />
-              <Tab.Screen name="Cost Calculator" component={CostCalculatorScreen} />
-              <Tab.Screen name="Materials" component={MaterialsScreen} />
-              <Tab.Screen name="Orders" component={OrdersScreen} />
-              <Tab.Screen name="Laser Presets" component={LaserPresetsScreen} />
-              <Tab.Screen name="Quote Generator" component={QuoteGeneratorScreen} />
-              <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
-              <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
-              <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
-            </Tab.Navigator>
-          </NavigationContainer>
-        </SafeAreaProvider>
+              <Tab.Navigator
+                tabBar={(props) => <ResponsiveTabBar {...props} />}
+                screenOptions={{
+                  headerShown: false,
+                  sceneStyle: {
+                    backgroundColor: COLORS.bg,
+                    marginLeft: isDesktop ? 260 : 0,
+                    flex: 1
+                  }
+                }}
+              >
+                <Tab.Screen name="Dashboard" component={DashboardNavigator} />
+                <Tab.Screen name="Cost Calculator" component={CostCalculatorScreen} />
+                <Tab.Screen name="Materials" component={MaterialsScreen} />
+                <Tab.Screen name="Orders" component={OrdersScreen} />
+                <Tab.Screen name="Laser Presets" component={LaserPresetsScreen} />
+                <Tab.Screen name="Quote Generator" component={QuoteGeneratorScreen} />
+                <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
+                <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
+                <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
+              </Tab.Navigator>
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </WorkshopProvider>
       </ThemeProvider>
     </LanguageProvider>
   );
