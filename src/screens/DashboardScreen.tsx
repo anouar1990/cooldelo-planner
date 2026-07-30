@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { useProjects, ProjectRow } from '../hooks/useProjects';
 import { useMaterials } from '../hooks/useMaterials';
 import { useClients } from '../hooks/useClients';
@@ -188,13 +188,16 @@ export default function DashboardScreen({ navigation }: any) {
         downloadCsv(`0Machine_Projects_Report_${new Date().toISOString().slice(0,10)}.csv`, csvString);
     };
 
+    const { width } = useWindowDimensions();
+    const isMobile = width < 640;
+
     return (
         <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                 <ResponsiveContainer>
                     {/* Header */}
-                    <View style={styles.header}>
-                        <View style={styles.headerUser}>
+                    <View style={[styles.header, isMobile && styles.headerMobile]}>
+                        <View style={[styles.headerUser, isMobile && { width: '100%' }]}>
                             {avatarUrl ? (
                                 <Image source={{ uri: avatarUrl }} style={styles.avatar} />
                             ) : (
@@ -202,7 +205,7 @@ export default function DashboardScreen({ navigation }: any) {
                                     <Text style={[styles.avatarInitial, { color: colors.primary }]}>{initials}</Text>
                                 </View>
                             )}
-                            <View style={{ flexShrink: 1 }}>
+                            <View style={{ flex: 1, minWidth: 0 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                     <Text style={[styles.brand, { color: colors.text }]}>⚡ <Text style={{ color: colors.primary }}>0machine</Text></Text>
                                     <View style={{
@@ -218,7 +221,7 @@ export default function DashboardScreen({ navigation }: any) {
                             </View>
                         </View>
 
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <View style={[styles.headerActions, isMobile && styles.headerActionsMobile]}>
                             {/* Language Switcher */}
                             <View style={{ flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 8, borderWidth: 1, borderColor: colors.border, padding: 2 }}>
                                 {(['en', 'fr', 'es'] as const).map(l => (
@@ -237,18 +240,20 @@ export default function DashboardScreen({ navigation }: any) {
                                 ))}
                             </View>
 
-                            <TouchableOpacity 
-                                style={[styles.topIconBtn, { backgroundColor: colors.primary + '18', borderColor: colors.primary + '40' }]} 
-                                onPress={handleExportCSV}
-                            >
-                                <Download color={colors.primary} size={18} />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.topIconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('Settings')}>
-                                <Settings color={colors.sub} size={18} />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.topIconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={signOut}>
-                                <LogOut color={colors.sub} size={18} />
-                            </TouchableOpacity>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <TouchableOpacity 
+                                    style={[styles.topIconBtn, { backgroundColor: colors.primary + '18', borderColor: colors.primary + '40' }]} 
+                                    onPress={handleExportCSV}
+                                >
+                                    <Download color={colors.primary} size={16} />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.topIconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => navigation.navigate('Settings')}>
+                                    <Settings color={colors.sub} size={16} />
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.topIconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={signOut}>
+                                    <LogOut color={colors.sub} size={16} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
 
@@ -408,14 +413,17 @@ export default function DashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
     safe: { flex: 1 },
     scroll: { paddingBottom: 32 },
-    header: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 },
-    headerUser: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1, minWidth: 200 },
+    header: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    headerMobile: { flexDirection: 'column', alignItems: 'stretch', gap: 12 },
+    headerUser: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
+    headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    headerActionsMobile: { justifyContent: 'space-between', width: '100%' },
     avatar: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: '#FF6B35' },
     avatarFallback: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
     avatarInitial: { fontSize: 16, fontWeight: '800' },
-    brand: { fontSize: 22, fontWeight: '800' },
-    subtitle: { fontSize: 13, marginTop: 2 },
-    topIconBtn: { width: 38, height: 38, borderRadius: 12, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
+    brand: { fontSize: 20, fontWeight: '800' },
+    subtitle: { fontSize: 12, marginTop: 2 },
+    topIconBtn: { width: 36, height: 36, borderRadius: 10, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
     
     statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, gap: 12, marginBottom: 12 },
     statCard: {

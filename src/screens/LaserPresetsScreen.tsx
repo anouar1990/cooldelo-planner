@@ -159,6 +159,7 @@ const SOURCE_COLORS: Record<SourceType, string> = {
 
 export default function LaserPresetsScreen() {
     const { width } = useWindowDimensions();
+    const isMobile = width < 640;
     const { machines } = useMachineProfiles();
     const { materials } = useMaterials();
 
@@ -281,19 +282,19 @@ export default function LaserPresetsScreen() {
                     </View>
 
                     {/* Header */}
-                    <View style={styles.header}>
-                        <View>
+                    <View style={[styles.header, isMobile && styles.headerMobile]}>
+                        <View style={{ flex: 1, minWidth: 0 }}>
                             <View style={styles.titleRow}>
                                 <View style={styles.headerIcon}>
                                     <Zap color={C.primary} size={20} fill={C.primary + '40'} />
                                 </View>
-                                <Text style={styles.title}>Laser Settings Library</Text>
+                                <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">Laser Settings Library</Text>
                             </View>
                             <Text style={styles.subtitle}>
                                 {settings.length} test records · {settings.filter(s => s.starred).length} starred
                             </Text>
                         </View>
-                        <TouchableOpacity style={styles.addBtn} onPress={openAdd} activeOpacity={0.8}>
+                        <TouchableOpacity style={[styles.addBtn, isMobile && styles.addBtnMobile]} onPress={openAdd} activeOpacity={0.8}>
                             <Plus color="#fff" size={18} />
                             <Text style={styles.addBtnText}>Log Test Setting</Text>
                         </TouchableOpacity>
@@ -720,6 +721,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 16,
+        gap: 12,
+    },
+    headerMobile: {
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: 12,
     },
     titleRow: {
         flexDirection: 'row',
@@ -737,7 +744,7 @@ const styles = StyleSheet.create({
         borderColor: C.primary + '30',
     },
     title: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: '800',
         color: C.text,
     },
@@ -754,6 +761,10 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 16,
         borderRadius: 12,
+    },
+    addBtnMobile: {
+        width: '100%',
+        justifyContent: 'center',
     },
     addBtnText: {
         color: '#fff',

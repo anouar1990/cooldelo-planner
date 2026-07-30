@@ -111,9 +111,9 @@ export default function NestingEstimatorScreen() {
         <SafeAreaView style={styles.safe}>
             {/* Header */}
             <View style={styles.header}>
-                <View>
-                    <Text style={styles.title}>{t('nest_title')}</Text>
-                    <Text style={styles.subtitle}>{t('nest_subtitle')}</Text>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">{t('nest_title')}</Text>
+                    <Text style={styles.subtitle} numberOfLines={1}>{t('nest_subtitle')}</Text>
                 </View>
                 {!isPro && (
                     <View style={styles.tierBadge}>
@@ -247,10 +247,10 @@ function MetricBox({ label, value, color, bold }: { label: string; value: string
 
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: C.bg },
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
-    title: { fontSize: 20, fontWeight: '800', color: C.text },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 10, flexWrap: 'wrap' },
+    title: { fontSize: 18, fontWeight: '800', color: C.text, flexShrink: 1 },
     subtitle: { fontSize: 12, color: C.sub, marginTop: 2 },
-    tierBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primary + '15', borderWidth: 1, borderColor: C.primary + '40', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+    tierBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.primary + '15', borderWidth: 1, borderColor: C.primary + '40', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start' },
     tierBadgeText: { fontSize: 10, fontWeight: '800', color: C.primary },
 
     scroll: { padding: 16, gap: 14 },

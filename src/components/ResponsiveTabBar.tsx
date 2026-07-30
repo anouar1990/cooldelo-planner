@@ -157,7 +157,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
 
     // MOBILE BOTTOM BAR
     return (
-        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

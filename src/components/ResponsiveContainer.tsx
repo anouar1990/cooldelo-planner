@@ -26,7 +26,7 @@ export function ResponsiveContainer({ children, maxWidth = 1100, padded = true }
                     padded && {
                         paddingHorizontal: isDesktop ? 48 : 12,
                         paddingTop: isDesktop ? insets.top + 24 : insets.top + 16,
-                        paddingBottom: insets.bottom + (isDesktop ? 24 : 100) // account for mobile bottom bar
+                        paddingBottom: isDesktop ? insets.bottom + 24 : 16
                     }
                 ]}
             >
