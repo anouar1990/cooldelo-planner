@@ -74,13 +74,11 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
             <View style={[styles.sidebar, { paddingTop: Math.max(insets.top, 24) }]}>
                 {/* Brand Logo */}
                 <View style={styles.brandContainer}>
-                    <View style={styles.brandIconWrap}>
-                        <Zap size={18} color="#FFFFFF" />
-                    </View>
-                    <View>
-                        <Text style={styles.brandLogoText}>0Machine</Text>
-                        <Text style={styles.brandSub}>PLANNER</Text>
-                    </View>
+                    <Image 
+                        source={{ uri: '/logo.png' }} 
+                        style={{ width: 160, height: 42 }} 
+                        resizeMode="contain" 
+                    />
                 </View>
 
                 {/* Scrollable nav links — prevents overlap with bottom section */}

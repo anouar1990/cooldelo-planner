@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
     StyleSheet, SafeAreaView, KeyboardAvoidingView,
-    Platform, ActivityIndicator, Alert, ScrollView
+    Platform, ActivityIndicator, Alert, ScrollView, Image
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { trackEvent } from '../lib/analytics';
@@ -100,9 +100,11 @@ export default function AuthScreen() {
                     <View style={{ width: '100%', maxWidth: 480, alignSelf: 'center' }}>
                         {/* Brand */}
                         <View style={styles.hero}>
-                            <Text style={styles.heroIcon}>⚡</Text>
-                            <Text style={styles.brand}>0machine</Text>
-                            <Text style={styles.brandSub}>Planner</Text>
+                            <Image 
+                                source={{ uri: '/logo.png' }} 
+                                style={{ width: 200, height: 50, alignSelf: 'center', marginBottom: 8 }} 
+                                resizeMode="contain" 
+                            />
                             <Text style={styles.tagline}>Laser & CNC project hub</Text>
                         </View>
 

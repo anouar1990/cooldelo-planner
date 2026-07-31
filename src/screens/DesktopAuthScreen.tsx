@@ -102,7 +102,11 @@ export default function DesktopAuthScreen() {
                     {!isSmallDesktop && (
                         <View style={styles.leftPanel}>
                             <View style={styles.leftContent}>
-                                <Text style={styles.brandBadge}>✨ 0machine</Text>
+                                <Image 
+                                    source={{ uri: '/logo.png' }} 
+                                    style={{ width: 180, height: 46, marginBottom: 16 }} 
+                                    resizeMode="contain" 
+                                />
                                 <Text style={styles.heroTitle}>Master your fabrication workflows.</Text>
                                 <Text style={styles.heroSub}>
                                     The all-in-one planning toolkit specifically engineered for makers, laser-cutting professionals, and CNC shops.
