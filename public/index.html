@@ -51,11 +51,9 @@
         s.parentNode.insertBefore(t,s)}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
         
-        const pixelId = window.META_PIXEL_ID || localStorage.getItem('0machine_meta_pixel') || '';
-        if (pixelId) {
-          fbq('init', pixelId);
-          fbq('track', 'PageView');
-        }
+        const pixelId = window.META_PIXEL_ID || localStorage.getItem('0machine_meta_pixel') || '1429957431108439';
+        fbq('init', pixelId);
+        fbq('track', 'PageView');
       }
     </script>
   </head>
