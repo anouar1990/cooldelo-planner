@@ -38,8 +38,8 @@ export const DICTIONARY: Translations = {
 
   // Plans & Pricing
   plan_free: { en: 'Free Forever', fr: 'Gratuit Pour Toujours', es: 'Gratis Para Siempre' },
-  plan_starter: { en: 'Starter', fr: 'Starter', es: 'Starter' },
-  plan_pro: { en: 'Workshop Pro', fr: 'Workshop Pro', es: 'Workshop Pro' },
+  plan_starter: { en: '0machine Starter', fr: '0machine Starter', es: '0machine Starter' },
+  plan_pro: { en: '0machine Pro', fr: '0machine Pro', es: '0machine Pro' },
   price_free: { en: '$0', fr: '0 €', es: '0 $' },
   price_starter_mo: { en: '$9/mo', fr: '9 €/mois', es: '9 $/mes' },
   price_starter_yr: { en: '$59/yr', fr: '59 €/an', es: '59 $/año' },
@@ -51,8 +51,8 @@ export const DICTIONARY: Translations = {
   most_popular: { en: '⭐ Most Popular', fr: '⭐ Le Plus Populaire', es: '⭐ Más Popular' },
   best_value: { en: '🔥 Best Value', fr: '🔥 Meilleure Valeur', es: '🔥 Mejor Valor' },
   cta_start_free: { en: 'Start Free', fr: 'Commencer Gratuitement', es: 'Empezar Gratis' },
-  cta_upgrade_starter: { en: 'Upgrade to Starter', fr: 'Passer à Starter', es: 'Cambiar a Starter' },
-  cta_upgrade_pro: { en: 'Upgrade to Pro', fr: 'Passer à Pro', es: 'Cambiar a Pro' },
+  cta_upgrade_starter: { en: 'Subscribe to 0machine Starter', fr: 'S\'abonner à 0machine Starter', es: 'Suscribirse a 0machine Starter' },
+  cta_upgrade_pro: { en: 'Subscribe to 0machine Pro', fr: 'S\'abonner à 0machine Pro', es: 'Suscribirse a 0machine Pro' },
 
   // Feature Descriptions & Gating
   feature_projects_limit: { en: '3 Projects per Month', fr: '3 Projets par mois', es: '3 Proyectos por mes' },
