@@ -94,34 +94,56 @@ export function useSubscription() {
     return false;
   };
 
+  const openUrlSafe = (url: string) => {
+    if (typeof window !== 'undefined' && window.location) {
+      window.location.href = url;
+    } else {
+      Linking.openURL(url);
+    }
+  };
+
   const createCheckoutSession = async (targetPlan: 'starter' | 'pro', cycle: BillingCycle = 'monthly') => {
-    if (!user) return;
     try {
       setCheckoutLoading(true);
       trackEvent('checkout_initiated', { plan: targetPlan, cycle });
+
+      const fallbackBaseUrl = targetPlan === 'pro'
+        ? 'https://buy.stripe.com/8x2cN5gIndv5dHL86veUU00'
+        : 'https://buy.stripe.com/14A3cv0Jp8aL47b1I7eUU01';
+
+      const emailParam = user?.email ? `?prefilled_email=${encodeURIComponent(user.email)}` : '';
+      const directFallbackUrl = `${fallbackBaseUrl}${emailParam}`;
+
+      if (!user) {
+        openUrlSafe(directFallbackUrl);
+        return;
+      }
 
       let priceId = STRIPE_PRICES.STARTER_MONTHLY;
       if (targetPlan === 'starter' && cycle === 'annual') priceId = STRIPE_PRICES.STARTER_ANNUAL;
       if (targetPlan === 'pro' && cycle === 'monthly') priceId = STRIPE_PRICES.PRO_MONTHLY;
       if (targetPlan === 'pro' && cycle === 'annual') priceId = STRIPE_PRICES.PRO_ANNUAL;
 
-      const { data, error: fnError } = await supabase.functions.invoke('create-checkout-session', {
-        body: { priceId, userId: user.id, userEmail: user.email, plan: targetPlan, cycle },
-      });
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('create-checkout-session', {
+          body: { priceId, userId: user.id, userEmail: user.email, plan: targetPlan, cycle },
+        });
 
-      if (fnError) throw fnError;
-      if (data?.url) {
-        Linking.openURL(data.url);
-      } else {
-        // Fallback checkout redirect URL
-        const fallbackUrl = targetPlan === 'pro'
-          ? 'https://buy.stripe.com/14A3cv0Jp8aL47b1I7eUU01'
-          : 'https://buy.stripe.com/14A3cv0Jp8aL47b1I7eUU01';
-        Linking.openURL(fallbackUrl);
+        if (!fnError && data?.url) {
+          openUrlSafe(data.url);
+        } else {
+          openUrlSafe(directFallbackUrl);
+        }
+      } catch (invokeErr) {
+        console.warn('Edge function invoke fallback to direct Stripe link:', invokeErr);
+        openUrlSafe(directFallbackUrl);
       }
     } catch (err: any) {
       console.error('Checkout error:', err);
-      Alert.alert('Checkout Failed', err.message || 'Unable to open checkout portal.');
+      const fallbackUrl = targetPlan === 'pro'
+        ? 'https://buy.stripe.com/8x2cN5gIndv5dHL86veUU00'
+        : 'https://buy.stripe.com/14A3cv0Jp8aL47b1I7eUU01';
+      openUrlSafe(fallbackUrl);
     } finally {
       setCheckoutLoading(false);
     }

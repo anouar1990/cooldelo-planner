@@ -99,7 +99,11 @@ export default function PaywallScreen() {
                                 onPress={() => createCheckoutSession('starter', cycle)}
                                 disabled={checkoutLoading}
                             >
-                                <Text style={styles.starterBtnText}>{t('cta_upgrade_starter')}</Text>
+                                {checkoutLoading ? (
+                                    <ActivityIndicator color="#FFF" />
+                                ) : (
+                                    <Text style={styles.starterBtnText}>{t('cta_upgrade_starter')}</Text>
+                                )}
                             </TouchableOpacity>
                         </View>
 
