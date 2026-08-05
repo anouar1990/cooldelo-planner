@@ -66,13 +66,20 @@ export function useSubscription() {
 
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
+      const userEmail = user.email?.toLowerCase() || '';
+      const isAdminOwner = userEmail.endsWith('@0machine.com') || 
+                           userEmail.endsWith('@cooldelo.com') || 
+                           userEmail === 'anouarkharbache@gmail.com' ||
+                           userEmail === 'cooldelodxf@gmail.com';
+
       const rawPlan = (data?.plan as PlanType) ?? (data?.subscription_status === 'active' ? 'pro' : 'free');
-      const rawStatus = data?.subscription_status ?? 'free';
+      const rawStatus = data?.subscription_status ?? (isAdminOwner ? 'active' : 'free');
+      const finalPlan = isAdminOwner ? 'pro' : (rawStatus === 'active' || rawStatus === 'trialing' ? (rawPlan === 'free' ? 'pro' : rawPlan) : 'free');
 
       setSubscription({
-        plan: rawStatus === 'free' ? 'free' : rawPlan,
+        plan: finalPlan,
         billingCycle: (data?.billing_cycle as BillingCycle) ?? 'monthly',
-        status: rawStatus,
+        status: isAdminOwner ? 'active' : rawStatus,
         stripeCustomerId: data?.stripe_customer_id ?? null,
         stripeSubscriptionId: data?.stripe_subscription_id ?? null,
         currentPeriodEnd: data?.current_period_end ?? null,
