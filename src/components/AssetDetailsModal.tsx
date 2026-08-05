@@ -11,6 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { ProUpgradeModal } from './ProUpgradeModal';
 import AdminUploadScreen from '../screens/AdminUploadScreen';
+import { getDownloadUrl } from '../lib/driveUtils';
 
 interface Props {
     design: Design;
@@ -70,10 +71,11 @@ export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props
         }
         try {
             setDownloading(true);
+            const finalUrl = getDownloadUrl(url, design.file_size);
             if (Platform.OS === 'web') {
-                window.open(url, '_blank');
+                window.open(finalUrl, '_blank');
             } else {
-                await Linking.openURL(url);
+                await Linking.openURL(finalUrl);
             }
             await incrementDownload(design.id);
         } catch (err) {
@@ -138,10 +140,11 @@ export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props
             
             // Check if it's an external link (like Google Drive)
             if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+                const finalUrl = getDownloadUrl(targetUrl, design.file_size);
                 if (Platform.OS === 'web') {
-                    window.open(targetUrl, '_blank');
+                    window.open(finalUrl, '_blank');
                 } else {
-                    await Linking.openURL(targetUrl);
+                    await Linking.openURL(finalUrl);
                 }
                 await incrementDownload(design.id);
                 return;

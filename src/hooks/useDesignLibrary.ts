@@ -10,6 +10,8 @@ export interface Design {
     thumbnail_url: string | null;
     file_url: string;
     file_type: string;
+    file_size?: number | null;
+    file_id?: string | null;
     downloads_count: number;
     created_at: string;
     updated_at: string;
