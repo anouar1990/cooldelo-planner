@@ -87,7 +87,25 @@ export function useSubscription() {
 
   useEffect(() => {
     fetchSubscription();
-  }, [fetchSubscription]);
+
+    if (user?.id) {
+      const channel = supabase
+        .channel(`user-subscription-sync-${user.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'user_settings', filter: `user_id=eq.${user.id}` },
+          () => {
+            console.log('[REALTIME SUBSCRIPTION SYNC] user_settings updated for user:', user.id);
+            fetchSubscription();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user?.id, fetchSubscription]);
 
   const isFree = subscription.plan === 'free';
   const isStarter = subscription.plan === 'starter' || subscription.plan === 'pro';
