@@ -8,10 +8,17 @@ export type PlanType = 'free' | 'starter' | 'pro';
 export type BillingCycle = 'monthly' | 'annual';
 
 export const STRIPE_PRICES = {
-  STARTER_MONTHLY: process.env.EXPO_PUBLIC_STRIPE_STARTER_MONTHLY_PRICE_ID ?? 'price_starter_monthly_9',
-  STARTER_ANNUAL: process.env.EXPO_PUBLIC_STRIPE_STARTER_ANNUAL_PRICE_ID ?? 'price_starter_annual_59',
-  PRO_MONTHLY: process.env.EXPO_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID ?? 'price_pro_monthly_19',
-  PRO_ANNUAL: process.env.EXPO_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID ?? 'price_pro_annual_149',
+  STARTER_MONTHLY: process.env.EXPO_PUBLIC_STRIPE_STARTER_MONTHLY_PRICE_ID ?? 'price_1TAtn4GNkz6GTxuMwTn9DjU3',
+  STARTER_ANNUAL: process.env.EXPO_PUBLIC_STRIPE_STARTER_ANNUAL_PRICE_ID ?? 'price_1U0sHpGNkz6GTxuMMsaB6NUp',
+  PRO_MONTHLY: process.env.EXPO_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID ?? 'price_1U0sHtGNkz6GTxuMtY8nj81a',
+  PRO_ANNUAL: process.env.EXPO_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID ?? 'price_1U0sHkGNkz6GTxuMW2LnYzpW',
+};
+
+export const STRIPE_PAYMENT_LINKS = {
+  STARTER_MONTHLY: 'https://buy.stripe.com/14A3cv0Jp8aL47b1I7eUU01',
+  STARTER_ANNUAL: 'https://buy.stripe.com/8x28wPcs776HavzdqPeUU03',
+  PRO_MONTHLY: 'https://buy.stripe.com/8x2cN5gIndv5dHL86veUU00',
+  PRO_ANNUAL: 'https://buy.stripe.com/dRm4gz9fV62DdHLcmLeUU02',
 };
 
 export interface SubscriptionInfo {
@@ -107,9 +114,22 @@ export function useSubscription() {
       setCheckoutLoading(true);
       trackEvent('checkout_initiated', { plan: targetPlan, cycle });
 
-      const fallbackBaseUrl = targetPlan === 'pro'
-        ? 'https://buy.stripe.com/8x2cN5gIndv5dHL86veUU00'
-        : 'https://buy.stripe.com/14A3cv0Jp8aL47b1I7eUU01';
+      let fallbackBaseUrl = STRIPE_PAYMENT_LINKS.STARTER_MONTHLY;
+      let priceId = STRIPE_PRICES.STARTER_MONTHLY;
+
+      if (targetPlan === 'starter' && cycle === 'monthly') {
+        fallbackBaseUrl = STRIPE_PAYMENT_LINKS.STARTER_MONTHLY;
+        priceId = STRIPE_PRICES.STARTER_MONTHLY;
+      } else if (targetPlan === 'starter' && cycle === 'annual') {
+        fallbackBaseUrl = STRIPE_PAYMENT_LINKS.STARTER_ANNUAL;
+        priceId = STRIPE_PRICES.STARTER_ANNUAL;
+      } else if (targetPlan === 'pro' && cycle === 'monthly') {
+        fallbackBaseUrl = STRIPE_PAYMENT_LINKS.PRO_MONTHLY;
+        priceId = STRIPE_PRICES.PRO_MONTHLY;
+      } else if (targetPlan === 'pro' && cycle === 'annual') {
+        fallbackBaseUrl = STRIPE_PAYMENT_LINKS.PRO_ANNUAL;
+        priceId = STRIPE_PRICES.PRO_ANNUAL;
+      }
 
       const emailParam = user?.email ? `?prefilled_email=${encodeURIComponent(user.email)}` : '';
       const directFallbackUrl = `${fallbackBaseUrl}${emailParam}`;
@@ -118,11 +138,6 @@ export function useSubscription() {
         openUrlSafe(directFallbackUrl);
         return;
       }
-
-      let priceId = STRIPE_PRICES.STARTER_MONTHLY;
-      if (targetPlan === 'starter' && cycle === 'annual') priceId = STRIPE_PRICES.STARTER_ANNUAL;
-      if (targetPlan === 'pro' && cycle === 'monthly') priceId = STRIPE_PRICES.PRO_MONTHLY;
-      if (targetPlan === 'pro' && cycle === 'annual') priceId = STRIPE_PRICES.PRO_ANNUAL;
 
       try {
         const { data, error: fnError } = await supabase.functions.invoke('create-checkout-session', {
@@ -141,8 +156,8 @@ export function useSubscription() {
     } catch (err: any) {
       console.error('Checkout error:', err);
       const fallbackUrl = targetPlan === 'pro'
-        ? 'https://buy.stripe.com/8x2cN5gIndv5dHL86veUU00'
-        : 'https://buy.stripe.com/14A3cv0Jp8aL47b1I7eUU01';
+        ? (cycle === 'annual' ? STRIPE_PAYMENT_LINKS.PRO_ANNUAL : STRIPE_PAYMENT_LINKS.PRO_MONTHLY)
+        : (cycle === 'annual' ? STRIPE_PAYMENT_LINKS.STARTER_ANNUAL : STRIPE_PAYMENT_LINKS.STARTER_MONTHLY);
       openUrlSafe(fallbackUrl);
     } finally {
       setCheckoutLoading(false);
