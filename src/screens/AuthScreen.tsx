@@ -30,11 +30,12 @@ export default function AuthScreen() {
     const [loading, setLoading] = useState(false);
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [modalEmail, setModalEmail] = useState('');
 
-    const clearErrors = () => { setEmailError(''); setPasswordError(''); };
+    const clearErrors = () => { setEmailError(''); setPasswordError(''); setSuccessMessage(''); };
 
     const validate = () => {
         clearErrors();
@@ -87,6 +88,7 @@ export default function AuthScreen() {
         if (error) {
             Alert.alert('Error', error.message);
         } else {
+            setSuccessMessage('Password reset link sent to your email.');
             Alert.alert('Password reset sent', 'Check your email for a reset link.');
         }
     };

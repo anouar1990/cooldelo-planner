@@ -32,13 +32,14 @@ export default function DesktopAuthScreen() {
     const [loading, setLoading] = useState(false);
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [modalEmail, setModalEmail] = useState('');
 
     const { width, height } = useWindowDimensions();
 
-    const clearErrors = () => { setEmailError(''); setPasswordError(''); };
+    const clearErrors = () => { setEmailError(''); setPasswordError(''); setSuccessMessage(''); };
 
     const validate = () => {
         clearErrors();
@@ -91,6 +92,7 @@ export default function DesktopAuthScreen() {
         if (error) {
             Alert.alert('Error', error.message);
         } else {
+            setSuccessMessage('Password reset link sent to your email.');
             Alert.alert('Password reset sent', 'Check your email for a reset link.');
         }
     };
