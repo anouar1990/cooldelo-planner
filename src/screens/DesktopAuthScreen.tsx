@@ -10,6 +10,7 @@ import { useAuth } from '../hooks/useAuth';
 import { trackEvent } from '../lib/analytics';
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, ShieldCheck, Zap, Layers } from 'lucide-react-native';
 import { SocialAuthButtons } from '../components/SocialAuthButtons';
+import { EmailConfirmationModal } from '../components/EmailConfirmationModal';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -31,6 +32,9 @@ export default function DesktopAuthScreen() {
     const [loading, setLoading] = useState(false);
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [modalEmail, setModalEmail] = useState('');
 
     const { width, height } = useWindowDimensions();
 
@@ -60,15 +64,17 @@ export default function DesktopAuthScreen() {
                 const { data, error } = await signUp(email, password);
                 if (error) {
                     setEmailError(error.message);
-                } else if (!data?.session) {
+                } else {
                     trackEvent('sign_up', { method: 'email' });
-                    Alert.alert(
-                        'Account created! ✅',
-                        'Check your email to confirm your account, then sign in.',
-                        [{ text: 'OK', onPress: () => setMode('signin') }]
-                    );
+                    setModalEmail(email);
+                    setShowConfirmModal(true);
+                    setMode('signin');
+                    setPassword('');
+                    setConfirmPassword('');
                 }
             }
+        } catch (err: any) {
+            setEmailError(err.message || 'An unexpected error occurred during registration.');
         } finally {
             setLoading(false);
         }
@@ -163,6 +169,12 @@ export default function DesktopAuthScreen() {
                             {/* Social Auth */}
                             <SocialAuthButtons onError={(msg) => setPasswordError(msg)} />
 
+                            {successMessage ? (
+                                <View style={styles.successBanner}>
+                                    <Text style={styles.successBannerText}>✅ {successMessage}</Text>
+                                </View>
+                            ) : null}
+
                             <View style={styles.tabRow}>
                                 <TouchableOpacity style={[styles.tabBtn, mode === 'signin' && styles.tabBtnActive]} onPress={() => { setMode('signin'); clearErrors(); }}>
                                     <LogIn color={mode === 'signin' ? '#fff' : C.sub} size={16} />
@@ -255,6 +267,16 @@ export default function DesktopAuthScreen() {
 
                 </View>
             </KeyboardAvoidingView>
+
+            <EmailConfirmationModal
+                visible={showConfirmModal}
+                email={modalEmail}
+                onClose={() => setShowConfirmModal(false)}
+                onGoToLogin={() => {
+                    setShowConfirmModal(false);
+                    setMode('signin');
+                }}
+            />
         </SafeAreaView>
     );
 }
@@ -440,6 +462,20 @@ const styles = StyleSheet.create({
         color: C.error,
         marginTop: 6,
         marginLeft: 4,
+    },
+    successBanner: {
+        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(16, 185, 129, 0.3)',
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 20,
+    },
+    successBannerText: {
+        color: '#10B981',
+        fontSize: 13,
+        fontWeight: '600',
+        lineHeight: 18,
     },
     forgotBtn: {
         alignSelf: 'flex-start',

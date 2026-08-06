@@ -3,5 +3,9 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "web-build",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/auth/callback", "destination": "/index.html" },
+    { "source": "/((?!assets/|_expo/|.*\\..*).*)", "destination": "/index.html" }
+  ]
 }

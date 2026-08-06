@@ -7,24 +7,91 @@ export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const ensureUserProfile = async (authUser: User) => {
+        try {
+            const { data } = await supabase
+                .from('user_settings')
+                .select('user_id')
+                .eq('user_id', authUser.id)
+                .maybeSingle();
+
+            if (!data) {
+                await supabase.from('user_settings').insert({
+                    user_id: authUser.id,
+                    plan: 'free',
+                    subscription_status: 'free',
+                });
+            }
+        } catch (e) {
+            console.warn('Error auto-creating user_settings profile:', e);
+        }
+    };
+
+    const handleAuthSession = (currentSession: Session | null) => {
+        setSession(currentSession);
+        const currentUser = currentSession?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+            ensureUserProfile(currentUser);
+        }
+        setLoading(false);
+    };
+
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
+        let isMounted = true;
+
+        const initAuth = async () => {
+            // 1. Handle PKCE code exchange if redirected from email confirmation link with ?code=...
+            if (typeof window !== 'undefined' && window.location) {
+                const params = new URLSearchParams(window.location.search);
+                const code = params.get('code');
+                if (code) {
+                    try {
+                        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+                        if (!error && data.session) {
+                            if (isMounted) handleAuthSession(data.session);
+                            // Clean code from URL
+                            const cleanUrl = window.location.origin + window.location.pathname;
+                            window.history.replaceState({}, document.title, cleanUrl);
+                            return;
+                        }
+                    } catch (codeErr) {
+                        console.warn('Error exchanging code for session:', codeErr);
+                    }
+                }
+            }
+
+            // 2. Fetch existing session
+            const { data: { session: existingSession } } = await supabase.auth.getSession();
+            if (isMounted) {
+                handleAuthSession(existingSession);
+            }
+        };
+
+        initAuth();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+            if (isMounted) {
+                handleAuthSession(newSession);
+            }
         });
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
-
-        return () => subscription.unsubscribe();
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     const signUp = async (email: string, password: string) => {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.0machine.com';
+        const redirectTo = `${origin}/auth/callback`;
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                emailRedirectTo: redirectTo,
+            },
+        });
         return { data, error };
     };
 
@@ -38,18 +105,20 @@ export function useAuth() {
     };
 
     const resetPassword = async (email: string) => {
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.0machine.com';
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'https://app.0machine.com',
+            redirectTo: `${origin}/auth/callback`,
         });
         return { error };
     };
 
     /** Redirects to Google OAuth — returns to app.0machine.com after login */
     const signInWithGoogle = async () => {
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.0machine.com';
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: 'https://app.0machine.com',
+                redirectTo: `${origin}/auth/callback`,
                 queryParams: {
                     access_type: 'offline',
                     prompt: 'consent',

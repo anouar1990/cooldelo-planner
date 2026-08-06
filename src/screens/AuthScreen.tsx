@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { trackEvent } from '../lib/analytics';
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react-native';
 import { SocialAuthButtons } from '../components/SocialAuthButtons';
+import { EmailConfirmationModal } from '../components/EmailConfirmationModal';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -29,6 +30,9 @@ export default function AuthScreen() {
     const [loading, setLoading] = useState(false);
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [modalEmail, setModalEmail] = useState('');
 
     const clearErrors = () => { setEmailError(''); setPasswordError(''); };
 
@@ -56,17 +60,18 @@ export default function AuthScreen() {
                 const { data, error } = await signUp(email, password);
                 if (error) {
                     setEmailError(error.message);
-                } else if (!data?.session) {
+                } else {
                     trackEvent('signup_completed', { method: 'email' }, `signup_${email}`);
-                    Alert.alert(
-                        'Account created! ✅',
-                        'Check your email to confirm your account, then sign in.',
-                        [{ text: 'OK', onPress: () => setMode('signin') }]
-                    );
+                    setModalEmail(email);
+                    setShowConfirmModal(true);
+                    setMode('signin');
+                    setPassword('');
+                    setConfirmPassword('');
                 }
             }
+        } catch (err: any) {
+            setEmailError(err.message || 'An unexpected error occurred during registration.');
         } finally {
-            // Guarantee loading is cleared even on unexpected network errors
             setLoading(false);
         }
     };
@@ -110,6 +115,12 @@ export default function AuthScreen() {
 
                         {/* Social Auth */}
                         <SocialAuthButtons onError={(msg) => setPasswordError(msg)} />
+
+                        {successMessage ? (
+                            <View style={styles.successBanner}>
+                                <Text style={styles.successBannerText}>✅ {successMessage}</Text>
+                            </View>
+                        ) : null}
 
                         {/* Tab switcher */}
                         <View style={styles.tabRow}>
@@ -216,6 +227,16 @@ export default function AuthScreen() {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            <EmailConfirmationModal
+                visible={showConfirmModal}
+                email={modalEmail}
+                onClose={() => setShowConfirmModal(false)}
+                onGoToLogin={() => {
+                    setShowConfirmModal(false);
+                    setMode('signin');
+                }}
+            />
         </SafeAreaView>
     );
 }
@@ -250,6 +271,20 @@ const styles = StyleSheet.create({
     input: { flex: 1, color: C.text, fontSize: 15 },
     eyeBtn: { padding: 4 },
     errorText: { fontSize: 12, color: C.error, marginTop: 6, marginLeft: 4 },
+    successBanner: {
+        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(16, 185, 129, 0.3)',
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 20,
+    },
+    successBannerText: {
+        color: '#10B981',
+        fontSize: 13,
+        fontWeight: '600',
+        lineHeight: 18,
+    },
     submitBtn: {
         backgroundColor: C.primary, borderRadius: 14, height: 54,
         justifyContent: 'center', alignItems: 'center', marginTop: 24,
