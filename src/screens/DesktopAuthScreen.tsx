@@ -67,10 +67,17 @@ export default function DesktopAuthScreen() {
                     setEmailError(error.message);
                 } else {
                     trackEvent('sign_up', { method: 'email' });
-                    setModalEmail(email);
-                    setShowConfirmModal(true);
-                    setPassword('');
-                    setConfirmPassword('');
+                    if (data?.session) {
+                        // User auto-logged in (Email confirmation disabled in Supabase)
+                        setPassword('');
+                        setConfirmPassword('');
+                    } else {
+                        // OTP sent to email
+                        setModalEmail(email);
+                        setShowConfirmModal(true);
+                        setPassword('');
+                        setConfirmPassword('');
+                    }
                 }
             }
         } catch (err: any) {

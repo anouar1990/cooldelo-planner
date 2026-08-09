@@ -91,11 +91,26 @@ export function useAuth() {
     };
 
     const verifyOtp = async (email: string, token: string) => {
-        const { data, error } = await supabase.auth.verifyOtp({
+        // First try type: 'signup'
+        let { data, error } = await supabase.auth.verifyOtp({
             email,
             token,
             type: 'signup',
         });
+
+        // Fallback to type: 'email' if signup type returns error
+        if (error) {
+            const fallback = await supabase.auth.verifyOtp({
+                email,
+                token,
+                type: 'email',
+            });
+            if (!fallback.error) {
+                data = fallback.data;
+                error = null;
+            }
+        }
+
         if (data?.session) {
             handleAuthSession(data.session);
         }

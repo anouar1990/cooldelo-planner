@@ -63,10 +63,17 @@ export default function AuthScreen() {
                     setEmailError(error.message);
                 } else {
                     trackEvent('signup_completed', { method: 'email' }, `signup_${email}`);
-                    setModalEmail(email);
-                    setShowConfirmModal(true);
-                    setPassword('');
-                    setConfirmPassword('');
+                    if (data?.session) {
+                        // User auto-logged in (Email confirmation disabled in Supabase)
+                        setPassword('');
+                        setConfirmPassword('');
+                    } else {
+                        // OTP sent to email
+                        setModalEmail(email);
+                        setShowConfirmModal(true);
+                        setPassword('');
+                        setConfirmPassword('');
+                    }
                 }
             }
         } catch (err: any) {
