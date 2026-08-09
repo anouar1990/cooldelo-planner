@@ -166,7 +166,7 @@ export function useSubscription() {
 
       try {
         const { data, error: fnError } = await supabase.functions.invoke('create-checkout-session', {
-          body: { priceId, userId: user.id, userEmail: user.email, plan: targetPlan, cycle },
+          body: { priceId, userId: user.id, userEmail: user.email, plan: targetPlan, cycle, trialPeriodDays: 30 },
         });
 
         if (!fnError && data?.url) {
