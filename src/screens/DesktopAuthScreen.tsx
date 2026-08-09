@@ -39,6 +39,10 @@ export default function DesktopAuthScreen() {
 
     const { width, height } = useWindowDimensions();
 
+    const [isEmailFocused, setIsEmailFocused] = useState(false);
+    const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+    const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] = useState(false);
+
     const clearErrors = () => { setEmailError(''); setPasswordError(''); setSuccessMessage(''); };
 
     const validate = () => {
@@ -68,11 +72,9 @@ export default function DesktopAuthScreen() {
                 } else {
                     trackEvent('sign_up', { method: 'email' });
                     if (data?.session) {
-                        // User auto-logged in (Email confirmation disabled in Supabase)
                         setPassword('');
                         setConfirmPassword('');
                     } else {
-                        // OTP sent to email
                         setModalEmail(email);
                         setShowConfirmModal(true);
                         setPassword('');
@@ -103,8 +105,6 @@ export default function DesktopAuthScreen() {
         }
     };
 
-    // Responsive rules for the split screen layout
-    // If width gets a little tight (like a small laptop window), we gracefully stack them or hide the side panel.
     const isSmallDesktop = width < 1000;
 
     return (
@@ -112,7 +112,6 @@ export default function DesktopAuthScreen() {
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
                 <View style={[styles.container, { minHeight: height }]}>
                     
-                    {/* LEFT PANEL: Branding & Graphic (Hidden on tight screens) */}
                     {!isSmallDesktop && (
                         <View style={styles.leftPanel}>
                             <View style={styles.leftContent}>
@@ -142,20 +141,17 @@ export default function DesktopAuthScreen() {
                                 </View>
                             </View>
 
-                            {/* Decorative geometric/acrylic aesthetic shapes */}
                             <View style={styles.decoCircle} />
                             <View style={styles.decoSquare} />
                         </View>
                     )}
 
-                    {/* RIGHT PANEL: Auth Form */}
                     <ScrollView 
                         contentContainerStyle={[styles.rightPanel, isSmallDesktop && { width: '100%' }]} 
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
                     >
                         <View style={[styles.formWrapper, isSmallDesktop && { paddingHorizontal: 40 }]}>
-                            {/* Mobile/Tablet Fallback Logo when Left Panel is hidden */}
                             {isSmallDesktop && (
                                 <View style={styles.mobileBrand}>
                                     <Text style={styles.mobileBrandIcon}>⚡</Text>
@@ -174,7 +170,6 @@ export default function DesktopAuthScreen() {
                                 </Text>
                             </View>
 
-                            {/* Social Auth */}
                             <SocialAuthButtons onError={(msg) => setPasswordError(msg)} />
 
                             {successMessage ? (
@@ -196,25 +191,27 @@ export default function DesktopAuthScreen() {
 
                             <View style={styles.form}>
                                 <Text style={styles.label}>EMAIL ADDRESS</Text>
-                                <View style={[styles.inputContainer, emailError && styles.inputError]}>
-                                    <Mail color={C.sub} size={18} style={styles.inputIcon} />
+                                <View style={[styles.inputContainer, isEmailFocused && styles.inputFocused, emailError ? styles.inputError : null]}>
+                                    <Mail color={isEmailFocused ? C.primary : C.sub} size={18} style={styles.inputIcon} />
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { outlineStyle: 'none' } as any]}
                                         placeholder="you@example.com"
                                         placeholderTextColor={C.dim}
                                         autoCapitalize="none"
                                         keyboardType="email-address"
                                         value={email}
                                         onChangeText={t => { setEmail(t); setEmailError(''); }}
+                                        onFocus={() => setIsEmailFocused(true)}
+                                        onBlur={() => setIsEmailFocused(false)}
                                     />
                                 </View>
                                 {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
                                 <Text style={[styles.label, { marginTop: 20 }]}>PASSWORD</Text>
-                                <View style={[styles.inputContainer, passwordError && styles.inputError]}>
-                                    <Lock color={C.sub} size={18} style={styles.inputIcon} />
+                                <View style={[styles.inputContainer, isPasswordFocused && styles.inputFocused, passwordError ? styles.inputError : null]}>
+                                    <Lock color={isPasswordFocused ? C.primary : C.sub} size={18} style={styles.inputIcon} />
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { outlineStyle: 'none' } as any]}
                                         placeholder="Min. 6 characters"
                                         placeholderTextColor={C.dim}
                                         secureTextEntry={!showPassword}
@@ -451,6 +448,11 @@ const styles = StyleSheet.create({
         borderColor: C.border,
         paddingHorizontal: 16,
         height: 54,
+    },
+    inputFocused: {
+        borderColor: C.primary,
+        borderWidth: 1.5,
+        backgroundColor: 'rgba(255, 107, 53, 0.04)',
     },
     inputError: {
         borderColor: C.error,

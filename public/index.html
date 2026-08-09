@@ -24,6 +24,15 @@
         height: 100%;
         flex: 1;
       }
+      /* Remove default browser blue focus outline rectangle on input fields */
+      input, textarea, select, button {
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent;
+      }
+      input:focus, textarea:focus, select:focus, button:focus {
+        outline: none !important;
+        box-shadow: none !important;
+      }
     </style>
     <!-- Google tag (gtag.js) -->
     <script>

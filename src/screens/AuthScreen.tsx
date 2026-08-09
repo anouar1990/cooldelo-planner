@@ -155,7 +155,7 @@ export default function AuthScreen() {
                             <View style={[styles.inputRow, emailError ? styles.inputError : null]}>
                                 <Mail color={C.sub} size={18} style={styles.inputIcon} />
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { outlineStyle: 'none' } as any]}
                                     placeholder="you@example.com"
                                     placeholderTextColor={C.dim}
                                     autoCapitalize="none"
@@ -171,7 +171,7 @@ export default function AuthScreen() {
                             <View style={[styles.inputRow, passwordError ? styles.inputError : null]}>
                                 <Lock color={C.sub} size={18} style={styles.inputIcon} />
                                 <TextInput
-                                    style={styles.input}
+                                    style={[styles.input, { outlineStyle: 'none' } as any]}
                                     placeholder="Min. 6 characters"
                                     placeholderTextColor={C.dim}
                                     secureTextEntry={!showPassword}
@@ -193,7 +193,7 @@ export default function AuthScreen() {
                                     <View style={[styles.inputRow, passwordError ? styles.inputError : null]}>
                                         <Lock color={C.sub} size={18} style={styles.inputIcon} />
                                         <TextInput
-                                            style={styles.input}
+                                            style={[styles.input, { outlineStyle: 'none' } as any]}
                                             placeholder="Repeat password"
                                             placeholderTextColor={C.dim}
                                             secureTextEntry={!showPassword}
