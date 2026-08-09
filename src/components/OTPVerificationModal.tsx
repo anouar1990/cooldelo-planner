@@ -14,10 +14,12 @@ interface OTPVerificationModalProps {
     onSuccess?: () => void;
 }
 
+const OTP_LENGTH = 8; // Supports up to 8-digit OTPs sent by Supabase
+
 export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTPVerificationModalProps) {
     const { verifyOtp } = useAuth();
 
-    const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+    const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
     const [verifying, setVerifying] = useState(false);
     const [resending, setResending] = useState(false);
     const [cooldown, setCooldown] = useState(60);
@@ -42,7 +44,7 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
     // Reset state when modal opens
     useEffect(() => {
         if (visible) {
-            setOtp(['', '', '', '', '', '']);
+            setOtp(Array(OTP_LENGTH).fill(''));
             setErrorMsg(null);
             setSuccessMsg(null);
             setCooldown(60);
@@ -57,22 +59,22 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
         setErrorMsg(null);
         setSuccessMsg(null);
 
-        // Handle paste of 6-digit code
+        // Handle paste of full OTP code (e.g. 6 or 8 digits)
         if (text.length > 1) {
-            const digits = text.replace(/[^0-9]/g, '').slice(0, 6).split('');
+            const digits = text.replace(/[^0-9]/g, '').slice(0, OTP_LENGTH).split('');
             if (digits.length > 0) {
-                const newOtp = [...otp];
+                const newOtp = Array(OTP_LENGTH).fill('');
                 digits.forEach((digit, i) => {
-                    if (i < 6) newOtp[i] = digit;
+                    if (i < OTP_LENGTH) newOtp[i] = digit;
                 });
                 setOtp(newOtp);
 
                 // Focus next empty or last box
-                const nextIndex = Math.min(digits.length, 5);
+                const nextIndex = Math.min(digits.length, OTP_LENGTH - 1);
                 inputRefs.current[nextIndex]?.focus();
 
-                // If complete 6 digits pasted, trigger verify
-                if (digits.length === 6) {
+                // If complete 8 or 6 digits pasted, trigger verify
+                if (digits.length >= 6) {
                     handleVerify(newOtp.join(''));
                 }
                 return;
@@ -84,11 +86,11 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
         newOtp[index] = digit;
         setOtp(newOtp);
 
-        if (digit && index < 5) {
+        if (digit && index < OTP_LENGTH - 1) {
             inputRefs.current[index + 1]?.focus();
         }
 
-        // Auto verify if all 6 digits entered
+        // Auto verify if all 8 digits entered
         if (digit && newOtp.every((d) => d !== '')) {
             handleVerify(newOtp.join(''));
         }
@@ -101,9 +103,9 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
     };
 
     const handleVerify = async (codeToVerify?: string) => {
-        const token = codeToVerify || otp.join('');
+        const token = (codeToVerify || otp.join('')).trim();
         if (token.length < 6) {
-            setErrorMsg('Please enter all 6 digits of the OTP code.');
+            setErrorMsg('Please enter your verification code.');
             return;
         }
 
@@ -123,7 +125,7 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
                         try {
                             window.history.pushState({}, '', '/dashboard');
                         } catch (e) {
-                            // ignore if navigation handle by state
+                            // ignore if navigation handled by state
                         }
                     }
                     if (onSuccess) onSuccess();
@@ -153,9 +155,9 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
             if (error) {
                 setErrorMsg(`Resend failed: ${error.message}`);
             } else {
-                setSuccessMsg('A new 6-digit code has been sent to your email.');
+                setSuccessMsg('A new verification code has been sent to your email.');
                 setCooldown(60);
-                setOtp(['', '', '', '', '', '']);
+                setOtp(Array(OTP_LENGTH).fill(''));
                 inputRefs.current[0]?.focus();
             }
         } catch (err: any) {
@@ -200,7 +202,7 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
 
                     {/* Instruction */}
                     <Text style={styles.message}>
-                        We sent a 6-digit verification code to{' '}
+                        We sent a verification code to{' '}
                         <Text style={styles.emailHighlight}>{email || 'your email'}</Text>.
                         Enter the code below to activate your account.
                     </Text>
@@ -218,7 +220,7 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
                         </View>
                     ) : null}
 
-                    {/* 6-Digit OTP Inputs */}
+                    {/* 8-Digit OTP Inputs */}
                     <View style={styles.otpRow}>
                         {otp.map((digit, index) => (
                             <TextInput
@@ -233,7 +235,7 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
                                 onChangeText={(text) => handleOtpChange(text, index)}
                                 onKeyPress={(e) => handleKeyPress(e, index)}
                                 keyboardType="number-pad"
-                                maxLength={6} // Allow pasting up to 6 digits into any box
+                                maxLength={OTP_LENGTH}
                                 selectTextOnFocus
                                 autoFocus={index === 0}
                             />
@@ -307,16 +309,16 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(10, 12, 18, 0.88)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 16,
     },
     modalCard: {
         width: '100%',
-        maxWidth: 460,
+        maxWidth: 480,
         backgroundColor: '#1C2030',
         borderRadius: 24,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.12)',
-        padding: 32,
+        padding: 28,
         alignItems: 'center',
         position: 'relative',
         shadowColor: '#000',
@@ -342,9 +344,9 @@ const styles = StyleSheet.create({
         height: 40,
     },
     iconCircle: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         backgroundColor: 'rgba(255, 107, 53, 0.12)',
         justifyContent: 'center',
         alignItems: 'center',
@@ -400,19 +402,19 @@ const styles = StyleSheet.create({
     otpRow: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 8,
+        gap: 6,
         marginBottom: 24,
         width: '100%',
     },
     otpInput: {
-        width: 48,
-        height: 56,
-        borderRadius: 12,
+        width: 38,
+        height: 50,
+        borderRadius: 10,
         backgroundColor: '#13151F',
         borderWidth: 1.5,
         borderColor: 'rgba(255, 255, 255, 0.12)',
         color: '#FFFFFF',
-        fontSize: 22,
+        fontSize: 18,
         fontWeight: '800',
         textAlign: 'center',
     },
