@@ -95,7 +95,7 @@ export function ProUpgradeModal({
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TextInput
                   style={styles.promoInput}
-                  placeholder="e.g. 1MONTHFREE or FREE30"
+                  placeholder="e.g. 3DAYSFREE or FREE3"
                   placeholderTextColor={C.textSub}
                   value={promoCode}
                   onChangeText={setPromoCode}
@@ -151,7 +151,7 @@ export function ProUpgradeModal({
                     <Text style={styles.planPeriod}>{cycle === 'annual' ? '/yr' : '/mo'}</Text>
                   </Text>
                   <Text style={{ fontSize: 10, color: C.green, fontWeight: '700', marginTop: 2 }}>
-                    🎁 1 Month Free Trial with code 1MONTHFREE
+                    🎁 3-Day Free Trial (Code: 3DAYSFREE)
                   </Text>
                 </View>
                 <View style={styles.benefits}>
@@ -159,7 +159,7 @@ export function ProUpgradeModal({
                   <Benefit text="PDF Quotes & Invoices" />
                   <Benefit text="Material Inventory Stock" />
                   <Benefit text="Laser Presets Library" />
-                  <Benefit text="Design Library Access" />
+                  <Benefit text="Design Library View" />
                 </View>
                 <TouchableOpacity
                   style={styles.starterBtn}
@@ -182,7 +182,7 @@ export function ProUpgradeModal({
                     <Text style={styles.planPeriod}>{cycle === 'annual' ? '/yr' : '/mo'}</Text>
                   </Text>
                   <Text style={{ fontSize: 10, color: C.primary, fontWeight: '700', marginTop: 2 }}>
-                    🎁 1 Month Free Trial with code 1MONTHFREE
+                    🎁 3-Day Free Trial (Code: 3DAYSFREE)
                   </Text>
                 </View>
                 <View style={styles.benefits}>

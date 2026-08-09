@@ -117,8 +117,14 @@ export function useSubscription() {
   const isFree = subscription.plan === 'free';
   const isStarter = subscription.plan === 'starter' || subscription.plan === 'pro';
   const isPro = subscription.plan === 'pro';
+  const isTrial = subscription.status === 'trialing';
 
   const canAccessFeature = (feature: 'inventory' | 'design_downloads' | 'pdf_invoices' | 'nesting' | 'csv_export' | 'whatsapp' | 'analytics' | 'team'): boolean => {
+    // Exclude design_downloads during 3-day trial period to prevent file scraping
+    if (feature === 'design_downloads' && isTrial) {
+      return false;
+    }
+
     if (isPro) return true;
     if (isStarter) {
       return feature === 'inventory' || feature === 'design_downloads' || feature === 'pdf_invoices';
@@ -166,7 +172,7 @@ export function useSubscription() {
 
       try {
         const { data, error: fnError } = await supabase.functions.invoke('create-checkout-session', {
-          body: { priceId, userId: user.id, userEmail: user.email, plan: targetPlan, cycle, trialPeriodDays: 30 },
+          body: { priceId, userId: user.id, userEmail: user.email, plan: targetPlan, cycle, trialPeriodDays: 3 },
         });
 
         if (!fnError && data?.url) {
@@ -212,10 +218,10 @@ export function useSubscription() {
 
   const applyPromoCode = async (code: string): Promise<{ success: boolean; message: string }> => {
     const cleanCode = code.trim().toUpperCase();
-    const validCodes = ['1MONTHFREE', 'FREE30', 'VIP30', 'MAKER30', '0MACHINE100', 'STARTER9', 'PRO19'];
+    const validCodes = ['3DAYSFREE', 'FREE3', 'TRIAL3', '1MONTHFREE', 'FREE30', 'VIP30', 'MAKER30', '0MACHINE100', 'STARTER9', 'PRO19'];
 
     if (!validCodes.includes(cleanCode)) {
-      return { success: false, message: 'Invalid promo code. Try "1MONTHFREE" or "FREE30".' };
+      return { success: false, message: 'Invalid promo code. Try "3DAYSFREE" or "FREE3".' };
     }
 
     if (!user) {
@@ -224,17 +230,17 @@ export function useSubscription() {
 
     try {
       setCheckoutLoading(true);
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      const threeDaysFromNow = new Date();
+      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
       const targetPlan: PlanType = cleanCode === 'STARTER9' ? 'starter' : 'pro';
 
       const { error: updateError } = await supabase
         .from('user_settings')
         .upsert({
           user_id: user.id,
-          subscription_status: 'active',
+          subscription_status: 'trialing',
           plan: targetPlan,
-          current_period_end: thirtyDaysFromNow.toISOString(),
+          current_period_end: threeDaysFromNow.toISOString(),
         }, { onConflict: 'user_id' });
 
       if (updateError) throw updateError;
@@ -244,7 +250,7 @@ export function useSubscription() {
 
       return {
         success: true,
-        message: `🎉 Promo Code "${cleanCode}" Applied! 1 Month Free Trial (${targetPlan.toUpperCase()}) activated.`,
+        message: `🎉 Promo Code "${cleanCode}" Applied! 3-Day Free Trial activated (Design Library downloads excluded until paid).`,
       };
     } catch (err: any) {
       console.error('Apply promo code error:', err);
@@ -261,6 +267,7 @@ export function useSubscription() {
     isFree,
     isStarter,
     isPro,
+    isTrial,
     canAccessFeature,
     createCheckoutSession,
     openCustomerPortal,

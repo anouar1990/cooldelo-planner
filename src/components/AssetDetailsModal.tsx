@@ -32,7 +32,7 @@ const COLORS = {
 
 export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props) {
     const { incrementDownload } = useDesignLibrary();
-    const { isPro } = useSubscription();
+    const { isPro, isTrial } = useSubscription();
     const [downloading, setDownloading] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showProModal, setShowProModal] = useState(false);
@@ -65,7 +65,7 @@ export function AssetDetailsModal({ design, visible, onClose, onRefresh }: Props
     }
 
     const handleDirectDownload = async (url: string) => {
-        if (!isPro) {
+        if (!isPro || isTrial) {
             setShowProModal(true);
             return;
         }

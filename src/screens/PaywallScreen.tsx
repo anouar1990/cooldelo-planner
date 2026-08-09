@@ -74,7 +74,7 @@ export default function PaywallScreen() {
                         <View style={{ flexDirection: 'row', gap: 8 }}>
                             <TextInput
                                 style={styles.promoInput}
-                                placeholder="e.g. 1MONTHFREE or FREE30"
+                                placeholder="e.g. 3DAYSFREE or FREE3"
                                 placeholderTextColor={C.sub}
                                 value={promoCode}
                                 onChangeText={setPromoCode}
@@ -142,14 +142,14 @@ export default function PaywallScreen() {
                             <Text style={styles.planName}>{t('plan_starter')}</Text>
                             <Text style={styles.price}>{cycle === 'annual' ? '$59/yr' : '$9/mo'}</Text>
                             <Text style={{ fontSize: 11, color: C.green, fontWeight: '700', marginBottom: 8 }}>
-                                🎁 1 Month Free Trial with code 1MONTHFREE
+                                🎁 3-Day Free Trial (Code: 3DAYSFREE)
                             </Text>
                             <View style={styles.benefits}>
                                 <Benefit text="Unlimited Projects & Machines" />
                                 <Benefit text="Material Stock Inventory" />
                                 <Benefit text="Laser Presets Library" />
                                 <Benefit text="PDF Quotes & Invoices" />
-                                <Benefit text="Design Library Access" />
+                                <Benefit text="Design Library View" />
                             </View>
                             <TouchableOpacity
                                 style={styles.starterBtn}
@@ -170,7 +170,7 @@ export default function PaywallScreen() {
                             <Text style={[styles.planName, { color: C.primary }]}>{t('plan_pro')}</Text>
                             <Text style={styles.price}>{cycle === 'annual' ? '$149/yr' : '$19/mo'}</Text>
                             <Text style={{ fontSize: 11, color: C.primary, fontWeight: '700', marginBottom: 8 }}>
-                                🎁 1 Month Free Trial with code 1MONTHFREE
+                                🎁 3-Day Free Trial (Code: 3DAYSFREE)
                             </Text>
                             <View style={styles.benefits}>
                                 <Benefit text="Everything in Starter +" bold />
