@@ -192,7 +192,7 @@ export default function SettingsScreen() {
                         </View>
 
                         <Text style={styles.label}>Workshop Name</Text>
-                        <TextInput style={styles.input} value={workshopName} onChangeText={setWorkshopName} placeholder="Atlas FabWorks" placeholderTextColor="#8B95A8" />
+                        <TextInput style={styles.input} value={workshopName} onChangeText={setWorkshopName} placeholder="Apex Precision Fab" placeholderTextColor="#8B95A8" />
 
                         <Text style={styles.label}>Owner / Managing Engineer Name</Text>
                         <TextInput style={styles.input} value={ownerName} onChangeText={setOwnerName} placeholder="John Doe" placeholderTextColor="#8B95A8" />

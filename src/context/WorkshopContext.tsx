@@ -127,15 +127,15 @@ interface WorkshopContextType {
 
 const DEFAULT_PROFILE: WorkshopProfile = {
     logoUrl: '',
-    workshopName: 'Atlas FabWorks',
-    ownerName: 'Anouar Kharbache',
-    companyName: 'Atlas Laser Technologies SARL',
-    email: 'contact@atlasfab.ma',
-    phone: '+212 661-987654',
-    country: 'Morocco',
-    city: 'Casablanca',
-    address: 'Boulevard Mohamed V, Suite 402',
-    taxId: 'MA-987654321',
+    workshopName: 'Apex Precision Fab',
+    ownerName: 'Ethan Vance',
+    companyName: 'Apex Precision Fabrication LLC',
+    email: 'contact@apexprecisionfab.com',
+    phone: '+1 (512) 890-3421',
+    country: 'United States',
+    city: 'Austin, TX',
+    address: '1042 Industrial Parkway, Suite 100',
+    taxId: 'US-987654321',
     currency: '$',
     workshopType: 'Laser Cutting',
     machine: {
@@ -185,12 +185,36 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [invoices, setInvoices] = useState<InvoiceItem[]>(SEED_INVOICES);
     const [clients, setClients] = useState<ClientItem[]>(SEED_CLIENTS);
 
-    // Initialize from LocalStorage
+    // Initialize from LocalStorage with auto-migration of legacy names
     useEffect(() => {
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
             try {
                 const storedProfile = localStorage.getItem('0machine_workshop_profile');
-                if (storedProfile) setProfile(JSON.parse(storedProfile));
+                if (storedProfile) {
+                    const parsed = JSON.parse(storedProfile);
+                    // Migrate legacy profile names if found
+                    if (
+                        parsed.ownerName?.includes('Anouar') ||
+                        parsed.workshopName?.includes('Atlas')
+                    ) {
+                        const migrated = {
+                            ...parsed,
+                            workshopName: 'Apex Precision Fab',
+                            ownerName: 'Ethan Vance',
+                            companyName: 'Apex Precision Fabrication LLC',
+                            email: 'contact@apexprecisionfab.com',
+                            phone: '+1 (512) 890-3421',
+                            country: 'United States',
+                            city: 'Austin, TX',
+                            address: '1042 Industrial Parkway, Suite 100',
+                            taxId: 'US-987654321',
+                        };
+                        setProfile(migrated);
+                        localStorage.setItem('0machine_workshop_profile', JSON.stringify(migrated));
+                    } else {
+                        setProfile(parsed);
+                    }
+                }
 
                 const storedMats = localStorage.getItem('0machine_materials');
                 if (storedMats) setMaterials(JSON.parse(storedMats));
