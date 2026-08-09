@@ -20,11 +20,31 @@ const C = {
     green: '#10B981',
 };
 
+import { TextInput } from 'react-native';
+import { Tag } from 'lucide-react-native';
+
 export default function PaywallScreen() {
     const navigation = useNavigation();
-    const { createCheckoutSession, checkoutLoading } = useSubscription();
+    const { createCheckoutSession, checkoutLoading, applyPromoCode } = useSubscription();
     const { t } = useLanguage();
     const [cycle, setCycle] = useState<BillingCycle>('annual');
+    const [promoCode, setPromoCode] = useState('');
+    const [promoStatus, setPromoStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+    const [applyingPromo, setApplyingPromo] = useState(false);
+
+    const handleApplyPromo = async () => {
+        if (!promoCode.trim()) return;
+        setApplyingPromo(true);
+        setPromoStatus(null);
+        const res = await applyPromoCode(promoCode);
+        setApplyingPromo(false);
+        setPromoStatus(res);
+        if (res.success) {
+            setTimeout(() => {
+                navigation.goBack();
+            }, 1800);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.safe}>
@@ -43,6 +63,40 @@ export default function PaywallScreen() {
                         <Zap color={C.primary} size={36} fill={C.primary} />
                         <Text style={styles.heroTitle}>{t('tagline')}</Text>
                         <Text style={styles.heroSub}>{t('sub_tagline')}</Text>
+                    </View>
+
+                    {/* Promo Code Input Card */}
+                    <View style={styles.promoCard}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                            <Tag color={C.primary} size={16} />
+                            <Text style={{ fontSize: 13, fontWeight: '700', color: C.text }}>Have a Promo / Coupon Code?</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <TextInput
+                                style={styles.promoInput}
+                                placeholder="e.g. 1MONTHFREE or FREE30"
+                                placeholderTextColor={C.sub}
+                                value={promoCode}
+                                onChangeText={setPromoCode}
+                                autoCapitalize="characters"
+                            />
+                            <TouchableOpacity
+                                style={styles.promoBtn}
+                                onPress={handleApplyPromo}
+                                disabled={applyingPromo || !promoCode.trim()}
+                            >
+                                {applyingPromo ? (
+                                    <ActivityIndicator color="#FFF" size="small" />
+                                ) : (
+                                    <Text style={styles.promoBtnText}>Apply</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                        {promoStatus ? (
+                            <Text style={[styles.promoMsgText, promoStatus.success ? styles.promoSuccessText : styles.promoErrorText]}>
+                                {promoStatus.message}
+                            </Text>
+                        ) : null}
                     </View>
 
                     {/* Cycle Toggle */}
@@ -87,6 +141,9 @@ export default function PaywallScreen() {
                             <View style={styles.badgeWrap}><Text style={styles.badgeText}>{t('most_popular')}</Text></View>
                             <Text style={styles.planName}>{t('plan_starter')}</Text>
                             <Text style={styles.price}>{cycle === 'annual' ? '$59/yr' : '$9/mo'}</Text>
+                            <Text style={{ fontSize: 11, color: C.green, fontWeight: '700', marginBottom: 8 }}>
+                                🎁 1 Month Free Trial with code 1MONTHFREE
+                            </Text>
                             <View style={styles.benefits}>
                                 <Benefit text="Unlimited Projects & Machines" />
                                 <Benefit text="Material Stock Inventory" />
@@ -112,6 +169,9 @@ export default function PaywallScreen() {
                             <View style={[styles.badgeWrap, { backgroundColor: C.primary }]}><Text style={styles.badgeText}>{t('best_value')}</Text></View>
                             <Text style={[styles.planName, { color: C.primary }]}>{t('plan_pro')}</Text>
                             <Text style={styles.price}>{cycle === 'annual' ? '$149/yr' : '$19/mo'}</Text>
+                            <Text style={{ fontSize: 11, color: C.primary, fontWeight: '700', marginBottom: 8 }}>
+                                🎁 1 Month Free Trial with code 1MONTHFREE
+                            </Text>
                             <View style={styles.benefits}>
                                 <Benefit text="Everything in Starter +" bold />
                                 <Benefit text="Nesting Yield Calculator" bold />
@@ -163,6 +223,51 @@ const styles = StyleSheet.create({
     heroWrap: { alignItems: 'center', gap: 6, marginBottom: 4 },
     heroTitle: { fontSize: 18, fontWeight: '900', color: C.text, textAlign: 'center' },
     heroSub: { fontSize: 12, color: C.sub, textAlign: 'center', lineHeight: 16 },
+
+    promoCard: {
+        backgroundColor: C.surface,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: C.border,
+        padding: 12,
+        marginBottom: 4,
+    },
+    promoInput: {
+        flex: 1,
+        height: 42,
+        backgroundColor: C.surface2,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: C.border,
+        paddingHorizontal: 12,
+        color: C.text,
+        fontSize: 13,
+        fontWeight: '700',
+    },
+    promoBtn: {
+        height: 42,
+        backgroundColor: C.primary,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    promoBtnText: {
+        color: '#FFF',
+        fontSize: 13,
+        fontWeight: '800',
+    },
+    promoMsgText: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginTop: 8,
+    },
+    promoSuccessText: {
+        color: C.green,
+    },
+    promoErrorText: {
+        color: '#EF4444',
+    },
 
     toggleRow: { flexDirection: 'row', backgroundColor: C.surface2, borderRadius: 10, padding: 3, alignSelf: 'center', width: '100%', maxWidth: 340, marginBottom: 4 },
     toggleBtn: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 7 },

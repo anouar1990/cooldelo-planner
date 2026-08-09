@@ -25,6 +25,9 @@ const C = {
   green: '#10B981',
 };
 
+import { TextInput, ActivityIndicator } from 'react-native';
+import { Tag } from 'lucide-react-native';
+
 export function ProUpgradeModal({
   visible,
   onClose,
@@ -34,10 +37,27 @@ export function ProUpgradeModal({
 }: ProUpgradeModalProps) {
   const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
-  const { createCheckoutSession, checkoutLoading } = useSubscription();
+  const { createCheckoutSession, checkoutLoading, applyPromoCode } = useSubscription();
   const { t } = useLanguage();
   const isDesktop = width > 768;
   const [cycle, setCycle] = useState<BillingCycle>('annual');
+  const [promoCode, setPromoCode] = useState('');
+  const [promoStatus, setPromoStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setApplyingPromo(true);
+    setPromoStatus(null);
+    const res = await applyPromoCode(promoCode);
+    setApplyingPromo(false);
+    setPromoStatus(res);
+    if (res.success) {
+      setTimeout(() => {
+        onClose();
+      }, 1800);
+    }
+  };
 
   const handleChoosePlan = (plan: 'starter' | 'pro') => {
     createCheckoutSession(plan, cycle);
@@ -65,6 +85,40 @@ export function ProUpgradeModal({
             <Text style={styles.badgeText}>{featureName.toUpperCase()}</Text>
             <Text style={styles.title}>{actionTitle}</Text>
             <Text style={styles.subText}>{description}</Text>
+
+            {/* Promo Code Box */}
+            <View style={styles.promoCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <Tag color={C.primary} size={14} />
+                <Text style={{ fontSize: 12, fontWeight: '700', color: C.text }}>Have a Promo / Coupon Code?</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TextInput
+                  style={styles.promoInput}
+                  placeholder="e.g. 1MONTHFREE or FREE30"
+                  placeholderTextColor={C.textSub}
+                  value={promoCode}
+                  onChangeText={setPromoCode}
+                  autoCapitalize="characters"
+                />
+                <TouchableOpacity
+                  style={styles.promoBtn}
+                  onPress={handleApplyPromo}
+                  disabled={applyingPromo || !promoCode.trim()}
+                >
+                  {applyingPromo ? (
+                    <ActivityIndicator color="#FFF" size="small" />
+                  ) : (
+                    <Text style={styles.promoBtnText}>Apply</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              {promoStatus ? (
+                <Text style={[styles.promoMsgText, promoStatus.success ? styles.promoSuccessText : styles.promoErrorText]}>
+                  {promoStatus.message}
+                </Text>
+              ) : null}
+            </View>
 
             {/* Cycle Toggle */}
             <View style={styles.toggleRow}>
@@ -96,6 +150,9 @@ export function ProUpgradeModal({
                     {cycle === 'annual' ? '$59' : '$9'}
                     <Text style={styles.planPeriod}>{cycle === 'annual' ? '/yr' : '/mo'}</Text>
                   </Text>
+                  <Text style={{ fontSize: 10, color: C.green, fontWeight: '700', marginTop: 2 }}>
+                    🎁 1 Month Free Trial with code 1MONTHFREE
+                  </Text>
                 </View>
                 <View style={styles.benefits}>
                   <Benefit text="Unlimited Projects & Machines" />
@@ -123,6 +180,9 @@ export function ProUpgradeModal({
                   <Text style={styles.planPrice}>
                     {cycle === 'annual' ? '$149' : '$19'}
                     <Text style={styles.planPeriod}>{cycle === 'annual' ? '/yr' : '/mo'}</Text>
+                  </Text>
+                  <Text style={{ fontSize: 10, color: C.primary, fontWeight: '700', marginTop: 2 }}>
+                    🎁 1 Month Free Trial with code 1MONTHFREE
                   </Text>
                 </View>
                 <View style={styles.benefits}>
@@ -186,8 +246,54 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontSize: 10, fontWeight: '800', color: C.primary, letterSpacing: 1.2, marginBottom: 2 },
   title: { fontSize: 18, fontWeight: '800', color: C.text, textAlign: 'center', marginBottom: 4 },
-  subText: { fontSize: 12, color: C.textSub, textAlign: 'center', marginBottom: 12, lineHeight: 16 },
+  subText: { fontSize: 12, color: C.textSub, textAlign: 'center', marginBottom: 10, lineHeight: 16 },
   
+  promoCard: {
+    width: '100%',
+    backgroundColor: C.surface2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: C.border,
+    padding: 10,
+    marginBottom: 12,
+  },
+  promoInput: {
+    flex: 1,
+    height: 38,
+    backgroundColor: C.bg,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: C.border,
+    paddingHorizontal: 10,
+    color: C.text,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  promoBtn: {
+    height: 38,
+    backgroundColor: C.primary,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  promoBtnText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  promoMsgText: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 6,
+  },
+  promoSuccessText: {
+    color: C.green,
+  },
+  promoErrorText: {
+    color: '#EF4444',
+  },
+
   toggleRow: {
     flexDirection: 'row', backgroundColor: C.surface2, borderRadius: 10, padding: 3,
     marginBottom: 12, width: '100%', maxWidth: 340,

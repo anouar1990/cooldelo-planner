@@ -210,6 +210,50 @@ export function useSubscription() {
     }
   };
 
+  const applyPromoCode = async (code: string): Promise<{ success: boolean; message: string }> => {
+    const cleanCode = code.trim().toUpperCase();
+    const validCodes = ['1MONTHFREE', 'FREE30', 'VIP30', 'MAKER30', '0MACHINE100', 'STARTER9', 'PRO19'];
+
+    if (!validCodes.includes(cleanCode)) {
+      return { success: false, message: 'Invalid promo code. Try "1MONTHFREE" or "FREE30".' };
+    }
+
+    if (!user) {
+      return { success: false, message: 'Please sign in to redeem your coupon code.' };
+    }
+
+    try {
+      setCheckoutLoading(true);
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      const targetPlan: PlanType = cleanCode === 'STARTER9' ? 'starter' : 'pro';
+
+      const { error: updateError } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          subscription_status: 'active',
+          plan: targetPlan,
+          current_period_end: thirtyDaysFromNow.toISOString(),
+        }, { onConflict: 'user_id' });
+
+      if (updateError) throw updateError;
+
+      await fetchSubscription();
+      trackEvent('promo_code_applied', { code: cleanCode, plan: targetPlan });
+
+      return {
+        success: true,
+        message: `🎉 Promo Code "${cleanCode}" Applied! 1 Month Free Trial (${targetPlan.toUpperCase()}) activated.`,
+      };
+    } catch (err: any) {
+      console.error('Apply promo code error:', err);
+      return { success: false, message: err.message || 'Failed to apply promo code. Please try again.' };
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   return {
     subscription,
     loading,
@@ -220,6 +264,7 @@ export function useSubscription() {
     canAccessFeature,
     createCheckoutSession,
     openCustomerPortal,
+    applyPromoCode,
     refetch: fetchSubscription,
   };
 }
