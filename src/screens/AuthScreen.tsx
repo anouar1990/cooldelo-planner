@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { trackEvent } from '../lib/analytics';
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react-native';
 import { SocialAuthButtons } from '../components/SocialAuthButtons';
-import { EmailConfirmationModal } from '../components/EmailConfirmationModal';
+import { OTPVerificationModal } from '../components/OTPVerificationModal';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -65,7 +65,6 @@ export default function AuthScreen() {
                     trackEvent('signup_completed', { method: 'email' }, `signup_${email}`);
                     setModalEmail(email);
                     setShowConfirmModal(true);
-                    setMode('signin');
                     setPassword('');
                     setConfirmPassword('');
                 }
@@ -230,13 +229,15 @@ export default function AuthScreen() {
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            <EmailConfirmationModal
+            <OTPVerificationModal
                 visible={showConfirmModal}
                 email={modalEmail}
                 onClose={() => setShowConfirmModal(false)}
-                onGoToLogin={() => {
+                onSuccess={() => {
                     setShowConfirmModal(false);
-                    setMode('signin');
+                    setEmail('');
+                    setPassword('');
+                    setConfirmPassword('');
                 }}
             />
         </SafeAreaView>

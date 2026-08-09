@@ -83,15 +83,22 @@ export function useAuth() {
     }, []);
 
     const signUp = async (email: string, password: string) => {
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.0machine.com';
-        const redirectTo = `${origin}/auth/callback`;
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
-            options: {
-                emailRedirectTo: redirectTo,
-            },
         });
+        return { data, error };
+    };
+
+    const verifyOtp = async (email: string, token: string) => {
+        const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: 'signup',
+        });
+        if (data?.session) {
+            handleAuthSession(data.session);
+        }
         return { data, error };
     };
 
@@ -144,6 +151,7 @@ export function useAuth() {
         user,
         loading,
         signUp,
+        verifyOtp,
         signIn,
         signOut,
         resetPassword,
