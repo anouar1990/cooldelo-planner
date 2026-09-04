@@ -1,6 +1,32 @@
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
+
+const UNVERIFIED_STORAGE_KEY = '0machine_unverified_session';
+
+const saveUnverifiedSession = async (sess: Session | null) => {
+    try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            if (sess) localStorage.setItem(UNVERIFIED_STORAGE_KEY, JSON.stringify(sess));
+            else localStorage.removeItem(UNVERIFIED_STORAGE_KEY);
+        }
+        if (sess) await AsyncStorage.setItem(UNVERIFIED_STORAGE_KEY, JSON.stringify(sess));
+        else await AsyncStorage.removeItem(UNVERIFIED_STORAGE_KEY);
+    } catch (e) {}
+};
+
+const getSavedUnverifiedSession = async (): Promise<Session | null> => {
+    try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const raw = localStorage.getItem(UNVERIFIED_STORAGE_KEY);
+            if (raw) return JSON.parse(raw);
+        }
+        const raw = await AsyncStorage.getItem(UNVERIFIED_STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+};
 
 export function useAuth() {
     const [session, setSession] = useState<Session | null>(null);
@@ -49,8 +75,8 @@ export function useAuth() {
                     try {
                         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
                         if (!error && data.session) {
+                            await saveUnverifiedSession(null);
                             if (isMounted) handleAuthSession(data.session);
-                            // Clean code from URL
                             const cleanUrl = window.location.origin + window.location.pathname;
                             window.history.replaceState({}, document.title, cleanUrl);
                             return;
@@ -63,15 +89,24 @@ export function useAuth() {
 
             // 2. Fetch existing session
             const { data: { session: existingSession } } = await supabase.auth.getSession();
-            if (isMounted) {
-                handleAuthSession(existingSession);
+            if (existingSession) {
+                if (isMounted) handleAuthSession(existingSession);
+            } else {
+                // Check if there is a saved unverified session
+                const savedUnverified = await getSavedUnverifiedSession();
+                if (savedUnverified && isMounted) {
+                    handleAuthSession(savedUnverified);
+                } else if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
 
         initAuth();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-            if (isMounted) {
+            if (isMounted && newSession) {
+                saveUnverifiedSession(null);
                 handleAuthSession(newSession);
             }
         });
@@ -87,6 +122,24 @@ export function useAuth() {
             email,
             password,
         });
+
+        if (!error && data?.user) {
+            let activeSession = data.session;
+            if (!activeSession) {
+                activeSession = {
+                    access_token: 'unverified_token',
+                    token_type: 'bearer',
+                    expires_in: 3600 * 24 * 30,
+                    refresh_token: '',
+                    user: data.user,
+                } as Session;
+                await saveUnverifiedSession(activeSession);
+            } else {
+                await saveUnverifiedSession(null);
+            }
+            handleAuthSession(activeSession);
+        }
+
         return { data, error };
     };
 
@@ -112,18 +165,41 @@ export function useAuth() {
         }
 
         if (data?.session) {
+            await saveUnverifiedSession(null);
             handleAuthSession(data.session);
         }
         return { data, error };
     };
 
     const signIn = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (!error && data?.session) {
+            await saveUnverifiedSession(null);
+            handleAuthSession(data.session);
+        } else if (error && error.message?.toLowerCase().includes('email not confirmed')) {
+            // Unverified user attempting login -> check user or re-trigger signUp to get user obj
+            const { data: signUpData } = await supabase.auth.signUp({ email, password });
+            if (signUpData?.user) {
+                const unverifiedSession = {
+                    access_token: 'unverified_token',
+                    token_type: 'bearer',
+                    expires_in: 3600 * 24 * 30,
+                    refresh_token: '',
+                    user: signUpData.user,
+                } as Session;
+                await saveUnverifiedSession(unverifiedSession);
+                handleAuthSession(unverifiedSession);
+                return { error: null };
+            }
+        }
         return { error };
     };
 
     const signOut = async () => {
+        await saveUnverifiedSession(null);
         await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
     };
 
     const resetPassword = async (email: string) => {
@@ -163,12 +239,16 @@ export function useAuth() {
     const refreshSession = async () => {
         const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
         if (refreshedSession) {
+            await saveUnverifiedSession(null);
             handleAuthSession(refreshedSession);
             return refreshedSession;
         }
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (currentUser && session) {
             const updatedSession = { ...session, user: currentUser };
+            if (currentUser.email_confirmed_at) {
+                await saveUnverifiedSession(null);
+            }
             handleAuthSession(updatedSession);
             return updatedSession;
         }
