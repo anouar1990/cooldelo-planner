@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useMachineProfiles, MachineProfile } from '../hooks/useMachineProfiles';
+import { useRequireVerification } from '../context/VerificationContext';
 import { Plus, Cpu, Zap, Gauge, ChevronLeft, Trash2, Edit2, X, Check } from 'lucide-react-native';
 
 const C = {
@@ -27,6 +28,7 @@ const EMPTY: Omit<MachineProfile, 'id' | 'created_at'> = {
 
 export default function MachineProfilesScreen({ navigation }: any) {
     const { machines, loading, addMachine, updateMachine, deleteMachine } = useMachineProfiles();
+    const { requireVerification } = useRequireVerification();
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<MachineProfile | null>(null);
     const [form, setForm] = useState(EMPTY);
@@ -43,6 +45,15 @@ export default function MachineProfilesScreen({ navigation }: any) {
 
     const handleSave = async () => {
         if (!form.name.trim()) { Alert.alert('Name required'); return; }
+        const allowed = requireVerification(editing ? 'Editing machine profile' : 'Adding machine profile', async () => {
+            await executeSave();
+        });
+        if (allowed) {
+            await executeSave();
+        }
+    };
+
+    const executeSave = async () => {
         setSaving(true);
         if (editing) {
             await updateMachine(editing.id, form);
@@ -54,10 +65,18 @@ export default function MachineProfilesScreen({ navigation }: any) {
     };
 
     const handleDelete = (m: MachineProfile) => {
-        Alert.alert('Delete Machine', `Remove "${m.name}"?`, [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Delete', style: 'destructive', onPress: () => deleteMachine(m.id) },
-        ]);
+        const allowed = requireVerification('Deleting machine profile', () => {
+            Alert.alert('Delete Machine', `Remove "${m.name}"?`, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteMachine(m.id) },
+            ]);
+        });
+        if (allowed) {
+            Alert.alert('Delete Machine', `Remove "${m.name}"?`, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteMachine(m.id) },
+            ]);
+        }
     };
 
     const typeInfo = (type: MachineProfile['type']) => TYPE_OPTS.find(t => t.value === type) ?? TYPE_OPTS[3];

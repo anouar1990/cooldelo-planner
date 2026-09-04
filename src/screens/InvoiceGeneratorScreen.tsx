@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useNavigation } from '@react-navigation/native';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { useRequireVerification } from '../context/VerificationContext';
 import { trackEvent } from '../lib/analytics';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -37,6 +38,7 @@ export default function InvoiceGeneratorScreen() {
     const navigation = useNavigation<any>();
     const { user } = useAuth();
     const { isFree, isPro } = useSubscription();
+    const { requireVerification } = useRequireVerification();
     const { addInvoice } = useWorkshop();
     const { width } = useWindowDimensions();
     const isDesktop = width > 768;
@@ -123,10 +125,19 @@ export default function InvoiceGeneratorScreen() {
             return;
         }
 
+        const allowed = requireVerification('Saving business profile settings', async () => {
+            await executeSaveBusinessSettings();
+        });
+        if (allowed) {
+            await executeSaveBusinessSettings();
+        }
+    };
+
+    const executeSaveBusinessSettings = async () => {
         try {
             setLoading(true);
             const payload = {
-                user_id: user.id,
+                user_id: user!.id,
                 name: businessName.trim(),
                 email: businessEmail.trim(),
                 phone: businessPhone.trim(),
@@ -184,26 +195,35 @@ export default function InvoiceGeneratorScreen() {
             return;
         }
         if (!businessName) {
-            showAlert('Setup Required', 'Please set up your Business Profile f Settings first.');
+            showAlert('Setup Required', 'Please set up your Business Profile in Settings first.');
             setActiveTab('settings');
             return;
         }
         if (!clientName.trim()) {
-            showAlert('Error', 'Please fill f the Client Name.');
+            showAlert('Error', 'Please fill in the Client Name.');
             return;
         }
         if (items.some(item => !item.description.trim())) {
-            showAlert('Error', 'Please fill f descriptions for all items.');
+            showAlert('Error', 'Please fill in descriptions for all items.');
             return;
         }
 
+        const allowed = requireVerification('Generating invoice PDF', async () => {
+            await executeGenerateInvoice();
+        });
+        if (allowed) {
+            await executeGenerateInvoice();
+        }
+    };
+
+    const executeGenerateInvoice = async () => {
         try {
             setLoading(true);
 
             const invNum = invoiceNumber.trim() || `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
             const payload = {
-                user_id: user.id,
+                user_id: user!.id,
                 invoice_number: invNum,
                 client_name: clientName.trim(),
                 client_email: clientEmail.trim(),

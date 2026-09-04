@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useClients, Client } from '../hooks/useClients';
+import { useRequireVerification } from '../context/VerificationContext';
 import { Plus, ChevronLeft, Trash2, Edit2, X, Check, Mail, Phone, User } from 'lucide-react-native';
 
 import { useWorkshop } from '../context/WorkshopContext';
@@ -20,6 +21,7 @@ const EMPTY = { name: '', email: '', phone: '', notes: '' };
 
 export default function ClientsScreen({ navigation }: any) {
     const { clients, loading, addClient, updateClient, deleteClient } = useClients();
+    const { requireVerification } = useRequireVerification();
     const workshop = useWorkshop();
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Client | null>(null);
@@ -37,6 +39,15 @@ export default function ClientsScreen({ navigation }: any) {
 
     const handleSave = async () => {
         if (!form.name.trim()) { Alert.alert('Name required'); return; }
+        const allowed = requireVerification(editing ? 'Editing customer profile' : 'Saving new customer', async () => {
+            await executeSave();
+        });
+        if (allowed) {
+            await executeSave();
+        }
+    };
+
+    const executeSave = async () => {
         setSaving(true);
         const payload = {
             name: form.name.trim(),
@@ -61,10 +72,18 @@ export default function ClientsScreen({ navigation }: any) {
     };
 
     const handleDelete = (c: Client) => {
-        Alert.alert('Delete Client', `Remove "${c.name}"?`, [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Delete', style: 'destructive', onPress: () => deleteClient(c.id) },
-        ]);
+        const allowed = requireVerification('Deleting customer data', () => {
+            Alert.alert('Delete Client', `Remove "${c.name}"?`, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteClient(c.id) },
+            ]);
+        });
+        if (allowed) {
+            Alert.alert('Delete Client', `Remove "${c.name}"?`, [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteClient(c.id) },
+            ]);
+        }
     };
 
     const initials = (name: string) => name.split(' ').map(w => w[0]?.toUpperCase()).slice(0, 2).join('');

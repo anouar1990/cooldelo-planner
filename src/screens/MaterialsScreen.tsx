@@ -13,6 +13,7 @@ const C = {
 };
 
 import { useWorkshop, MaterialItem as Material } from '../context/WorkshopContext';
+import { useRequireVerification } from '../context/VerificationContext';
 
 const TYPES = ['Wood', 'Acrylic', 'Metal', 'Leather', 'Fabric', 'Cardboard', 'Other'];
 const TYPE_COLORS: Record<string, string> = {
@@ -27,6 +28,7 @@ const BLANK: Omit<Material, 'id'> = {
 
 export default function MaterialsScreen() {
     const { materials, addMaterial, updateMaterial, deleteMaterial } = useWorkshop();
+    const { requireVerification } = useRequireVerification();
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Material | null>(null);
     const [form, setForm] = useState<Omit<Material, 'id'>>(BLANK);
@@ -45,15 +47,34 @@ export default function MaterialsScreen() {
 
     const save = () => {
         if (!form.name.trim()) return;
-        if (editing) {
-            updateMaterial(editing.id, form);
-        } else {
-            addMaterial(form);
+        const allowed = requireVerification(editing ? 'Editing material inventory' : 'Adding material to inventory', () => {
+            if (editing) {
+                updateMaterial(editing.id, form);
+            } else {
+                addMaterial(form);
+            }
+            setShowModal(false);
+        });
+        if (allowed) {
+            if (editing) {
+                updateMaterial(editing.id, form);
+            } else {
+                addMaterial(form);
+            }
+            setShowModal(false);
         }
-        setShowModal(false);
     };
 
     const del = (id: string) => {
+        const allowed = requireVerification('Deleting material from inventory', () => {
+            executeDelete(id);
+        });
+        if (allowed) {
+            executeDelete(id);
+        }
+    };
+
+    const executeDelete = (id: string) => {
         if (Platform.OS === 'web') {
             if (window.confirm('Delete this material?')) {
                 deleteMaterial(id);

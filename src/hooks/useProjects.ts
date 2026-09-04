@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
+import { trackEvent } from '../lib/analytics';
 import type { Database } from '../lib/database.types';
 
 export type ProjectRow = Database['public']['Tables']['projects']['Row'];
@@ -57,6 +58,9 @@ export function useProjects() {
 
             if (error) throw error;
             if (data) {
+                if (projects.length === 0) {
+                    trackEvent('first_project_created', { title: data.title });
+                }
                 setProjects(prev => [data, ...prev]);
             }
             return { data, error: null };

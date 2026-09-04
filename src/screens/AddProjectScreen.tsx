@@ -8,6 +8,7 @@ import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { trackEvent } from '../lib/analytics';
 import { useProjects, ProjectInsert } from '../hooks/useProjects';
 import { useMaterials } from '../hooks/useMaterials';
+import { useRequireVerification } from '../context/VerificationContext';
 import { X, Camera, ChevronDown } from 'lucide-react-native';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
@@ -30,6 +31,7 @@ const MATERIAL_TYPES = ['wood', 'acrylic', 'leather', 'mdf', 'stone', 'other'];
 export default function AddProjectScreen({ navigation }: any) {
     const { addProject } = useProjects();
     const { materials, hourlyRate } = useMaterials();
+    const { requireVerification } = useRequireVerification();
     const [isSaving, setIsSaving] = useState(false);
 
     const [imageUri, setImageUri] = useState<string | undefined>();
@@ -64,6 +66,16 @@ export default function AddProjectScreen({ navigation }: any) {
             Alert.alert('Required', 'Please enter a project title.');
             return;
         }
+
+        const allowed = await requireVerification('Creating a project', async () => {
+            await executeSave();
+        });
+        if (allowed) {
+            await executeSave();
+        }
+    };
+
+    const executeSave = async () => {
         setIsSaving(true);
         const { error } = await addProject({
             title: title.trim(),

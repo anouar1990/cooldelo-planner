@@ -70,15 +70,23 @@ export default function DesktopAuthScreen() {
                 if (error) {
                     setEmailError(error.message);
                 } else {
-                    trackEvent('sign_up', { method: 'email' });
                     if (data?.session) {
+                        trackEvent('signup_completed', { method: 'email', verified: true }, `signup_${email}`);
                         setPassword('');
                         setConfirmPassword('');
                     } else {
-                        setModalEmail(email);
-                        setShowConfirmModal(true);
-                        setPassword('');
-                        setConfirmPassword('');
+                        trackEvent('signup_unverified', { method: 'email', verified: false }, `signup_unverified_${email}`);
+                        const signInRes = await signIn(email, password);
+                        if (!signInRes.error) {
+                            trackEvent('signup_completed', { method: 'email', verified: false }, `signup_${email}`);
+                            setPassword('');
+                            setConfirmPassword('');
+                        } else {
+                            setSuccessMessage('Account created! A verification link was sent to your email. Please verify or sign in.');
+                            setModalEmail(email);
+                            setPassword('');
+                            setConfirmPassword('');
+                        }
                     }
                 }
             }

@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image, ScrollView, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle, Receipt } from 'lucide-react-native';
+import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle, Receipt, Factory } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useLanguage } from '../context/LanguageContext';
+import { useRequireVerification } from '../context/VerificationContext';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 const COLORS = {
@@ -21,6 +22,7 @@ const ICONS: Record<string, any> = {
     'Cost Calculator': Calculator,
     Materials: Package,
     Orders: Calendar,
+    'Production': Factory,
     'Laser Presets': Zap,
     'Quote Generator': FileText,
     'Invoice Generator': Receipt,
@@ -31,7 +33,8 @@ const ICONS: Record<string, any> = {
 export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
     const { width } = useWindowDimensions();
     const insets = useSafeAreaInsets();
-    const { signOut, displayName, avatarUrl } = useAuth();
+    const { signOut, displayName, avatarUrl, isEmailVerified } = useAuth();
+    const { openVerificationModal } = useRequireVerification();
     const { isPro } = useSubscription();
     const { t } = useLanguage();
     const initials = displayName.charAt(0).toUpperCase();
@@ -44,6 +47,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
         'Cost Calculator': 'nav_calculator',
         'Materials': 'nav_materials',
         'Orders': 'nav_orders',
+        'Production': 'nav_production',
         'Laser Presets': 'nav_presets',
         'Quote Generator': 'nav_quotes',
         'Invoice Generator': 'nav_invoices',
@@ -131,7 +135,19 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         )}
                         <View style={styles.userInfo}>
                             <Text style={styles.userName} numberOfLines={1}>{displayName}</Text>
-                            <Text style={styles.userRole}>Pro Member</Text>
+                            {!isEmailVerified ? (
+                                <TouchableOpacity 
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        openVerificationModal('0machine profile');
+                                    }}
+                                    style={styles.unverifiedTag}
+                                >
+                                    <Text style={styles.unverifiedTagText}>Verify email</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <Text style={styles.userRole}>Pro Member</Text>
+                            )}
                         </View>
                     </TouchableOpacity>
 
@@ -334,5 +350,20 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: '800',
         letterSpacing: 0.5,
+    },
+    unverifiedTag: {
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        borderColor: 'rgba(239, 68, 68, 0.3)',
+        borderWidth: 1,
+        borderRadius: 6,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginTop: 2,
+        alignSelf: 'flex-start',
+    },
+    unverifiedTagText: {
+        color: '#EF4444',
+        fontSize: 10,
+        fontWeight: '700',
     },
 });

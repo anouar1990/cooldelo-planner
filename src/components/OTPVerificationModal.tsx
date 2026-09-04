@@ -14,7 +14,7 @@ interface OTPVerificationModalProps {
     onSuccess?: () => void;
 }
 
-const OTP_LENGTH = 8; // Supports up to 8-digit OTPs sent by Supabase
+const OTP_LENGTH = 8; // 8-digit OTP code sent by custom email template
 
 export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTPVerificationModalProps) {
     const { verifyOtp } = useAuth();
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     },
     otpInput: {
         width: 38,
-        height: 50,
+        height: 52,
         borderRadius: 10,
         backgroundColor: '#13151F',
         borderWidth: 1.5,

@@ -6,6 +6,7 @@ import {
 import { FileText, Plus, X, Check, Trash2, User, Calendar, Hash, Percent, MessageSquare } from 'lucide-react-native';
 import { useSubscription } from '../hooks/useSubscription';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { useRequireVerification } from '../context/VerificationContext';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -54,6 +55,7 @@ const BLANK_ITEM = (): LineItem => ({ id: Date.now().toString(), description: ''
 
 export default function QuoteGeneratorScreen() {
     const { isPro } = useSubscription();
+    const { requireVerification } = useRequireVerification();
     const [quotes, setQuotes] = useState<Quote[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [showProModal, setShowProModal] = useState(false);
@@ -83,13 +85,23 @@ export default function QuoteGeneratorScreen() {
     const openEdit = (q: Quote) => {
         setEditing(q);
         setClientName(q.clientName); setProjectDesc(q.projectDescription);
-        setItems(q.items.map(i => ({ ...i }))); setVatPct(q.vatPct.toString());
+        setItems(q.items.length ? q.items.map(i => ({ ...i })) : [BLANK_ITEM()]); 
+        setVatPct(q.vatPct.toString());
         setValidDays(q.validDays.toString()); setDeliveryDate(q.deliveryDate); setNotes(q.notes);
         setShowModal(true);
     };
 
     const saveQuote = () => {
         if (!clientName.trim()) return;
+        const allowed = requireVerification(editing ? 'Editing quote' : 'Saving quote', () => {
+            executeSaveQuote();
+        });
+        if (allowed) {
+            executeSaveQuote();
+        }
+    };
+
+    const executeSaveQuote = () => {
         const validItems = items.filter(i => i.description.trim());
         if (editing) {
             setQuotes(prev => prev.map(q => q.id === editing.id ? {
@@ -126,6 +138,15 @@ export default function QuoteGeneratorScreen() {
             return;
         }
 
+        const allowed = requireVerification('Sending WhatsApp notification', () => {
+            executeSendWhatsAppQuote(q);
+        });
+        if (allowed) {
+            executeSendWhatsAppQuote(q);
+        }
+    };
+
+    const executeSendWhatsAppQuote = (q: Quote) => {
         const sub = q.items.reduce((s, i) => s + i.qty * i.unit, 0);
         const total = sub * (1 + q.vatPct / 100);
         

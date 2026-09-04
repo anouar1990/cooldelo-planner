@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="%LANG_ISO_CODE%">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>%WEB_TITLE%</title>
+    <meta name="facebook-domain-verification" content="993j50h5adwgfrym3gixyb1107vj4o" />
+    <title>0machine Planner</title>
+    <link rel="icon" type="image/png" href="%PUBLIC_URL%/logo.png" />
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       /* These styles make the body full-height */
@@ -22,6 +24,15 @@
         height: 100%;
         flex: 1;
       }
+      /* Remove default browser blue focus outline rectangle on input fields */
+      input, textarea, select, button {
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent;
+      }
+      input:focus, textarea:focus, select:focus, button:focus {
+        outline: none !important;
+        box-shadow: none !important;
+      }
     </style>
     <!-- Google tag (gtag.js) -->
     <script>
@@ -37,7 +48,24 @@
         gtag('config', 'G-8V921YKC8S');
       }
     </script>
-  </head>
+    <!-- Meta Pixel Code -->
+    <script>
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        
+        const pixelId = window.META_PIXEL_ID || localStorage.getItem('0machine_meta_pixel') || '517991158551582';
+        fbq('init', pixelId);
+        fbq('track', 'PageView');
+      }
+    </script>
+  <link rel="icon" href="/favicon.ico" /></head>
 
   <body>
     <!-- Use static rendering with Expo Router to support running without JavaScript. -->
@@ -46,5 +74,6 @@
     </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
-  </body>
+  <script src="/_expo/static/js/web/index-cd9fa9fb4c24c25dafb078097846c197.js" defer></script>
+</body>
 </html>

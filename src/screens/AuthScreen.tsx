@@ -62,17 +62,25 @@ export default function AuthScreen() {
                 if (error) {
                     setEmailError(error.message);
                 } else {
-                    trackEvent('signup_completed', { method: 'email' }, `signup_${email}`);
                     if (data?.session) {
-                        // User auto-logged in (Email confirmation disabled in Supabase)
+                        trackEvent('signup_completed', { method: 'email', verified: true }, `signup_${email}`);
                         setPassword('');
                         setConfirmPassword('');
                     } else {
-                        // OTP sent to email
-                        setModalEmail(email);
-                        setShowConfirmModal(true);
-                        setPassword('');
-                        setConfirmPassword('');
+                        trackEvent('signup_unverified', { method: 'email', verified: false }, `signup_unverified_${email}`);
+                        // Attempt to log in unverified user directly if Supabase permits
+                        const signInRes = await signIn(email, password);
+                        if (!signInRes.error) {
+                            trackEvent('signup_completed', { method: 'email', verified: false }, `signup_${email}`);
+                            setPassword('');
+                            setConfirmPassword('');
+                        } else {
+                            // Supabase Auth requires email verification before session issuance
+                            setSuccessMessage('Account created! A verification link was sent to your email. Please verify or sign in.');
+                            setModalEmail(email);
+                            setPassword('');
+                            setConfirmPassword('');
+                        }
                     }
                 }
             }

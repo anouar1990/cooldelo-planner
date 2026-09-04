@@ -13,6 +13,7 @@ const C = {
 };
 
 import { useWorkshop, OrderItem as Order } from '../context/WorkshopContext';
+import { useRequireVerification } from '../context/VerificationContext';
 
 type Status = Order['status'];
 
@@ -30,6 +31,7 @@ const BLANK = { clientName: '', projectName: '', dueDate: '', price: '', status:
 
 export default function OrdersScreen() {
     const { orders, addOrder, updateOrder, deleteOrder } = useWorkshop();
+    const { requireVerification } = useRequireVerification();
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<Order | null>(null);
     const [form, setForm] = useState(BLANK);
@@ -47,6 +49,15 @@ export default function OrdersScreen() {
 
     const save = () => {
         if (!form.clientName.trim() || !form.projectName.trim()) return;
+        const allowed = requireVerification(editing ? 'Editing order' : 'Creating new order', () => {
+            executeSave();
+        });
+        if (allowed) {
+            executeSave();
+        }
+    };
+
+    const executeSave = () => {
         const price = parseFloat(form.price) || 0;
         if (editing) {
             updateOrder(editing.id, { ...form, price });
@@ -57,10 +68,22 @@ export default function OrdersScreen() {
     };
 
     const del = (id: string) => {
+        const allowed = requireVerification('Deleting order', () => {
+            executeDelete(id);
+        });
+        if (allowed) {
+            executeDelete(id);
+        }
+    };
+
+    const executeDelete = (id: string) => {
         if (Platform.OS === 'web') {
             if (window.confirm('Delete this order?')) deleteOrder(id);
         } else {
-            Alert.alert('Delete', 'Delete order?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => deleteOrder(id) }]);
+            Alert.alert('Delete', 'Delete this order?', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteOrder(id) },
+            ]);
         }
     };
 

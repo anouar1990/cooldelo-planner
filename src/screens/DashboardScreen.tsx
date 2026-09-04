@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { 
     Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut, Settings,
@@ -11,7 +11,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { useWorkshop } from '../context/WorkshopContext';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { UnverifiedUserBanner } from '../components/UnverifiedUserBanner';
 import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
+import { trackEvent } from '../lib/analytics';
 
 function StatusBadge({ status, isDark }: { status: string; isDark: boolean }) {
     const color = status === 'completed' || status === 'delivered' ? '#10B981' : status === 'in-progress' ? '#F59E0B' : '#3B82F6';
@@ -75,6 +77,10 @@ export default function DashboardScreen({ navigation }: any) {
 
     const [showProModal, setShowProModal] = useState(false);
 
+    useEffect(() => {
+        trackEvent('dashboard_entered');
+    }, []);
+
     const initials = profile.workshopName ? profile.workshopName.charAt(0).toUpperCase() : 'W';
 
     const navigateTab = (tabName: string) => {
@@ -102,6 +108,8 @@ export default function DashboardScreen({ navigation }: any) {
         <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                 <ResponsiveContainer>
+                    <UnverifiedUserBanner />
+
                     {/* Header */}
                     <View style={[styles.header, isMobile && styles.headerMobile]}>
                         <View style={[styles.headerUser, isMobile && { width: '100%' }]}>

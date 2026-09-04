@@ -134,7 +134,7 @@ export function useAuth() {
         return { error };
     };
 
-    /** Redirects to Google OAuth — returns to app.0machine.com after login */
+    /** Redirects to Google OAuth — returns to app.0machine.com/auth/callback after login */
     const signInWithGoogle = async () => {
         const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.0machine.com';
         const { error } = await supabase.auth.signInWithOAuth({
@@ -150,7 +150,34 @@ export function useAuth() {
         return { error };
     };
 
+    const resendVerificationEmail = async (targetEmail?: string) => {
+        const emailToSend = targetEmail || user?.email;
+        if (!emailToSend) return { error: new Error('No email available to send verification code.') };
+        const { error } = await supabase.auth.resend({
+            type: 'signup',
+            email: emailToSend,
+        });
+        return { error };
+    };
+
+    const refreshSession = async () => {
+        const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+        if (refreshedSession) {
+            handleAuthSession(refreshedSession);
+            return refreshedSession;
+        }
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser && session) {
+            const updatedSession = { ...session, user: currentUser };
+            handleAuthSession(updatedSession);
+            return updatedSession;
+        }
+        return null;
+    };
+
     // ── Derived user display info from OAuth metadata or email ──────────────
+    const isEmailVerified: boolean = !!(user?.email_confirmed_at || (user as any)?.confirmed_at || user?.user_metadata?.email_verified);
+
     const displayName: string =
         user?.user_metadata?.full_name ||
         user?.user_metadata?.name ||
@@ -165,13 +192,17 @@ export function useAuth() {
         session,
         user,
         loading,
+        isEmailVerified,
         signUp,
         verifyOtp,
         signIn,
         signOut,
         resetPassword,
         signInWithGoogle,
+        resendVerificationEmail,
+        refreshSession,
         displayName,
         avatarUrl,
     };
 }
+
