@@ -10,6 +10,7 @@
     "web-build",
     ".expo",
     "android",
-    "ios"
+    "ios",
+    "supabase"
   ]
 }

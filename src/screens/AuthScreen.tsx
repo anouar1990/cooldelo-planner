@@ -9,6 +9,7 @@ import { trackEvent } from '../lib/analytics';
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react-native';
 import { SocialAuthButtons } from '../components/SocialAuthButtons';
 import { OTPVerificationModal } from '../components/OTPVerificationModal';
+import { SignupSuccessTransition } from '../components/SignupSuccessTransition';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -31,6 +32,10 @@ export default function AuthScreen() {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+
+    const [showSuccessTransition, setShowSuccessTransition] = useState(false);
+    const [isSignedUpVerified, setIsSignedUpVerified] = useState(false);
+    const [signedUpEmail, setSignedUpEmail] = useState('');
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [modalEmail, setModalEmail] = useState('');
@@ -62,10 +67,11 @@ export default function AuthScreen() {
                 if (error) {
                     setEmailError(error.message);
                 } else {
-                    const isVerified = !!data?.session?.user?.email_confirmed_at;
+                    const isVerified = !!(data?.session?.user?.email_confirmed_at || data?.user?.email_confirmed_at);
                     trackEvent('signup_completed', { method: 'email', verified: isVerified }, `signup_${email}`);
-                    setPassword('');
-                    setConfirmPassword('');
+                    setSignedUpEmail(email);
+                    setIsSignedUpVerified(isVerified);
+                    setShowSuccessTransition(true);
                 }
             }
         } catch (err: any) {
@@ -90,6 +96,24 @@ export default function AuthScreen() {
             Alert.alert('Password reset sent', 'Check your email for a reset link.');
         }
     };
+
+    if (showSuccessTransition) {
+        return (
+            <SignupSuccessTransition
+                email={signedUpEmail}
+                isEmailVerified={isSignedUpVerified}
+                onComplete={() => {
+                    if (typeof window !== 'undefined' && window.location) {
+                        if (window.location.host === 'app.0machine.com') {
+                            window.location.reload();
+                        } else {
+                            window.location.href = 'https://app.0machine.com';
+                        }
+                    }
+                }}
+            />
+        );
+    }
 
     return (
         <SafeAreaView style={styles.safe}>
