@@ -104,10 +104,16 @@ export function useAuth() {
 
         initAuth();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-            if (isMounted && newSession) {
-                saveUnverifiedSession(null);
-                handleAuthSession(newSession);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+            if (isMounted) {
+                if (event === 'SIGNED_OUT' || !newSession) {
+                    setSession(null);
+                    setUser(null);
+                    setLoading(false);
+                } else if (newSession) {
+                    saveUnverifiedSession(null);
+                    handleAuthSession(newSession);
+                }
             }
         });
 
@@ -196,10 +202,20 @@ export function useAuth() {
     };
 
     const signOut = async () => {
-        await saveUnverifiedSession(null);
-        await supabase.auth.signOut();
-        setSession(null);
-        setUser(null);
+        try {
+            await saveUnverifiedSession(null);
+            if (typeof window !== 'undefined' && window.localStorage) {
+                try {
+                    localStorage.clear();
+                } catch (e) {}
+            }
+            await supabase.auth.signOut();
+        } catch (err) {
+            console.warn('Error during sign out:', err);
+        } finally {
+            setSession(null);
+            setUser(null);
+        }
     };
 
     const resetPassword = async (email: string) => {
