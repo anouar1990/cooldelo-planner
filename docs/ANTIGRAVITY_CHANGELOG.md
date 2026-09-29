@@ -179,6 +179,21 @@
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
+## [2026-09-29 21:45:00] - Fix AI Expert Missing Response & Integrate Client Fallback Engine
+- **Task**: Fix empty/missing response bug when sending messages to AI Expert by introducing an offline client-side fallback knowledge engine (`laserExpertFallback.ts`) for laser cutting, woodworking, CNC, and 0machine tools whenever Supabase Edge function is unavailable or DEEPSEEK key is unconfigured.
+- **Files Changed**:
+  - `lasercut-planner/src/lib/laserExpertFallback.ts` (Created client fallback engine with domain-specific rules & off-topic refusal)
+  - `lasercut-planner/src/hooks/useLaserExpert.ts` (Updated `sendMessage` to generate fallbacks without dropping optimistic messages)
+  - `lasercut-planner/src/components/LaserExpertBubble.tsx` (Enhanced text rendering for AI responses)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build`: PASS (Clean web bundle export)
+  - GitHub push & commit (`e405874`): PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
 
 
 
