@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
-import { X, Zap, Lock, Sparkles, Check, ShieldCheck } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import {
+  View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView,
+  useWindowDimensions, Image, Platform, TextInput, ActivityIndicator
+} from 'react-native';
+import {
+  X, Zap, Lock, Sparkles, Check, ShieldCheck, Tag,
+  Wrench, Scissors, FileText, ChevronRight
+} from 'lucide-react-native';
 import { useSubscription, BillingCycle } from '../hooks/useSubscription';
-import { useLanguage } from '../context/LanguageContext';
 
 interface ProUpgradeModalProps {
   visible: boolean;
@@ -14,36 +18,46 @@ interface ProUpgradeModalProps {
 }
 
 const C = {
-  bg: '#0A0C12',
-  surface: '#13151F',
-  surface2: '#1C2030',
-  border: 'rgba(255,255,255,0.08)',
+  bg: '#0B0D14',
+  surface: '#151924',
+  surface2: '#1F2434',
+  border: 'rgba(255,255,255,0.1)',
+  borderPrimary: 'rgba(255,107,53,0.4)',
   primary: '#FF6B35',
-  textSub: '#8B95A8',
-  text: '#F1F5F9',
-  gold: '#F59E0B',
+  primaryGlow: 'rgba(255,107,53,0.15)',
+  text: '#FFFFFF',
+  sub: '#94A3B8',
+  dim: '#64748B',
   green: '#10B981',
 };
 
-import { TextInput, ActivityIndicator } from 'react-native';
-import { Tag } from 'lucide-react-native';
+const HERO_IMAGE_SOURCE = Platform.OS === 'web'
+  ? { uri: '/paywall_hero.png' }
+  : require('../../assets/paywall_hero.png');
 
 export function ProUpgradeModal({
   visible,
   onClose,
   featureName = 'Premium Feature',
-  actionTitle = 'Unlock Full Workshop Power',
-  description = 'Upgrade your plan to get access to advanced laser tools, design files, nesting, and exports.',
+  actionTitle = 'Unlock Full 0machine Workshop',
+  description = 'Upgrade to Pro to access advanced nesting, laser presets, DXF design downloads, and PDF invoice generation.',
 }: ProUpgradeModalProps) {
-  const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
-  const { createCheckoutSession, checkoutLoading, applyPromoCode } = useSubscription();
-  const { t } = useLanguage();
+  const { createCheckoutSession, checkoutLoading, applyPromoCode, refetch } = useSubscription();
   const isDesktop = width > 768;
+
   const [cycle, setCycle] = useState<BillingCycle>('annual');
+  const [selectedPlan, setSelectedPlan] = useState<'pro' | 'starter'>('pro');
+
+  // Promo Code State
+  const [showPromo, setShowPromo] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoStatus, setPromoStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [applyingPromo, setApplyingPromo] = useState(false);
+
+  // Restore Purchase State
+  const [restoring, setRestoring] = useState(false);
+  const [restoreStatus, setRestoreStatus] = useState<string | null>(null);
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) return;
@@ -59,9 +73,26 @@ export function ProUpgradeModal({
     }
   };
 
-  const handleChoosePlan = (plan: 'starter' | 'pro') => {
-    createCheckoutSession(plan, cycle);
+  const handleRestorePurchase = async () => {
+    setRestoring(true);
+    setRestoreStatus(null);
+    try {
+      await refetch();
+      setRestoreStatus('Subscription restored successfully!');
+      setTimeout(() => setRestoreStatus(null), 3000);
+    } catch (err: any) {
+      setRestoreStatus('No active subscription found.');
+      setTimeout(() => setRestoreStatus(null), 3000);
+    } finally {
+      setRestoring(false);
+    }
   };
+
+  const handleCheckout = () => {
+    createCheckoutSession(selectedPlan, cycle);
+  };
+
+  if (!visible) return null;
 
   return (
     <Modal visible={visible} animationType="fade" transparent={true} onRequestClose={onClose}>
@@ -69,143 +100,257 @@ export function ProUpgradeModal({
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
 
         <View style={[styles.modalCard, isDesktop && styles.modalCardDesktop]}>
+          {/* Top Close Button */}
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <X color={C.textSub} size={20} />
+            <X color={C.text} size={20} />
           </TouchableOpacity>
 
           <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Header Icon & Title */}
-            <View style={styles.iconWrap}>
-              <Zap color={C.primary} size={28} fill={C.primary} />
-              <View style={styles.lockBadge}>
-                <Lock color="#FFF" size={10} />
+            {/* Hero Image */}
+            <View style={styles.heroContainer}>
+              <Image
+                source={HERO_IMAGE_SOURCE}
+                style={styles.heroImage}
+                resizeMode="cover"
+              />
+              <View style={styles.heroBadge}>
+                <Lock color={C.primary} size={12} />
+                <Text style={styles.heroBadgeText}>{featureName.toUpperCase()}</Text>
               </View>
             </View>
 
-            <Text style={styles.badgeText}>{featureName.toUpperCase()}</Text>
-            <Text style={styles.title}>{actionTitle}</Text>
-            <Text style={styles.subText}>{description}</Text>
-
-            {/* Promo Code Box */}
-            <View style={styles.promoCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <Tag color={C.primary} size={14} />
-                <Text style={{ fontSize: 12, fontWeight: '700', color: C.text }}>Have a Promo / Coupon Code?</Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput
-                  style={styles.promoInput}
-                  placeholder="e.g. 3DAYSFREE or FREE3"
-                  placeholderTextColor={C.textSub}
-                  value={promoCode}
-                  onChangeText={setPromoCode}
-                  autoCapitalize="characters"
-                />
-                <TouchableOpacity
-                  style={styles.promoBtn}
-                  onPress={handleApplyPromo}
-                  disabled={applyingPromo || !promoCode.trim()}
-                >
-                  {applyingPromo ? (
-                    <ActivityIndicator color="#FFF" size="small" />
-                  ) : (
-                    <Text style={styles.promoBtnText}>Apply</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-              {promoStatus ? (
-                <Text style={[styles.promoMsgText, promoStatus.success ? styles.promoSuccessText : styles.promoErrorText]}>
-                  {promoStatus.message}
-                </Text>
-              ) : null}
+            {/* Headline Section */}
+            <View style={styles.titleSection}>
+              <Text style={styles.mainTitle}>{actionTitle}</Text>
+              <Text style={styles.subtitle}>{description}</Text>
             </View>
 
             {/* Cycle Toggle */}
-            <View style={styles.toggleRow}>
+            <View style={styles.cycleToggleWrap}>
               <TouchableOpacity
-                style={[styles.toggleBtn, cycle === 'monthly' && styles.activeToggleBtn]}
+                style={[styles.cycleBtn, cycle === 'monthly' && styles.activeCycleBtn]}
                 onPress={() => setCycle('monthly')}
+                activeOpacity={0.8}
               >
-                <Text style={[styles.toggleBtnText, cycle === 'monthly' && styles.activeToggleText]}>
-                  {t('billing_monthly')}
+                <Text style={[styles.cycleBtnText, cycle === 'monthly' && styles.activeCycleText]}>
+                  MONTHLY
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.toggleBtn, cycle === 'annual' && styles.activeToggleBtn]}
+                style={[styles.cycleBtn, cycle === 'annual' && styles.activeCycleBtn]}
                 onPress={() => setCycle('annual')}
+                activeOpacity={0.8}
               >
-                <Text style={[styles.toggleBtnText, cycle === 'annual' && styles.activeToggleText]}>
-                  {t('billing_annual')}
+                <View style={styles.annualLabelWrap}>
+                  <Text style={[styles.cycleBtnText, cycle === 'annual' && styles.activeCycleText]}>
+                    ANNUAL
+                  </Text>
+                  <View style={styles.saveBadge}>
+                    <Text style={styles.saveBadgeText}>SAVE 35%</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* Plans */}
+            <View style={styles.plansContainer}>
+              {/* Pro Card */}
+              <TouchableOpacity
+                style={[
+                  styles.planCard,
+                  styles.proPlanCard,
+                  selectedPlan === 'pro' && styles.selectedPlanCard
+                ]}
+                onPress={() => setSelectedPlan('pro')}
+                activeOpacity={0.9}
+              >
+                <View style={styles.popularRibbon}>
+                  <Sparkles color="#FFFFFF" size={11} />
+                  <Text style={styles.popularRibbonText}>RECOMMENDED</Text>
+                </View>
+
+                <View style={styles.planCardHeader}>
+                  <View>
+                    <Text style={styles.planTitlePro}>Workshop Pro</Text>
+                    <Text style={styles.planSubtext}>Full fabrication toolkit</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.priceNumber}>
+                      {cycle === 'annual' ? '$149' : '$19'}
+                    </Text>
+                    <Text style={styles.pricePeriod}>
+                      {cycle === 'annual' ? '$12.41/mo' : '/month'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.benefitList}>
+                  <BenefitRow text="Unlimited Projects & Machines" bold />
+                  <BenefitRow text="Nesting Yield & Material Costing" bold />
+                  <BenefitRow text="PDF Quotes, Invoices & WhatsApp" bold />
+                  <BenefitRow text="500+ Commercial Vector Packs" bold />
+                </View>
+              </TouchableOpacity>
+
+              {/* Starter Card */}
+              <TouchableOpacity
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'starter' && styles.selectedPlanCard
+                ]}
+                onPress={() => setSelectedPlan('starter')}
+                activeOpacity={0.9}
+              >
+                <View style={styles.planCardHeader}>
+                  <View>
+                    <Text style={styles.planTitleStarter}>Starter</Text>
+                    <Text style={styles.planSubtext}>Essential tools for solo makers</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.priceNumberStarter}>
+                      {cycle === 'annual' ? '$59' : '$9'}
+                    </Text>
+                    <Text style={styles.pricePeriod}>
+                      {cycle === 'annual' ? '$4.91/mo' : '/month'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.benefitList}>
+                  <BenefitRow text="Unlimited Projects & Machines" />
+                  <BenefitRow text="Material Inventory & Presets" />
+                  <BenefitRow text="PDF Quotes & Invoices" />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* Value Timeline */}
+            <View style={styles.timelineSection}>
+              <Text style={styles.sectionHeading}>What You Get with Pro</Text>
+
+              <View style={styles.timelineItem}>
+                <View style={styles.timelineIconBadge}>
+                  <Zap color={C.primary} size={18} />
+                </View>
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineStepTitle}>TODAY</Text>
+                  <Text style={styles.timelineStepDesc}>Instant unlock for Pro tools & DXF library.</Text>
+                </View>
+              </View>
+
+              <View style={styles.timelineItem}>
+                <View style={styles.timelineIconBadge}>
+                  <Scissors color={C.primary} size={18} />
+                </View>
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineStepTitle}>IN YOUR WORKSHOP</Text>
+                  <Text style={styles.timelineStepDesc}>Automated job costing, nesting & presets.</Text>
+                </View>
+              </View>
+
+              <View style={styles.timelineItem}>
+                <View style={styles.timelineIconBadge}>
+                  <FileText color={C.primary} size={18} />
+                </View>
+                <View style={styles.timelineContent}>
+                  <Text style={styles.timelineStepTitle}>GROW YOUR BUSINESS</Text>
+                  <Text style={styles.timelineStepDesc}>Send professional PDF quotes & invoices.</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Promo Accordion */}
+            <View style={styles.promoSection}>
+              <TouchableOpacity
+                style={styles.promoToggleRow}
+                onPress={() => setShowPromo(!showPromo)}
+                activeOpacity={0.7}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Tag color={C.primary} size={16} />
+                  <Text style={styles.promoToggleText}>Have a Coupon / Promo Code?</Text>
+                </View>
+                <Text style={styles.promoActionText}>{showPromo ? 'Hide' : 'Enter Code'}</Text>
+              </TouchableOpacity>
+
+              {showPromo ? (
+                <View style={styles.promoForm}>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TextInput
+                      style={styles.promoInput}
+                      placeholder="e.g. 3DAYSFREE"
+                      placeholderTextColor={C.dim}
+                      value={promoCode}
+                      onChangeText={setPromoCode}
+                      autoCapitalize="characters"
+                    />
+                    <TouchableOpacity
+                      style={styles.promoApplyBtn}
+                      onPress={handleApplyPromo}
+                      disabled={applyingPromo || !promoCode.trim()}
+                    >
+                      {applyingPromo ? (
+                        <ActivityIndicator color="#FFF" size="small" />
+                      ) : (
+                        <Text style={styles.promoApplyBtnText}>Apply</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                  {promoStatus ? (
+                    <Text style={[styles.promoStatusText, promoStatus.success ? styles.promoSuccess : styles.promoError]}>
+                      {promoStatus.message}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+
+            {/* Notification Status */}
+            {restoreStatus ? (
+              <View style={styles.restoreStatusBanner}>
+                <Text style={styles.restoreStatusText}>{restoreStatus}</Text>
+              </View>
+            ) : null}
+
+            {/* Main CTA */}
+            <TouchableOpacity
+              style={[styles.mainCtaBtn, checkoutLoading && styles.disabledCtaBtn]}
+              onPress={handleCheckout}
+              disabled={checkoutLoading}
+              activeOpacity={0.85}
+            >
+              {checkoutLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <View style={styles.ctaBtnContent}>
+                  <Text style={styles.mainCtaText}>
+                    {selectedPlan === 'pro' ? 'Start 0machine Pro' : 'Start Starter Plan'}
+                  </Text>
+                  <ChevronRight color="#FFFFFF" size={20} />
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Secondary Options */}
+            <View style={styles.secondaryActionsRow}>
+              <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+                <Text style={styles.freeOptionText}>Keep using Free</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.dotSeparator}>·</Text>
+
+              <TouchableOpacity onPress={handleRestorePurchase} disabled={restoring} activeOpacity={0.7}>
+                <Text style={styles.restoreOptionText}>
+                  {restoring ? 'Restoring...' : 'Restore purchase'}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Plans Grid */}
-            <View style={styles.plansContainer}>
-              {/* Starter Plan Card */}
-              <View style={styles.planCard}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.planName}>{t('plan_starter')}</Text>
-                  <Text style={styles.planPrice}>
-                    {cycle === 'annual' ? '$59' : '$9'}
-                    <Text style={styles.planPeriod}>{cycle === 'annual' ? '/yr' : '/mo'}</Text>
-                  </Text>
-                  <Text style={{ fontSize: 10, color: C.green, fontWeight: '700', marginTop: 2 }}>
-                    🎁 3-Day Free Trial (Code: 3DAYSFREE)
-                  </Text>
-                </View>
-                <View style={styles.benefits}>
-                  <Benefit text="Unlimited Projects & Machines" />
-                  <Benefit text="PDF Quotes & Invoices" />
-                  <Benefit text="Material Inventory Stock" />
-                  <Benefit text="Laser Presets Library" />
-                  <Benefit text="Design Library View" />
-                </View>
-                <TouchableOpacity
-                  style={styles.starterBtn}
-                  onPress={() => handleChoosePlan('starter')}
-                  disabled={checkoutLoading}
-                >
-                  <Text style={styles.starterBtnText}>{t('cta_upgrade_starter')}</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Workshop Pro Plan Card */}
-              <View style={[styles.planCard, styles.proPlanCard]}>
-                <View style={styles.popularBadge}>
-                  <Text style={styles.popularBadgeText}>{t('best_value')}</Text>
-                </View>
-                <View style={styles.cardHeader}>
-                  <Text style={[styles.planName, { color: C.primary }]}>{t('plan_pro')}</Text>
-                  <Text style={styles.planPrice}>
-                    {cycle === 'annual' ? '$149' : '$19'}
-                    <Text style={styles.planPeriod}>{cycle === 'annual' ? '/yr' : '/mo'}</Text>
-                  </Text>
-                  <Text style={{ fontSize: 10, color: C.primary, fontWeight: '700', marginTop: 2 }}>
-                    🎁 3-Day Free Trial (Code: 3DAYSFREE)
-                  </Text>
-                </View>
-                <View style={styles.benefits}>
-                  <Benefit text="Everything in Starter +" bold />
-                  <Benefit text="Nesting Yield Calculator" bold />
-                  <Benefit text="1-Click WhatsApp Sharing" bold />
-                  <Benefit text="CSV & Excel Data Exports" bold />
-                  <Benefit text="Team Workspace (3 Users)" bold />
-                  <Benefit text="Commercial Vector Packs" bold />
-                </View>
-                <TouchableOpacity
-                  style={styles.proBtn}
-                  onPress={() => handleChoosePlan('pro')}
-                  disabled={checkoutLoading}
-                >
-                  <Text style={styles.proBtnText}>{t('cta_upgrade_pro')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.footerNote}>
-              <ShieldCheck color={C.green} size={14} />
-              <Text style={styles.footerNoteText}>Secure checkout processed via Stripe · Cancel anytime</Text>
+            <View style={styles.securityBadgeRow}>
+              <ShieldCheck color={C.green} size={13} />
+              <Text style={styles.securityBadgeText}>
+                Stripe SSL Secure Checkout · Cancel Anytime
+              </Text>
             </View>
           </ScrollView>
         </View>
@@ -214,124 +359,463 @@ export function ProUpgradeModal({
   );
 }
 
-function Benefit({ text, bold }: { text: string; bold?: boolean }) {
+function BenefitRow({ text, bold }: { text: string; bold?: boolean }) {
   return (
     <View style={styles.benefitRow}>
-      <Check color={bold ? C.primary : C.green} size={14} />
-      <Text style={[styles.benefitText, bold && { fontWeight: '700', color: C.text }]}>{text}</Text>
+      <View style={[styles.checkCircle, bold && styles.checkCircleBold]}>
+        <Check color="#FFFFFF" size={11} strokeWidth={3} />
+      </View>
+      <Text style={[styles.benefitText, bold && styles.benefitTextBold]}>
+        {text}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.85)',
-    justifyContent: 'center', alignItems: 'center', padding: 12,
+    flex: 1,
+    backgroundColor: 'rgba(5, 7, 12, 0.88)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 12,
   },
-  backdrop: { ...StyleSheet.absoluteFillObject },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
   modalCard: {
-    backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.border,
-    width: '100%', maxWidth: 520, maxHeight: '92%', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, position: 'relative',
-  },
-  modalCardDesktop: { maxWidth: 640 },
-  closeBtn: { position: 'absolute', top: 12, right: 12, zIndex: 10, padding: 6, backgroundColor: C.surface2, borderRadius: 16 },
-  content: { alignItems: 'center', paddingBottom: 16 },
-  iconWrap: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: C.primary + '20',
-    justifyContent: 'center', alignItems: 'center', marginBottom: 8, position: 'relative', marginTop: 4,
-  },
-  lockBadge: {
-    position: 'absolute', bottom: 0, right: 0, backgroundColor: C.primary,
-    borderRadius: 8, padding: 2,
-  },
-  badgeText: { fontSize: 10, fontWeight: '800', color: C.primary, letterSpacing: 1.2, marginBottom: 2 },
-  title: { fontSize: 18, fontWeight: '800', color: C.text, textAlign: 'center', marginBottom: 4 },
-  subText: { fontSize: 12, color: C.textSub, textAlign: 'center', marginBottom: 10, lineHeight: 16 },
-  
-  promoCard: {
-    width: '100%',
-    backgroundColor: C.surface2,
-    borderRadius: 12,
+    backgroundColor: C.bg,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: C.border,
-    padding: 10,
+    width: '100%',
+    maxWidth: 480,
+    maxHeight: '92%',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  modalCardDesktop: {
+    maxWidth: 540,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    zIndex: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: C.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    paddingBottom: 10,
+  },
+
+  /* Hero Artwork */
+  heroContainer: {
+    width: '100%',
+    height: 180,
+    borderRadius: 18,
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroBadge: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(11, 13, 20, 0.88)',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: C.borderPrimary,
+  },
+  heroBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: C.text,
+    letterSpacing: 1,
+  },
+
+  /* Title Section */
+  titleSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  mainTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: C.text,
+    textAlign: 'center',
+    lineHeight: 30,
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: C.sub,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+
+  /* Cycle Toggle */
+  cycleToggleWrap: {
+    flexDirection: 'row',
+    backgroundColor: C.surface,
+    borderRadius: 14,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: C.border,
+    marginBottom: 16,
+  },
+  cycleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 11,
+  },
+  activeCycleBtn: {
+    backgroundColor: C.primary,
+  },
+  cycleBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: C.sub,
+    letterSpacing: 0.8,
+  },
+  activeCycleText: {
+    color: '#FFFFFF',
+  },
+  annualLabelWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  saveBadge: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+  },
+  saveBadgeText: {
+    color: C.primary,
+    fontSize: 9,
+    fontWeight: '900',
+  },
+
+  /* Plans */
+  plansContainer: {
+    gap: 12,
+    marginBottom: 18,
+  },
+  planCard: {
+    backgroundColor: C.surface,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: C.border,
+    padding: 16,
+  },
+  proPlanCard: {
+    backgroundColor: C.surface2,
+    borderColor: C.primary,
+  },
+  selectedPlanCard: {
+    borderColor: C.primary,
+    backgroundColor: '#1E1410',
+  },
+  popularRibbon: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: C.primary,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  popularRibbonText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 0.6,
+  },
+  planCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 12,
+  },
+  planTitlePro: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: C.primary,
+  },
+  planTitleStarter: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: C.text,
+  },
+  planSubtext: {
+    fontSize: 12,
+    color: C.sub,
+    marginTop: 2,
+  },
+  priceNumber: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: C.text,
+  },
+  priceNumberStarter: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: C.text,
+  },
+  pricePeriod: {
+    fontSize: 11,
+    color: C.sub,
+  },
+
+  benefitList: {
+    gap: 8,
+  },
+  benefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: C.green,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkCircleBold: {
+    backgroundColor: C.primary,
+  },
+  benefitText: {
+    fontSize: 13,
+    color: C.sub,
+    flex: 1,
+  },
+  benefitTextBold: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.text,
+    flex: 1,
+  },
+
+  /* Timeline */
+  timelineSection: {
+    backgroundColor: C.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: C.border,
+    padding: 16,
+    marginBottom: 16,
+    width: '100%',
+  },
+  sectionHeading: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: C.text,
+    marginBottom: 12,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 12,
+  },
+  timelineIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: C.primaryGlow,
+    borderWidth: 1,
+    borderColor: C.borderPrimary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  timelineContent: {
+    flex: 1,
+  },
+  timelineStepTitle: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: C.primary,
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  timelineStepDesc: {
+    fontSize: 13,
+    color: C.sub,
+    lineHeight: 18,
+  },
+
+  /* Promo Section */
+  promoSection: {
+    backgroundColor: C.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: C.border,
+    padding: 12,
+    marginBottom: 14,
+    width: '100%',
+  },
+  promoToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  promoToggleText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.text,
+  },
+  promoActionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: C.primary,
+  },
+  promoForm: {
+    marginTop: 10,
   },
   promoInput: {
     flex: 1,
-    height: 38,
-    backgroundColor: C.bg,
+    height: 42,
+    backgroundColor: C.surface2,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: C.border,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     color: C.text,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
   },
-  promoBtn: {
-    height: 38,
+  promoApplyBtn: {
+    height: 42,
     backgroundColor: C.primary,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  promoBtnText: {
-    color: '#FFF',
-    fontSize: 12,
+  promoApplyBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
     fontWeight: '800',
   },
-  promoMsgText: {
-    fontSize: 11,
+  promoStatusText: {
+    fontSize: 12,
     fontWeight: '600',
     marginTop: 6,
   },
-  promoSuccessText: {
+  promoSuccess: {
     color: C.green,
   },
-  promoErrorText: {
+  promoError: {
     color: '#EF4444',
   },
 
-  toggleRow: {
-    flexDirection: 'row', backgroundColor: C.surface2, borderRadius: 10, padding: 3,
-    marginBottom: 12, width: '100%', maxWidth: 340,
+  restoreStatusBanner: {
+    backgroundColor: C.surface,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 14,
+    width: '100%',
   },
-  toggleBtn: { flex: 1, paddingVertical: 6, alignItems: 'center', borderRadius: 7 },
-  activeToggleBtn: { backgroundColor: C.primary },
-  toggleBtnText: { fontSize: 11, fontWeight: '700', color: C.textSub },
-  activeToggleText: { color: '#FFF' },
+  restoreStatusText: {
+    fontSize: 12,
+    color: C.text,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
 
-  plansContainer: { flexDirection: 'row', gap: 10, width: '100%', marginBottom: 12, flexWrap: 'wrap' },
-  planCard: {
-    flex: 1, minWidth: 200, backgroundColor: C.surface2, borderRadius: 14,
-    borderWidth: 1, borderColor: C.border, padding: 12, justifyContent: 'space-between',
+  /* Main CTA */
+  mainCtaBtn: {
+    width: '100%',
+    height: 54,
+    backgroundColor: C.primary,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    shadowColor: C.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  proPlanCard: { borderColor: C.primary + '60', backgroundColor: '#1E1410' },
-  popularBadge: {
-    alignSelf: 'flex-start', backgroundColor: C.primary, borderRadius: 6,
-    paddingHorizontal: 8, paddingVertical: 2, marginBottom: 6,
+  disabledCtaBtn: {
+    opacity: 0.7,
   },
-  popularBadgeText: { fontSize: 9, fontWeight: '800', color: '#FFF' },
-  cardHeader: { marginBottom: 8 },
-  planName: { fontSize: 15, fontWeight: '800', color: C.text },
-  planPrice: { fontSize: 20, fontWeight: '900', color: C.text, marginTop: 2 },
-  planPeriod: { fontSize: 11, fontWeight: '600', color: C.textSub },
-  benefits: { gap: 6, marginBottom: 12 },
-  benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  benefitText: { fontSize: 11, color: C.textSub },
+  ctaBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  mainCtaText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  },
 
-  starterBtn: {
-    backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
-    paddingVertical: 8, borderRadius: 8, alignItems: 'center',
+  secondaryActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 10,
   },
-  starterBtnText: { color: C.text, fontWeight: '700', fontSize: 12 },
-  proBtn: {
-    backgroundColor: C.primary, paddingVertical: 8, borderRadius: 8, alignItems: 'center',
+  freeOptionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.sub,
+    textDecorationLine: 'underline',
   },
-  proBtnText: { color: '#FFF', fontWeight: '800', fontSize: 12 },
+  restoreOptionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: C.dim,
+  },
+  dotSeparator: {
+    color: C.dim,
+    fontSize: 14,
+  },
 
-  footerNote: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  footerNoteText: { fontSize: 10, color: C.textSub },
+  securityBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    justifyContent: 'center',
+  },
+  securityBadgeText: {
+    fontSize: 10,
+    color: C.dim,
+  },
 });
+
