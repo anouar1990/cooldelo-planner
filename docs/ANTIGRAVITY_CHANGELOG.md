@@ -80,8 +80,29 @@
 - **Test Results**:
   - `npx tsc --noEmit`: PASS
   - `npm run vercel-build`: PASS
+
+## [2026-09-29 20:45:00] - Comprehensive Auth Audit & Direct Dashboard Signup Optimization
+- **Task**: Audit 20+ authentication system components, identify OTP/link mismatch root causes, and clean up signup & login flows. Direct signup -> auto-session -> direct dashboard.
+- **Files Changed**:
+  - `lasercut-planner/src/hooks/useAuth.ts` (Streamlined `signUp` & `signIn` session handling)
+  - `lasercut-planner/src/screens/DesktopAuthScreen.tsx` (Removed unused modal imports/state; direct dashboard transition)
+  - `lasercut-planner/src/screens/AuthScreen.tsx` (Removed unused modal imports/state; direct dashboard transition)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - TEST 1 (New user signup -> direct dashboard): PASS
+  - TEST 2 (Dashboard refresh session persistence): PASS
+  - TEST 3 (Logout -> return to login screen): PASS
+  - TEST 4 (Existing user login): PASS
+  - TEST 5 (Wrong password error handling): PASS
+  - TEST 6 (Existing email signup error message): PASS
+  - TEST 7 & 8 (Mobile 375px & 430px responsive layout): PASS
+  - TEST 9 (New browser session login): PASS
+  - TEST 10 & 11 (Browser console & network request audit - 0 OTP/magic-link requests): PASS
+  - TypeScript compilation check (`npx tsc --noEmit`): PASS
+  - Web export build (`npm run vercel-build`): PASS
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
 
 
 

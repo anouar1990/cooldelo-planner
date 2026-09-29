@@ -8,8 +8,6 @@ import { useAuth } from '../hooks/useAuth';
 import { trackEvent } from '../lib/analytics';
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react-native';
 import { SocialAuthButtons } from '../components/SocialAuthButtons';
-import { OTPVerificationModal } from '../components/OTPVerificationModal';
-import { SignupSuccessTransition } from '../components/SignupSuccessTransition';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -32,13 +30,6 @@ export default function AuthScreen() {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
-
-    const [showSuccessTransition, setShowSuccessTransition] = useState(false);
-    const [isSignedUpVerified, setIsSignedUpVerified] = useState(false);
-    const [signedUpEmail, setSignedUpEmail] = useState('');
-
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [modalEmail, setModalEmail] = useState('');
 
     const clearErrors = () => { setEmailError(''); setPasswordError(''); setSuccessMessage(''); };
 
@@ -233,18 +224,6 @@ export default function AuthScreen() {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-
-            <OTPVerificationModal
-                visible={showConfirmModal}
-                email={modalEmail}
-                onClose={() => setShowConfirmModal(false)}
-                onSuccess={() => {
-                    setShowConfirmModal(false);
-                    setEmail('');
-                    setPassword('');
-                    setConfirmPassword('');
-                }}
-            />
         </SafeAreaView>
     );
 }
