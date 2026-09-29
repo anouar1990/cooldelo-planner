@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, TextInput,
     ScrollView, Animated, Platform, useWindowDimensions,
-    ActivityIndicator, Modal, KeyboardAvoidingView
+    ActivityIndicator, Modal, KeyboardAvoidingView, PanResponder
 } from 'react-native';
 import { Bot, Sparkles, X, Send, Maximize2, Trash2, Zap, MessageSquare, RefreshCw } from 'lucide-react-native';
 import { useLaserExpert } from '../hooks/useLaserExpert';
@@ -48,6 +48,34 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
 
     const scrollViewRef = useRef<ScrollView>(null);
     const pulseAnim = useRef(new Animated.Value(1)).current;
+    const pan = useRef(new Animated.ValueXY()).current;
+    const isDraggingRef = useRef(false);
+
+    // Draggable PanResponder
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+                return Math.abs(gestureState.dx) > 3 || Math.abs(gestureState.dy) > 3;
+            },
+            onPanResponderGrant: () => {
+                isDraggingRef.current = false;
+                pan.extractOffset();
+            },
+            onPanResponderMove: (e, gestureState) => {
+                if (Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5) {
+                    isDraggingRef.current = true;
+                }
+                Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false })(e, gestureState);
+            },
+            onPanResponderRelease: (_, gestureState) => {
+                pan.flattenOffset();
+                if (!isDraggingRef.current && Math.abs(gestureState.dx) < 5 && Math.abs(gestureState.dy) < 5) {
+                    setIsOpen(true);
+                }
+            },
+        })
+    ).current;
 
     // Pulse animation for the bubble dot
     useEffect(() => {
@@ -88,12 +116,23 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
 
     return (
         <>
-            {/* FLOATING BUBBLE BUTTON */}
+            {/* FLOATING DRAGGABLE BUBBLE BUTTON */}
             {!isOpen && (
-                <View style={styles.bubblePositioner}>
+                <Animated.View
+                    {...panResponder.panHandlers}
+                    style={[
+                        styles.bubblePositioner,
+                        isMobile && styles.bubblePositionerMobile,
+                        { transform: pan.getTranslateTransform() }
+                    ]}
+                >
                     <TouchableOpacity
                         activeOpacity={0.85}
-                        onPress={() => setIsOpen(true)}
+                        onPress={() => {
+                            if (!isDraggingRef.current) {
+                                setIsOpen(true);
+                            }
+                        }}
                         style={styles.bubbleButton}
                     >
                         <View style={styles.bubbleIconWrapper}>
@@ -110,7 +149,7 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                             <Text style={styles.bubbleSubtitle}>Laser & CNC Expert</Text>
                         </View>
                     </TouchableOpacity>
-                </View>
+                </Animated.View>
             )}
 
             {/* FLOATING CHAT MODAL / POPUP */}
@@ -280,6 +319,10 @@ const styles = StyleSheet.create({
         right: 24,
         zIndex: 9999,
     },
+    bubblePositionerMobile: {
+        bottom: 85,
+        right: 16,
+    },
     bubbleButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -292,8 +335,10 @@ const styles = StyleSheet.create({
         ...Platform.select({
             web: {
                 boxShadow: '0 8px 24px rgba(255, 107, 53, 0.4)',
-                cursor: 'pointer',
-            },
+                cursor: 'grab',
+                userSelect: 'none',
+                touchAction: 'none',
+            } as any,
             default: {
                 elevation: 10,
                 shadowColor: '#FF6B35',
