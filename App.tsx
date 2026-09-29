@@ -32,6 +32,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import { useAuth } from './src/hooks/useAuth';
 import { useSubscription } from './src/hooks/useSubscription';
 import { ResponsiveTabBar } from './src/components/ResponsiveTabBar';
+import { LaserExpertBubble } from './src/components/LaserExpertBubble';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { LanguageProvider } from './src/context/LanguageContext';
 import { WorkshopProvider } from './src/context/WorkshopContext';
@@ -167,6 +168,7 @@ export default function App() {
                   <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
                   <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
                 </Tab.Navigator>
+                <LaserExpertBubble onOpenFullScreen={() => navigationRef.current?.navigate('Laser Expert')} />
               </NavigationContainer>
             </SafeAreaProvider>
           </VerificationProvider>
