@@ -19,6 +19,7 @@ import LaserPresetsScreen from './src/screens/LaserPresetsScreen';
 import QuoteGeneratorScreen from './src/screens/QuoteGeneratorScreen';
 import InvoiceGeneratorScreen from './src/screens/InvoiceGeneratorScreen';
 import NestingEstimatorScreen from './src/screens/NestingEstimatorScreen';
+import LaserExpertScreen from './src/screens/LaserExpertScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import DesktopAuthScreen from './src/screens/DesktopAuthScreen';
 import PaywallScreen from './src/screens/PaywallScreen';
@@ -155,6 +156,7 @@ export default function App() {
                   }}
                 >
                   <Tab.Screen name="Dashboard" component={DashboardNavigator} />
+                  <Tab.Screen name="Laser Expert" component={LaserExpertScreen} />
                   <Tab.Screen name="Cost Calculator" component={CostCalculatorScreen} />
                   <Tab.Screen name="Materials" component={MaterialsScreen} />
                   <Tab.Screen name="Orders" component={OrdersScreen} />

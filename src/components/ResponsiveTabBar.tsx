@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image, ScrollView, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle, Receipt, Factory } from 'lucide-react-native';
+import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle, Receipt, Factory, Bot } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useLanguage } from '../context/LanguageContext';
@@ -28,6 +28,7 @@ const ICONS: Record<string, any> = {
     'Invoice Generator': Receipt,
     'Design Library': Library,
     'Nesting Estimator': Grid,
+    'Laser Expert': Bot,
 };
 
 export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
