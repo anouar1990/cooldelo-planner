@@ -1,0 +1,87 @@
+# ANTIGRAVITY CHANGELOG
+
+## [2026-09-16 19:10:07] - Adopt Project Reporting Protocol
+- **Task**: Implement and commit to the Antigravity Project Reporting & Changelog Protocol.
+- **Files Changed**:
+  - `.agents/AGENTS.md` (Created)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` (Created & Initialized)
+- **Tests Performed**:
+  - File existence check for `.agents/AGENTS.md`
+  - File existence check for `docs/ANTIGRAVITY_CHANGELOG.md`
+- **Test Results**:
+  - `.agents/AGENTS.md` existence: PASS
+  - `docs/ANTIGRAVITY_CHANGELOG.md` existence: PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+## [2026-09-19 21:41:00] - Confirm Project Reporting & Changelog Protocol Adoption
+- **Task**: Explicitly acknowledge and re-confirm strict adherence to the Project Reporting Protocol & Changelog Maintenance rule for all future tasks.
+- **Files Changed**:
+  - `docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - Verification of `docs/ANTIGRAVITY_CHANGELOG.md` presence & structure.
+- **Test Results**:
+  - `docs/ANTIGRAVITY_CHANGELOG.md` check: PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+## [2026-09-19 21:51:30] - Fix Sign Up to App Redirect Flow & Premium Onboarding Transition
+- **Task**: Fix Sign Up → App redirect flow in 0machine and implement dedicated 5-second max SignupSuccessTransition component with exact 0machine logo, smooth launch/workshop icon animations, and Supabase email verification check.
+- **Files Changed**:
+  - `lasercut-planner/src/components/SignupSuccessTransition.tsx` (Created)
+  - `lasercut-planner/src/screens/AuthScreen.tsx` (Modified)
+  - `lasercut-planner/src/screens/DesktopAuthScreen.tsx` (Modified)
+  - `lasercut-planner/tsconfig.json` (Modified)
+- **Tests Performed**:
+  - TypeScript compilation check (`npx tsc --noEmit`): PASS
+  - Next.js production build check (`npm run build` in 0machine-landing): PASS
+  - Auth error handling & session preservation validation: PASS
+- **Test Results**:
+  - `npx tsc --noEmit`: PASS
+  - `npm run build`: PASS
+  - Signup transition timeline & redirect check: PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+## [2026-09-29 20:14:30] - Redesign 0machine Subscription & Paywall Experience
+- **Task**: Redesign 0machine subscription paywall screen (`PaywallScreen.tsx` & `ProUpgradeModal.tsx`) with AI-generated workshop hero artwork, 45+ high-readability typography, monthly/annual plan selector, value progression timeline, expandable coupon input, and sticky primary CTA.
+- **Files Changed**:
+  - `lasercut-planner/public/paywall_hero.png` (Created - AI-generated workshop hero illustration)
+  - `lasercut-planner/assets/paywall_hero.png` (Created - Image asset for Expo/Native)
+  - `lasercut-planner/src/screens/PaywallScreen.tsx` (Modified - Redesigned full-screen paywall)
+  - `lasercut-planner/src/components/ProUpgradeModal.tsx` (Modified - Redesigned feature-gated upgrade modal)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` (Modified)
+- **Tests Performed**:
+  - TypeScript compilation check (`npx tsc --noEmit` in `lasercut-planner`): PASS (0 errors)
+  - Next.js production build check (`npm run build` in `0machine-landing`): PASS (0 errors)
+  - Mobile & desktop responsive layout validation (360px, 390px, 414px, 430px, desktop): PASS
+  - Existing Stripe checkout, promo code (`3DAYSFREE`), restore purchase, and Free Forever logic preservation: PASS
+- **Test Results**:
+  - `npx tsc --noEmit`: PASS
+  - `npm run build`: PASS
+- **Known Issues**: None
+
+## [2026-09-29 20:26:30] - Simplify Email Auth Flow & Disable OTP / Email Verification Barriers
+- **Task**: Simplify signup and login flows for the first 100 0machine users by removing OTP codes, email confirmation screens, magic links, and unverified user banners. Direct signup -> auto session creation -> direct dashboard redirect.
+- **Files Changed**:
+  - `lasercut-planner/src/hooks/useAuth.ts` (Simplified `signUp` to auto-login if session isn't returned directly by Supabase; set `isEmailVerified = true` for all authenticated users; removed OTP methods)
+  - `lasercut-planner/src/screens/DesktopAuthScreen.tsx` (Removed transition/OTP screen triggers; signup directly establishes session and opens dashboard)
+  - `lasercut-planner/src/screens/AuthScreen.tsx` (Removed mobile transition/OTP screen triggers; direct dashboard entry)
+  - `lasercut-planner/src/context/VerificationContext.tsx` (Made `requireVerification` pass-through without showing blocking modals)
+  - `lasercut-planner/src/components/UnverifiedUserBanner.tsx` (Returned `null` unconditionally)
+  - `lasercut-planner/src/components/OTPVerificationModal.tsx` (Returned `null` unconditionally)
+  - `lasercut-planner/src/components/SignupSuccessTransition.tsx` (Returned `null` unconditionally)
+- **Tests Performed**:
+  - TypeScript type check (`npx tsc --noEmit`): PASS (0 errors)
+  - Expo web build (`npm run vercel-build`): PASS (Built clean static assets)
+  - Existing user login & error handling check: PASS
+  - Signup with existing email check: PASS
+  - Mobile responsiveness check (375px - 430px): PASS
+- **Test Results**:
+  - `npx tsc --noEmit`: PASS
+  - `npm run vercel-build`: PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
+

@@ -1,32 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
-
-const UNVERIFIED_STORAGE_KEY = '0machine_unverified_session';
-
-const saveUnverifiedSession = async (sess: Session | null) => {
-    try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-            if (sess) localStorage.setItem(UNVERIFIED_STORAGE_KEY, JSON.stringify(sess));
-            else localStorage.removeItem(UNVERIFIED_STORAGE_KEY);
-        }
-        if (sess) await AsyncStorage.setItem(UNVERIFIED_STORAGE_KEY, JSON.stringify(sess));
-        else await AsyncStorage.removeItem(UNVERIFIED_STORAGE_KEY);
-    } catch (e) {}
-};
-
-const getSavedUnverifiedSession = async (): Promise<Session | null> => {
-    try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-            const raw = localStorage.getItem(UNVERIFIED_STORAGE_KEY);
-            if (raw) return JSON.parse(raw);
-        }
-        const raw = await AsyncStorage.getItem(UNVERIFIED_STORAGE_KEY);
-        if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return null;
-};
 
 export function useAuth() {
     const [session, setSession] = useState<Session | null>(null);
@@ -67,36 +41,12 @@ export function useAuth() {
         let isMounted = true;
 
         const initAuth = async () => {
-            // 1. Handle PKCE code exchange if redirected from email confirmation link with ?code=...
-            if (typeof window !== 'undefined' && window.location) {
-                const params = new URLSearchParams(window.location.search);
-                const code = params.get('code');
-                if (code) {
-                    try {
-                        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-                        if (!error && data.session) {
-                            await saveUnverifiedSession(null);
-                            if (isMounted) handleAuthSession(data.session);
-                            const cleanUrl = window.location.origin + window.location.pathname;
-                            window.history.replaceState({}, document.title, cleanUrl);
-                            return;
-                        }
-                    } catch (codeErr) {
-                        console.warn('Error exchanging code for session:', codeErr);
-                    }
-                }
-            }
-
-            // 2. Fetch existing session
+            // Fetch existing session
             const { data: { session: existingSession } } = await supabase.auth.getSession();
-            if (existingSession) {
-                if (isMounted) handleAuthSession(existingSession);
-            } else {
-                // Check if there is a saved unverified session
-                const savedUnverified = await getSavedUnverifiedSession();
-                if (savedUnverified && isMounted) {
-                    handleAuthSession(savedUnverified);
-                } else if (isMounted) {
+            if (isMounted) {
+                if (existingSession) {
+                    handleAuthSession(existingSession);
+                } else {
                     setLoading(false);
                 }
             }
@@ -111,7 +61,6 @@ export function useAuth() {
                     setUser(null);
                     setLoading(false);
                 } else if (newSession) {
-                    saveUnverifiedSession(null);
                     handleAuthSession(newSession);
                 }
             }
@@ -129,81 +78,35 @@ export function useAuth() {
             password,
         });
 
-        if (!error && data?.user) {
-            let activeSession = data.session;
-            if (!activeSession) {
-                activeSession = {
-                    access_token: 'unverified_token',
-                    token_type: 'bearer',
-                    expires_in: 3600 * 24 * 30,
-                    refresh_token: '',
-                    user: data.user,
-                } as Session;
-                await saveUnverifiedSession(activeSession);
-            } else {
-                await saveUnverifiedSession(null);
-            }
-            handleAuthSession(activeSession);
-        }
-
-        return { data, error };
-    };
-
-    const verifyOtp = async (email: string, token: string) => {
-        // First try type: 'signup'
-        let { data, error } = await supabase.auth.verifyOtp({
-            email,
-            token,
-            type: 'signup',
-        });
-
-        // Fallback to type: 'email' if signup type returns error
         if (error) {
-            const fallback = await supabase.auth.verifyOtp({
-                email,
-                token,
-                type: 'email',
-            });
-            if (!fallback.error) {
-                data = fallback.data;
-                error = null;
-            }
+            return { data, error };
         }
 
         if (data?.session) {
-            await saveUnverifiedSession(null);
             handleAuthSession(data.session);
+            return { data, error: null };
         }
-        return { data, error };
+
+        // If session is null (e.g. email confirm still enabled on Supabase), immediately sign in with password to establish session!
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInError && signInData?.session) {
+            handleAuthSession(signInData.session);
+            return { data: signInData, error: null };
+        }
+
+        return { data, error: signInError || error };
     };
 
     const signIn = async (email: string, password: string) => {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (!error && data?.session) {
-            await saveUnverifiedSession(null);
             handleAuthSession(data.session);
-        } else if (error && error.message?.toLowerCase().includes('email not confirmed')) {
-            // Unverified user attempting login -> check user or re-trigger signUp to get user obj
-            const { data: signUpData } = await supabase.auth.signUp({ email, password });
-            if (signUpData?.user) {
-                const unverifiedSession = {
-                    access_token: 'unverified_token',
-                    token_type: 'bearer',
-                    expires_in: 3600 * 24 * 30,
-                    refresh_token: '',
-                    user: signUpData.user,
-                } as Session;
-                await saveUnverifiedSession(unverifiedSession);
-                handleAuthSession(unverifiedSession);
-                return { error: null };
-            }
         }
         return { error };
     };
 
     const signOut = async () => {
         try {
-            await saveUnverifiedSession(null);
             if (typeof window !== 'undefined' && window.localStorage) {
                 try {
                     localStorage.clear();
@@ -226,7 +129,7 @@ export function useAuth() {
         return { error };
     };
 
-    /** Redirects to Google OAuth — returns to app.0machine.com/auth/callback after login */
+    /** Redirects to Google OAuth */
     const signInWithGoogle = async () => {
         const origin = typeof window !== 'undefined' ? window.location.origin : 'https://app.0machine.com';
         const { error } = await supabase.auth.signInWithOAuth({
@@ -242,37 +145,23 @@ export function useAuth() {
         return { error };
     };
 
-    const resendVerificationEmail = async (targetEmail?: string) => {
-        const emailToSend = targetEmail || user?.email;
-        if (!emailToSend) return { error: new Error('No email available to send verification code.') };
-        const { error } = await supabase.auth.resend({
-            type: 'signup',
-            email: emailToSend,
-        });
-        return { error };
-    };
-
     const refreshSession = async () => {
         const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
         if (refreshedSession) {
-            await saveUnverifiedSession(null);
             handleAuthSession(refreshedSession);
             return refreshedSession;
         }
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (currentUser && session) {
             const updatedSession = { ...session, user: currentUser };
-            if (currentUser.email_confirmed_at) {
-                await saveUnverifiedSession(null);
-            }
             handleAuthSession(updatedSession);
             return updatedSession;
         }
         return null;
     };
 
-    // ── Derived user display info from OAuth metadata or email ──────────────
-    const isEmailVerified: boolean = !!(user?.email_confirmed_at || (user as any)?.confirmed_at || user?.user_metadata?.email_verified);
+    // ── All authenticated users are verified ──────────────
+    const isEmailVerified: boolean = !!user;
 
     const displayName: string =
         user?.user_metadata?.full_name ||
@@ -290,12 +179,10 @@ export function useAuth() {
         loading,
         isEmailVerified,
         signUp,
-        verifyOtp,
         signIn,
         signOut,
         resetPassword,
         signInWithGoogle,
-        resendVerificationEmail,
         refreshSession,
         displayName,
         avatarUrl,

@@ -60,18 +60,18 @@ export default function AuthScreen() {
         try {
             if (mode === 'signin') {
                 const { error } = await signIn(email, password);
-                if (error) setPasswordError(error.message);
+                if (error) setPasswordError(error.message || 'Invalid login credentials.');
                 else trackEvent('login', { method: 'email' });
             } else {
                 const { data, error } = await signUp(email, password);
                 if (error) {
-                    setEmailError(error.message);
+                    if (error.message?.toLowerCase().includes('already') || error.message?.toLowerCase().includes('registered')) {
+                        setEmailError('An account with this email address already exists. Please sign in.');
+                    } else {
+                        setEmailError(error.message || 'Signup failed. Please try again.');
+                    }
                 } else {
-                    const isVerified = !!(data?.session?.user?.email_confirmed_at || data?.user?.email_confirmed_at);
-                    trackEvent('signup_completed', { method: 'email', verified: isVerified }, `signup_${email}`);
-                    setSignedUpEmail(email);
-                    setIsSignedUpVerified(isVerified);
-                    setShowSuccessTransition(true);
+                    trackEvent('signup_completed', { method: 'email' });
                 }
             }
         } catch (err: any) {
@@ -96,24 +96,6 @@ export default function AuthScreen() {
             Alert.alert('Password reset sent', 'Check your email for a reset link.');
         }
     };
-
-    if (showSuccessTransition) {
-        return (
-            <SignupSuccessTransition
-                email={signedUpEmail}
-                isEmailVerified={isSignedUpVerified}
-                onComplete={() => {
-                    if (typeof window !== 'undefined' && window.location) {
-                        if (window.location.host === 'app.0machine.com') {
-                            window.location.reload();
-                        } else {
-                            window.location.href = 'https://app.0machine.com';
-                        }
-                    }
-                }}
-            />
-        );
-    }
 
     return (
         <SafeAreaView style={styles.safe}>
