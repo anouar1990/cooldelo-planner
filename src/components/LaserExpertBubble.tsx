@@ -213,7 +213,9 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                                                     isUser ? styles.userBubble : styles.assistantBubble
                                                 ]}
                                             >
-                                                <Text style={styles.messageText}>{msg.content}</Text>
+                                                <Text style={styles.messageText}>
+                                                    {msg.content}
+                                                </Text>
                                             </View>
                                         </View>
                                     );

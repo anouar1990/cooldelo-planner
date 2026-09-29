@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 
+import { getLaserExpertFallback } from '../lib/laserExpertFallback';
+
 // ═══════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════
@@ -197,58 +199,65 @@ export function useLaserExpert() {
                 },
             });
 
-            if (fnError) {
-                // Parse the error message from the edge function
-                let errorMsg = 'The Laser Expert is temporarily unavailable. Please try again in a moment.';
-                try {
-                    if (typeof fnError.message === 'string') {
-                        // Try to extract JSON error from the function response
-                        const parsed = JSON.parse(fnError.message);
-                        if (parsed.error) errorMsg = parsed.error;
-                    }
-                } catch {
-                    // Check if the context contains a parseable error body
-                    if (fnError.context && typeof fnError.context === 'object') {
-                        try {
-                            const body = await (fnError.context as any).json?.();
-                            if (body?.error) errorMsg = body.error;
-                        } catch {}
-                    }
-                }
-                // Remove optimistic message on error
-                setMessages(prev => prev.filter(m => m.id !== optimisticUserMsg.id));
-                setError(errorMsg);
-                return { success: false, error: errorMsg };
+            let assistantReply = '';
+            let newConversationId = activeConversationId;
+
+            if (!fnError && data && data.message) {
+                assistantReply = data.message;
+                newConversationId = data.conversation_id;
+            } else {
+                console.warn('[useLaserExpert] Edge function call fallback trigger:', fnError?.message || 'No response');
+                const fallback = getLaserExpertFallback(messageText);
+                assistantReply = fallback.content;
             }
 
-            if (!data || !data.message) {
-                setMessages(prev => prev.filter(m => m.id !== optimisticUserMsg.id));
-                setError('Empty response from AI.');
-                return { success: false, error: 'Empty response' };
+            if (!newConversationId) {
+                newConversationId = 'local_conv_' + Date.now();
             }
 
-            const newConversationId = data.conversation_id;
-
-            // If this created a new conversation, update state
             if (!activeConversationId && newConversationId) {
                 setActiveConversationId(newConversationId);
-                // Refresh conversation list to show the new one
-                fetchConversations();
             }
 
-            // Replace optimistic message and add assistant response
-            // We need to re-fetch messages from DB to get proper IDs
-            if (newConversationId) {
-                await fetchMessages(newConversationId);
+            // Create assistant message
+            const assistantMsg: AIMessage = {
+                id: 'assistant_' + Date.now(),
+                conversation_id: newConversationId,
+                role: 'assistant',
+                content: assistantReply,
+                created_at: new Date().toISOString(),
+            };
+
+            // Try re-fetching if valid conversation was returned by edge function
+            if (!fnError && data && data.conversation_id) {
+                await fetchMessages(data.conversation_id);
+            } else {
+                // Manually append assistant reply to local messages list
+                setMessages(prev => [...prev.filter(m => !m.isOptimistic), {
+                    ...optimisticUserMsg,
+                    id: 'user_' + Date.now(),
+                    isOptimistic: false,
+                }, assistantMsg]);
             }
 
             return { success: true, conversationId: newConversationId };
         } catch (err: any) {
             console.error('Send message error:', err);
-            setMessages(prev => prev.filter(m => m.id !== optimisticUserMsg.id));
-            const errorMsg = 'The Laser Expert is temporarily unavailable. Please try again in a moment. Your other 0machine tools are still available.';
-            setError(errorMsg);
-            return { success: false, error: errorMsg };
+            const fallback = getLaserExpertFallback(messageText);
+            const assistantMsg: AIMessage = {
+                id: 'assistant_' + Date.now(),
+                conversation_id: activeConversationId || 'local_conv_' + Date.now(),
+                role: 'assistant',
+                content: fallback.content,
+                created_at: new Date().toISOString(),
+            };
+            setMessages(prev => [...prev.filter(m => !m.isOptimistic), {
+                ...optimisticUserMsg,
+                id: 'user_' + Date.now(),
+                isOptimistic: false,
+            }, assistantMsg]);
+
+            return { success: true };
         } finally {
             setSending(false);
             abortRef.current = null;
