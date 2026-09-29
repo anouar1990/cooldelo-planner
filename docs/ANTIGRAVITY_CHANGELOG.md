@@ -103,6 +103,20 @@
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
+## [2026-09-29 20:56:45] - Upgrade Zustand to 5.0.15 for React 19 Peer Dependency Compatibility
+- **Task**: Resolve `use-sync-external-store@1.2.0` ERESOLVE peer dependency warning without downgrading React 19 or Expo 55.
+- **Files Changed**:
+  - `lasercut-planner/package.json` (Upgraded `zustand` from `^4.5.2` to `^5.0.15`)
+  - `lasercut-planner/package-lock.json` (Updated cleanly via `npm install`)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - `npm install`: PASS (0 `ERESOLVE` peer dependency warnings)
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build`: PASS (Clean web bundle export)
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
 
 
 
