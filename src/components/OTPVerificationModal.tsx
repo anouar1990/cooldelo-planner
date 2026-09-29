@@ -116,24 +116,22 @@ export function OTPVerificationModal({ visible, email, onClose, onSuccess }: OTP
         try {
             const { data, error } = await verifyOtp(email, token);
             if (error) {
-                setErrorMsg(error.message || 'Invalid or expired OTP code. Please try again.');
+                if (error.message?.toLowerCase().includes('expired')) {
+                    setErrorMsg('Verification code expired. Please request a new code.');
+                } else if (error.message?.toLowerCase().includes('invalid')) {
+                    setErrorMsg('Invalid code. Please check your email and try again.');
+                } else {
+                    setErrorMsg(error.message || 'Invalid or expired OTP code. Please try again.');
+                }
             } else {
-                setSuccessMsg('OTP verified successfully! Redirecting...');
+                setSuccessMsg('Email verified successfully!');
                 setTimeout(() => {
-                    // Redirect to /dashboard if in web browser
-                    if (typeof window !== 'undefined' && window.location) {
-                        try {
-                            window.history.pushState({}, '', '/dashboard');
-                        } catch (e) {
-                            // ignore if navigation handled by state
-                        }
-                    }
                     if (onSuccess) onSuccess();
                     onClose();
                 }, 800);
             }
         } catch (err: any) {
-            setErrorMsg(err.message || 'Verification failed. Please try again.');
+            setErrorMsg(err.message || 'Network error during verification. Please try again.');
         } finally {
             setVerifying(false);
         }
