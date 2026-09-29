@@ -367,7 +367,7 @@ function EmptyState({ colors, primaryColor, onPromptSelect }: {
                 0machine Laser Expert
             </Text>
             <Text style={[emptyStyles.subtitle, { color: colors.sub }]}>
-                Your AI assistant for laser cutting, engraving, and CNC fabrication
+                Specialized AI assistant exclusively for Woodworking, Laser Cutting, CNC Fabrication, and 0machine Tools
             </Text>
 
             <View style={emptyStyles.capabilities}>

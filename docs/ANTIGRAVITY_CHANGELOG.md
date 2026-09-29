@@ -154,6 +154,19 @@
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
+## [2026-09-29 21:26:45] - Enforce Strict Domain Rules for Laser Expert AI Assistant
+- **Task**: Lock down Laser Expert AI Assistant to strictly answer questions about Woodworking, Laser Cutting, CNC Fabrication, and 0machine Tools only. All off-topic queries are strictly refused with a specialized refusal response.
+- **Files Changed**:
+  - `lasercut-planner/supabase/functions/ai-chat/index.ts` (Enforced strict domain prompt boundaries and off-topic prohibition rules)
+  - `lasercut-planner/src/screens/LaserExpertScreen.tsx` (Updated empty state subtitle to highlight domain boundaries)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build`: PASS (Clean web bundle export)
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
 
 
 
