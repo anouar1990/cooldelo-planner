@@ -116,6 +116,18 @@
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
+## [2026-09-29 21:07:00] - Refine SignUp Error Detection for Existing Unconfirmed Users & Supabase Settings
+- **Task**: Catch Supabase `identities: []` signature for existing unconfirmed users and provide clear error messages if Supabase "Confirm email" is still enabled.
+- **Files Changed**:
+  - `lasercut-planner/src/hooks/useAuth.ts` (Added `data.user.identities.length === 0` check and improved "Email not confirmed" error guidance)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build`: PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
 
 
 

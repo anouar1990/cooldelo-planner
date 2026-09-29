@@ -87,11 +87,26 @@ export function useAuth() {
             return { data, error: null };
         }
 
-        // If session is null (e.g. email confirm still enabled on Supabase), immediately sign in with password to establish session!
+        // Supabase returns identities: [] if user ALREADY EXISTS in auth.users
+        if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+            return {
+                data,
+                error: new Error('An account with this email address already exists. Please sign in.')
+            };
+        }
+
+        // If session is null (e.g. "Confirm email" is ENABLED in Supabase Dashboard), try immediate sign in
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (!signInError && signInData?.session) {
             handleAuthSession(signInData.session);
             return { data: signInData, error: null };
+        }
+
+        if (signInError?.message?.toLowerCase().includes('email not confirmed')) {
+            return {
+                data,
+                error: new Error("Email confirmation is enabled in your Supabase project. Please disable 'Confirm email' in Supabase Dashboard (Authentication -> Providers -> Email).")
+            };
         }
 
         return { data, error: signInError || error };
