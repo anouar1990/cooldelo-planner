@@ -166,6 +166,20 @@
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
+## [2026-09-29 21:40:00] - Add Floating AI Chat Bubble Widget (LaserExpertBubble)
+- **Task**: Create floating AI Chat Bubble component (`LaserExpertBubble.tsx`) and embed it persistently in `App.tsx` so users can access 0machine Laser & CNC AI Expert from any screen.
+- **Files Changed**:
+  - `lasercut-planner/src/components/LaserExpertBubble.tsx` (Created floating bubble & popover chat widget component)
+  - `lasercut-planner/App.tsx` (Rendered `<LaserExpertBubble />` persistently inside `NavigationContainer` with tab navigation handler)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build`: PASS (Clean web bundle export)
+  - GitHub push & commit (`78ff739`): PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
 
 
 
