@@ -10,6 +10,7 @@ import { useAuth } from '../hooks/useAuth';
 import { trackEvent } from '../lib/analytics';
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, ShieldCheck, Zap, Layers } from 'lucide-react-native';
 import { SocialAuthButtons } from '../components/SocialAuthButtons';
+import { SignupSuccessTransition } from '../components/SignupSuccessTransition';
 
 const C = {
     bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
@@ -22,7 +23,7 @@ const C = {
 type Mode = 'signin' | 'signup';
 
 export default function DesktopAuthScreen() {
-    const { signIn, signUp, resetPassword } = useAuth();
+    const { signIn, signUp, resetPassword, completeSession } = useAuth();
     const [mode, setMode] = useState<Mode>('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -32,6 +33,8 @@ export default function DesktopAuthScreen() {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    const [showTransition, setShowTransition] = useState(false);
+    const [pendingSessionData, setPendingSessionData] = useState<any>(null);
 
     const { width, height } = useWindowDimensions();
 
@@ -62,7 +65,7 @@ export default function DesktopAuthScreen() {
                 if (error) setPasswordError(error.message || 'Invalid login credentials.');
                 else trackEvent('login', { method: 'email' });
             } else {
-                const { data, error } = await signUp(email, password);
+                const { data, error } = await signUp(email, password, { deferSession: true });
                 if (error) {
                     if (error.message?.toLowerCase().includes('already') || error.message?.toLowerCase().includes('registered')) {
                         setEmailError('An account with this email address already exists. Please sign in.');
@@ -71,6 +74,8 @@ export default function DesktopAuthScreen() {
                     }
                 } else {
                     trackEvent('signup_completed', { method: 'email' });
+                    setPendingSessionData(data);
+                    setShowTransition(true);
                 }
             }
         } catch (err: any) {
@@ -79,6 +84,17 @@ export default function DesktopAuthScreen() {
             setLoading(false);
         }
     };
+
+    if (showTransition) {
+        return (
+            <SignupSuccessTransition
+                email={email}
+                onComplete={() => {
+                    completeSession(pendingSessionData?.session);
+                }}
+            />
+        );
+    }
 
     const handleForgotPassword = async () => {
         if (!email.includes('@')) {

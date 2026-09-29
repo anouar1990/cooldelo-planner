@@ -1,15 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-    View, Text, StyleSheet, Image, Animated, Easing,
-    TouchableOpacity, TextInput, ActivityIndicator, Platform
-} from 'react-native';
-import { Zap, CheckCircle2, KeyRound, RefreshCw, ArrowRight } from 'lucide-react-native';
-import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../lib/supabase';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, Animated, Easing } from 'react-native';
+import { CheckCircle2, Zap } from 'lucide-react-native';
 
 interface SignupSuccessTransitionProps {
     email: string;
-    isEmailVerified: boolean;
     onComplete: () => void;
 }
 
@@ -22,13 +16,127 @@ const C = {
     sub: '#8B95A8',
     dim: '#4B5568',
     success: '#10B981',
-    error: '#EF4444',
 };
 
-const OTP_LENGTH = 8; // Supports up to 8 digits with paste support for 6-8 digits
+export function SignupSuccessTransition({ email, onComplete }: SignupSuccessTransitionProps) {
+    const progressAnim = useRef(new Animated.Value(0)).current;
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.95)).current;
+    const [progressPercent, setProgressPercent] = useState(0);
+    const [statusText, setStatusText] = useState('Initializing workshop...');
 
-export function SignupSuccessTransition({ email, isEmailVerified: initialIsVerified, onComplete }: SignupSuccessTransitionProps) {
-    return null;
+    useEffect(() => {
+        // Fade in card animation
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                friction: 8,
+                tension: 40,
+                useNativeDriver: true,
+            }),
+        ]).start();
+
+        // 5-second loading bar animation
+        Animated.timing(progressAnim, {
+            toValue: 1,
+            duration: 5000,
+            easing: Easing.linear,
+            useNativeDriver: false,
+        }).start();
+
+        // Update progress percentage state
+        const listenerId = progressAnim.addListener(({ value }) => {
+            const pct = Math.min(100, Math.floor(value * 100));
+            setProgressPercent(pct);
+
+            if (pct < 30) {
+                setStatusText('Initializing workshop workspace...');
+            } else if (pct < 70) {
+                setStatusText('Loading material & machine templates...');
+            } else if (pct < 95) {
+                setStatusText('Finalizing account security...');
+            } else {
+                setStatusText('Opening 0machine dashboard...');
+            }
+        });
+
+        // Redirect after 5 seconds
+        const timer = setTimeout(() => {
+            onComplete();
+        }, 5000);
+
+        return () => {
+            progressAnim.removeListener(listenerId);
+            clearTimeout(timer);
+        };
+    }, []);
+
+    const barWidth = progressAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0%', '100%'],
+    });
+
+    return (
+        <View style={styles.container}>
+            <Animated.View style={[styles.card, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+                {/* 0machine Logo */}
+                <Image
+                    source={{ uri: '/logo.png' }}
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
+
+                <View style={styles.iconBadge}>
+                    <Zap color={C.primary} size={32} />
+                </View>
+
+                <Text style={styles.title}>Account Created Successfully!</Text>
+                <Text style={styles.subtitle}>
+                    Welcome to 0machine. Preparing your workspace for{' '}
+                    <Text style={styles.emailText}>{email}</Text>
+                </Text>
+
+                {/* 5-Second Loading Bar (Samta katcharja) */}
+                <View style={styles.progressContainer}>
+                    <View style={styles.trackBar}>
+                        <Animated.View style={[styles.fillBar, { width: barWidth }]} />
+                    </View>
+
+                    <View style={styles.progressLabelRow}>
+                        <Text style={styles.statusText}>{statusText}</Text>
+                        <Text style={styles.percentText}>{progressPercent}%</Text>
+                    </View>
+                </View>
+
+                {/* Status Timeline Checklist */}
+                <View style={styles.checklist}>
+                    <View style={styles.checkItem}>
+                        <CheckCircle2 color={progressPercent >= 25 ? C.success : C.dim} size={16} />
+                        <Text style={[styles.checkText, progressPercent >= 25 && styles.checkTextActive]}>
+                            Account & session created
+                        </Text>
+                    </View>
+                    <View style={styles.checkItem}>
+                        <CheckCircle2 color={progressPercent >= 65 ? C.success : C.dim} size={16} />
+                        <Text style={[styles.checkText, progressPercent >= 65 && styles.checkTextActive]}>
+                            Material presets & cost calculators ready
+                        </Text>
+                    </View>
+                    <View style={styles.checkItem}>
+                        <CheckCircle2 color={progressPercent >= 98 ? C.success : C.dim} size={16} />
+                        <Text style={[styles.checkText, progressPercent >= 98 && styles.checkTextActive]}>
+                            Redirecting to app.0machine.com
+                        </Text>
+                    </View>
+                </View>
+            </Animated.View>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -58,13 +166,9 @@ const styles = StyleSheet.create({
     logo: {
         width: 190,
         height: 48,
-        marginBottom: 24,
+        marginBottom: 20,
     },
-    otpContainer: {
-        alignItems: 'center',
-        width: '100%',
-    },
-    iconCircle: {
+    iconBadge: {
         width: 64,
         height: 64,
         borderRadius: 32,
@@ -75,189 +179,81 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(255, 107, 53, 0.3)',
     },
-    heading: {
+    title: {
         fontSize: 22,
         fontWeight: '800',
         color: C.text,
         textAlign: 'center',
-        marginBottom: 6,
-        letterSpacing: -0.3,
+        marginBottom: 8,
     },
-    subtext: {
+    subtitle: {
         fontSize: 14,
         color: C.sub,
         textAlign: 'center',
-        marginBottom: 20,
         lineHeight: 20,
-    },
-    emailHighlight: {
-        fontWeight: '700',
-        color: C.text,
-    },
-    statusBanner: {
-        width: '100%',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 18,
-        borderWidth: 1,
-    },
-    statusError: {
-        backgroundColor: 'rgba(239, 68, 68, 0.12)',
-        borderColor: 'rgba(239, 68, 68, 0.3)',
-    },
-    statusErrorText: {
-        color: C.error,
-        fontSize: 13,
-        textAlign: 'center',
-        fontWeight: '600',
-    },
-    statusSuccess: {
-        backgroundColor: 'rgba(16, 185, 129, 0.12)',
-        borderColor: 'rgba(16, 185, 129, 0.3)',
-    },
-    statusSuccessText: {
-        color: C.success,
-        fontSize: 13,
-        textAlign: 'center',
-        fontWeight: '600',
-    },
-    otpRow: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 6,
-        marginBottom: 24,
-        width: '100%',
-    },
-    otpInput: {
-        width: 38,
-        height: 52,
-        borderRadius: 10,
-        backgroundColor: '#13151F',
-        borderWidth: 1.5,
-        borderColor: 'rgba(255, 255, 255, 0.12)',
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '800',
-        textAlign: 'center',
-    },
-    otpInputFilled: {
-        borderColor: C.primary,
-        backgroundColor: 'rgba(255, 107, 53, 0.06)',
-    },
-    otpInputError: {
-        borderColor: C.error,
-    },
-    verifyBtn: {
-        width: '100%',
-        height: 52,
-        backgroundColor: C.primary,
-        borderRadius: 14,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: 20,
-        shadowColor: C.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    verifyBtnText: {
-        color: '#FFFFFF',
-        fontSize: 15,
-        fontWeight: '700',
-    },
-    disabledBtn: {
-        opacity: 0.6,
-    },
-    resendContainer: {
-        alignItems: 'center',
-        gap: 8,
-    },
-    resendPrompt: {
-        fontSize: 13,
-        color: C.sub,
-    },
-    resendBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 107, 53, 0.08)',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 107, 53, 0.25)',
-    },
-    resendBtnDisabled: {
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-    },
-    resendBtnText: {
-        color: C.primary,
-        fontSize: 13,
-        fontWeight: '700',
-    },
-    resendBtnTextDisabled: {
-        color: C.dim,
-    },
-    verifiedContainer: {
-        alignItems: 'center',
-        width: '100%',
-    },
-    animationCircleWrapper: {
-        width: 100,
-        height: 100,
-        justifyContent: 'center',
-        alignItems: 'center',
         marginBottom: 28,
-        marginTop: 12,
     },
-    pulseRing: {
-        position: 'absolute',
-        width: 90,
-        height: 90,
-        borderRadius: 45,
-        backgroundColor: 'rgba(255, 107, 53, 0.15)',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 107, 53, 0.3)',
+    emailText: {
+        color: C.text,
+        fontWeight: '700',
     },
-    iconCircleVerified: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
-        backgroundColor: 'rgba(255, 107, 53, 0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255, 107, 53, 0.4)',
-    },
-    statusBox: {
+    progressContainer: {
         width: '100%',
-        backgroundColor: 'rgba(255,255,255,0.03)',
+        marginBottom: 24,
+    },
+    trackBar: {
+        width: '100%',
+        height: 8,
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        borderRadius: 4,
+        overflow: 'hidden',
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)',
+    },
+    fillBar: {
+        height: '100%',
+        backgroundColor: C.primary,
+        borderRadius: 4,
+    },
+    progressLabelRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    statusText: {
+        fontSize: 12,
+        color: C.sub,
+        fontWeight: '500',
+    },
+    percentText: {
+        fontSize: 13,
+        color: C.primary,
+        fontWeight: '800',
+    },
+    checklist: {
+        width: '100%',
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
         borderRadius: 14,
         padding: 16,
-        gap: 12,
+        gap: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)',
     },
-    statusRow: {
+    checkItem: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
     },
-    statusTextDone: {
+    checkText: {
+        fontSize: 13,
+        color: C.dim,
+        fontWeight: '500',
+    },
+    checkTextActive: {
         color: C.text,
-        fontSize: 13,
         fontWeight: '600',
-    },
-    statusTextActive: {
-        color: C.primary,
-        fontSize: 13,
-        fontWeight: '600',
-    },
-    statusTextSubtle: {
-        color: C.sub,
-        fontSize: 13,
     },
 });
+
 

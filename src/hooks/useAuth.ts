@@ -72,7 +72,13 @@ export function useAuth() {
         };
     }, []);
 
-    const signUp = async (email: string, password: string) => {
+    const completeSession = (targetSession: Session | null) => {
+        if (targetSession) {
+            handleAuthSession(targetSession);
+        }
+    };
+
+    const signUp = async (email: string, password: string, options?: { deferSession?: boolean }) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -83,7 +89,9 @@ export function useAuth() {
         }
 
         if (data?.session) {
-            handleAuthSession(data.session);
+            if (!options?.deferSession) {
+                handleAuthSession(data.session);
+            }
             return { data, error: null };
         }
 
@@ -98,7 +106,9 @@ export function useAuth() {
         // If session is null (e.g. "Confirm email" is ENABLED in Supabase Dashboard), try immediate sign in
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (!signInError && signInData?.session) {
-            handleAuthSession(signInData.session);
+            if (!options?.deferSession) {
+                handleAuthSession(signInData.session);
+            }
             return { data: signInData, error: null };
         }
 
@@ -199,6 +209,7 @@ export function useAuth() {
         resetPassword,
         signInWithGoogle,
         refreshSession,
+        completeSession,
         displayName,
         avatarUrl,
     };
