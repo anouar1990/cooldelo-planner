@@ -193,6 +193,19 @@
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
+## [2026-09-29 21:53:00] - Make AI Chat Bubble Draggable & Offset from Mobile Navigation Bar
+- **Task**: Implement cross-platform touch/drag pan physics (`PanResponder` & `Animated.ValueXY`) on the AI Chat Bubble and increase mobile bottom spacing (`bottom: 85px`) to prevent overlapping the mobile bottom tools bar.
+- **Files Changed**:
+  - `lasercut-planner/src/components/LaserExpertBubble.tsx` (Added `PanResponder` touch drag physics, grab cursor styling, and mobile offset `bottom: 85px`)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build`: PASS (Clean web bundle export)
+  - GitHub push & commit (`31ce732`): PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
 
 
 
