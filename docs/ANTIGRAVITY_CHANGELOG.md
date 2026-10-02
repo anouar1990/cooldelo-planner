@@ -239,6 +239,18 @@
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
+## [2026-10-02 23:46:00] - Add Users At Risk and Subscriptions & Revenue Sections to Admin Console
+- **Task**: Implement data-driven "Users At Risk" signal cards and "Subscriptions & Revenue" metrics with date range filters in the 0machine Admin Console (`0machine-landing/app/admin/page.js`).
+- **Files Changed**:
+  - `0machine-landing/app/admin/page.js` (Added Section 1 Users At Risk, Section 2 Subscriptions & Revenue with 7d/30d/90d/All-time filters, interactive signal filtering, MRR calculation, and extended user table columns)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - `npm run build` in `0machine-landing`: PASS (Compiled Next.js production build in 1896ms with 0 errors)
+  - `git push origin main` (`85392bf` in `0machine-landing`): PASS
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
 
 
 
