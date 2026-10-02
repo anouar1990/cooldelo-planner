@@ -4,6 +4,7 @@ import {
     ScrollView, Animated, Platform, useWindowDimensions,
     ActivityIndicator, Modal, KeyboardAvoidingView, PanResponder
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bot, Sparkles, X, Send, Maximize2, Trash2, Zap, MessageSquare, RefreshCw } from 'lucide-react-native';
 import { useLaserExpert } from '../hooks/useLaserExpert';
 
@@ -37,6 +38,7 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
     const [isOpen, setIsOpen] = useState(false);
     const [inputText, setInputText] = useState('');
     const { width, height } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
     const isMobile = width < 640;
 
     const {
@@ -51,26 +53,27 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
     const pan = useRef(new Animated.ValueXY()).current;
     const isDraggingRef = useRef(false);
 
-    // Draggable PanResponder
+    // Draggable PanResponder - Optimized so taps work reliably on touch & web
     const panResponder = useRef(
         PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
+            onStartShouldSetPanResponder: () => false,
+            onStartShouldSetPanResponderCapture: () => false,
             onMoveShouldSetPanResponder: (_, gestureState) => {
-                return Math.abs(gestureState.dx) > 3 || Math.abs(gestureState.dy) > 3;
+                return Math.abs(gestureState.dx) > 8 || Math.abs(gestureState.dy) > 8;
             },
             onPanResponderGrant: () => {
                 isDraggingRef.current = false;
                 pan.extractOffset();
             },
             onPanResponderMove: (e, gestureState) => {
-                if (Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5) {
+                if (Math.abs(gestureState.dx) > 8 || Math.abs(gestureState.dy) > 8) {
                     isDraggingRef.current = true;
                 }
                 Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false })(e, gestureState);
             },
             onPanResponderRelease: (_, gestureState) => {
                 pan.flattenOffset();
-                if (!isDraggingRef.current && Math.abs(gestureState.dx) < 5 && Math.abs(gestureState.dy) < 5) {
+                if (!isDraggingRef.current && Math.abs(gestureState.dx) < 8 && Math.abs(gestureState.dy) < 8) {
                     setIsOpen(true);
                 }
             },
@@ -133,20 +136,23 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                                 setIsOpen(true);
                             }
                         }}
-                        style={styles.bubbleButton}
+                        style={[styles.bubbleButton, isMobile && styles.bubbleButtonMobile]}
                     >
-                        <View style={styles.bubbleIconWrapper}>
-                            <Bot color="#FFFFFF" size={26} />
+                        <View style={[styles.bubbleIconWrapper, isMobile && styles.bubbleIconWrapperMobile]}>
+                            <Bot color="#FFFFFF" size={isMobile ? 20 : 26} />
                             <Animated.View
                                 style={[
                                     styles.pulseDot,
+                                    isMobile && styles.pulseDotMobile,
                                     { transform: [{ scale: pulseAnim }] }
                                 ]}
                             />
                         </View>
                         <View style={styles.bubbleTextContainer}>
-                            <Text style={styles.bubbleTitle}>0machine AI</Text>
-                            <Text style={styles.bubbleSubtitle}>Laser & CNC Expert</Text>
+                            <Text style={[styles.bubbleTitle, isMobile && styles.bubbleTitleMobile]}>0machine AI</Text>
+                            {!isMobile && (
+                                <Text style={styles.bubbleSubtitle}>Laser & CNC Expert</Text>
+                            )}
                         </View>
                     </TouchableOpacity>
                 </Animated.View>
@@ -157,7 +163,7 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                 <View style={[styles.chatModalOverlay, isMobile && styles.chatModalMobile]}>
                     <View style={styles.chatContainer}>
                         {/* CHAT HEADER */}
-                        <View style={styles.header}>
+                        <View style={[styles.header, isMobile && { paddingTop: Math.max(insets.top, 14) }]}>
                             <View style={styles.headerLeft}>
                                 <View style={styles.headerAvatar}>
                                     <Bot color="#FF6B35" size={20} />
@@ -348,6 +354,11 @@ const styles = StyleSheet.create({
             },
         }),
     },
+    bubbleButtonMobile: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 24,
+    },
     bubbleIconWrapper: {
         width: 38,
         height: 38,
@@ -357,6 +368,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 10,
         position: 'relative',
+    },
+    bubbleIconWrapperMobile: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        marginRight: 8,
     },
     pulseDot: {
         position: 'absolute',
@@ -369,6 +386,13 @@ const styles = StyleSheet.create({
         borderWidth: 1.5,
         borderColor: '#13151F',
     },
+    pulseDotMobile: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        top: 0,
+        right: 0,
+    },
     bubbleTextContainer: {
         justifyContent: 'center',
     },
@@ -376,6 +400,10 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: '700',
         fontSize: 14,
+    },
+    bubbleTitleMobile: {
+        fontSize: 12,
+        fontWeight: '700',
     },
     bubbleSubtitle: {
         color: '#8B95A8',

@@ -97,24 +97,37 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         const isFocused = state.index === index;
                         const Icon = ICONS[route.name] || LayoutDashboard;
                         const isProTab = PRO_TABS.includes(route.name);
+                        const isFirstPro = index === 0;
+                        const isFirstFree = route.name === 'Dashboard';
 
                         return (
-                            <TouchableOpacity
-                                key={route.key}
-                                onPress={() => handlePress(route, isFocused)}
-                                style={[styles.sidebarLink, isFocused && styles.sidebarLinkActive]}
-                                activeOpacity={0.7}
-                            >
-                                <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={22} />
-                                <Text style={[styles.sidebarLabel, isFocused && styles.sidebarLabelActive, { flex: 1 }]}>
-                                    {getRouteTitle(route.name)}
-                                </Text>
-                                {isProTab && !isPro && (
-                                    <View style={styles.proBadge}>
-                                        <Text style={styles.proBadgeText}>PRO</Text>
+                            <React.Fragment key={route.key}>
+                                {isFirstPro && (
+                                    <View style={styles.sectionHeader}>
+                                        <Text style={styles.sectionHeaderText}>⚡ PRO TOOLS</Text>
                                     </View>
                                 )}
-                            </TouchableOpacity>
+                                {isFirstFree && (
+                                    <View style={[styles.sectionHeader, { marginTop: 14 }]}>
+                                        <Text style={styles.sectionHeaderText}>🛠️ WORKSHOP TOOLS</Text>
+                                    </View>
+                                )}
+                                <TouchableOpacity
+                                    onPress={() => handlePress(route, isFocused)}
+                                    style={[styles.sidebarLink, isFocused && styles.sidebarLinkActive]}
+                                    activeOpacity={0.7}
+                                >
+                                    <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={22} />
+                                    <Text style={[styles.sidebarLabel, isFocused && styles.sidebarLabelActive, { flex: 1 }]}>
+                                        {getRouteTitle(route.name)}
+                                    </Text>
+                                    {isProTab && (
+                                        <View style={styles.proBadge}>
+                                            <Text style={styles.proBadgeText}>PRO</Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            </React.Fragment>
                         );
                     })}
                 </ScrollView>
@@ -182,6 +195,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                 {state.routes.map((route: any, index: number) => {
                     const isFocused = state.index === index;
                     const Icon = ICONS[route.name] || LayoutDashboard;
+                    const isProTab = PRO_TABS.includes(route.name);
 
                     return (
                         <TouchableOpacity
@@ -190,7 +204,14 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                             style={styles.bottomTab}
                             activeOpacity={0.7}
                         >
-                            <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={24} />
+                            <View style={styles.iconBadgeWrapper}>
+                                <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={24} />
+                                {isProTab && (
+                                    <View style={styles.mobileProBadge}>
+                                        <Text style={styles.mobileProBadgeText}>PRO</Text>
+                                    </View>
+                                )}
+                            </View>
                             <Text style={[styles.bottomLabel, isFocused && styles.bottomLabelActive]} numberOfLines={1}>
                                 {getRouteTitle(route.name)}
                             </Text>
@@ -351,6 +372,37 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: '800',
         letterSpacing: 0.5,
+    },
+    sectionHeader: {
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 6,
+    },
+    sectionHeaderText: {
+        color: '#64748B',
+        fontSize: 10,
+        fontWeight: '800',
+        letterSpacing: 1.2,
+    },
+    iconBadgeWrapper: {
+        position: 'relative',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    mobileProBadge: {
+        position: 'absolute',
+        top: -4,
+        right: -10,
+        backgroundColor: '#FF6B35',
+        borderRadius: 4,
+        paddingHorizontal: 3,
+        paddingVertical: 1,
+    },
+    mobileProBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 8,
+        fontWeight: '900',
+        letterSpacing: 0.3,
     },
     unverifiedTag: {
         backgroundColor: 'rgba(239, 68, 68, 0.15)',

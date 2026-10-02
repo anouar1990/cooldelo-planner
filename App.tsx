@@ -146,6 +146,7 @@ export default function App() {
                 }}
               >
                 <Tab.Navigator
+                  initialRouteName="Dashboard"
                   tabBar={(props) => <ResponsiveTabBar {...props} />}
                   screenOptions={{
                     headerShown: false,
@@ -156,17 +157,20 @@ export default function App() {
                     }
                   }}
                 >
+                  {/* PRO TOOLS */}
+                  <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
+                  <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
+                  <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
+
+                  {/* FREE TOOLS */}
                   <Tab.Screen name="Dashboard" component={DashboardNavigator} />
-                  <Tab.Screen name="Laser Expert" component={LaserExpertScreen} />
                   <Tab.Screen name="Cost Calculator" component={CostCalculatorScreen} />
                   <Tab.Screen name="Materials" component={MaterialsScreen} />
                   <Tab.Screen name="Orders" component={OrdersScreen} />
                   <Tab.Screen name="Production" component={ProductionScreen} />
                   <Tab.Screen name="Laser Presets" component={LaserPresetsScreen} />
                   <Tab.Screen name="Quote Generator" component={QuoteGeneratorScreen} />
-                  <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
-                  <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
-                  <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
+                  <Tab.Screen name="Laser Expert" component={LaserExpertScreen} />
                 </Tab.Navigator>
                 <LaserExpertBubble onOpenFullScreen={() => navigationRef.current?.navigate('Laser Expert')} />
               </NavigationContainer>

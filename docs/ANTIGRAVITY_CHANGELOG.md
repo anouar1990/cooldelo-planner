@@ -202,8 +202,31 @@
   - `npx tsc --noEmit`: PASS (0 errors)
   - `npm run vercel-build`: PASS (Clean web bundle export)
   - GitHub push & commit (`31ce732`): PASS
+## [2026-10-02 23:22:00] - Fix Mobile AI Chat Bubble Size & Tap Responsiveness
+- **Task**: Fix issue where AI Expert chat bubble button was too large on mobile screens and failed to open the chat modal on tap/click.
+- **Files Changed**:
+  - `lasercut-planner/src/components/LaserExpertBubble.tsx` (Fixed `PanResponder` to pass tap gestures cleanly to button handlers, added mobile responsive styling to reduce bubble footprint, and added safe area top inset padding to full-screen mobile chat overlay header)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - TypeScript type check (`npx tsc --noEmit`): PASS (0 errors)
+  - PanResponder gesture validation: PASS (Taps <8px trigger modal open, drags >8px move bubble smoothly)
+  - Mobile responsive size check: PASS (Compact pill ~125px on mobile, full pill on desktop)
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+## [2026-10-02 23:28:00] - Reorder Navigation Tools from PRO to FREE
+- **Task**: Reorder tools in Desktop sidebar and Mobile bottom navigation bar so PRO features appear first, followed by FREE workshop tools.
+- **Files Changed**:
+  - `lasercut-planner/App.tsx` (Reordered `Tab.Screen` routes to list PRO tools first, set `initialRouteName="Dashboard"`)
+  - `lasercut-planner/src/components/ResponsiveTabBar.tsx` (Added `⚡ PRO TOOLS` and `🛠️ WORKSHOP TOOLS` section headers on Desktop sidebar, added `PRO` badge indicators on Mobile bottom tabs)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Updated)
+- **Tests Performed**:
+  - TypeScript type check (`npx tsc --noEmit`): PASS (0 errors)
+  - Navigation route ordering validation: PASS (PRO tools first -> FREE tools second across Desktop and Mobile)
+- **Current Status**: COMPLETE
+- **Known Issues**: None
+
+
 
 
 
