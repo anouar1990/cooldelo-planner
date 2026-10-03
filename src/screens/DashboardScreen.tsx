@@ -124,7 +124,7 @@ export default function DashboardScreen({ navigation }: any) {
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                     <Text style={[styles.brand, { color: colors.text }]}>{profile.workshopName}</Text>
                                     <View style={{
-                                        backgroundColor: isPro ? '#FF6B35' : isStarter ? '#3B82F6' : '#242840',
+                                        backgroundColor: isPro ? '#FE7733' : isStarter ? '#3B82F6' : '#242840',
                                         borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
                                     }}>
                                         <Text style={{ fontSize: 9, fontWeight: '800', color: '#FFF' }}>
@@ -195,11 +195,11 @@ export default function DashboardScreen({ navigation }: any) {
                             onPress={() => navigateTab('Materials')}
                         />
                         <StatCard 
-                            icon={<FileText color="#FF6B35" size={20} />} 
+                            icon={<FileText color="#FE7733" size={20} />} 
                             value={`$${stats.totalRevenue.toFixed(0)}`} 
                             label="Revenue Issued" 
                             subtext={`${stats.paidInvoicesCount} Paid · ${stats.pendingInvoicesCount} Pending`} 
-                            color="#FF6B35" 
+                            color="#FE7733" 
                             colors={colors}
                             onPress={() => navigateTab('Invoice Generator')}
                         />
@@ -232,7 +232,7 @@ export default function DashboardScreen({ navigation }: any) {
                                 <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Weekly Avg</Text>
                             </View>
                             <View style={styles.revWidgetStat}>
-                                <Text style={[styles.revWidgetValue, { color: '#FF6B35' }]}>{profile.currency}{stats.averageOrderValue}</Text>
+                                <Text style={[styles.revWidgetValue, { color: '#FE7733' }]}>{profile.currency}{stats.averageOrderValue}</Text>
                                 <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Avg Order Value</Text>
                             </View>
                         </View>
@@ -244,10 +244,10 @@ export default function DashboardScreen({ navigation }: any) {
                     </View>
                     <View style={styles.toolsGrid}>
                         <QuickToolCard
-                            icon={<Calculator color="#FF6B35" size={20} />}
+                            icon={<Calculator color="#FE7733" size={20} />}
                             title={t('calc_title')}
                             desc="Material, machine time & labor margin"
-                            color="#FF6B35"
+                            color="#FE7733"
                             colors={colors}
                             onPress={() => navigateTab('Cost Calculator')}
                         />
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     headerUser: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
     headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     headerActionsMobile: { justifyContent: 'space-between', width: '100%' },
-    avatar: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: '#FF6B35' },
+    avatar: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, borderColor: '#FE7733' },
     avatarFallback: { width: 42, height: 42, borderRadius: 21, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
     avatarInitial: { fontSize: 16, fontWeight: '800' },
     brand: { fontSize: 20, fontWeight: '800' },

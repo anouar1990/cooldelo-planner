@@ -21,8 +21,8 @@ import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
 const C = {
-    bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
-    border: 'rgba(255,255,255,0.07)', primary: '#FF6B35',
+    bg: '#111317', surface: '#1A1D21', surface2: '#23262C',
+    border: 'rgba(255,255,255,0.07)', primary: '#FE7733',
     blue: '#3B82F6', amber: '#F59E0B', green: '#10B981',
     text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568', danger: '#EF4444',
 };
@@ -155,7 +155,7 @@ h1{font-size:28px;font-weight:900;margin-bottom:4px}
 h2{font-size:13px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
 .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee;font-size:14px}
 .row span:last-child{font-weight:600}
-.total{background:#FF6B35;color:white;padding:16px 20px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;margin-top:24px}
+.total{background:#FE7733;color:white;padding:16px 20px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;margin-top:24px}
 .total-label{font-size:13px;font-weight:700;letter-spacing:0.5px}
 .total-value{font-size:24px;font-weight:900}
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;

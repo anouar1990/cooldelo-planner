@@ -7,10 +7,10 @@ import JSZip from 'jszip';
 import { supabase } from '../lib/supabase';
 
 const COLORS = {
-    bg: '#0A0C12',
-    surface: '#13151F',
+    bg: '#111317',
+    surface: '#1A1D21',
     border: 'rgba(255,255,255,0.08)',
-    primary: '#FF6B35',
+    primary: '#FE7733',
     textSub: '#8B95A8',
     text: '#F1F5F9',
     success: '#10B981',

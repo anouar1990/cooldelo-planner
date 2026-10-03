@@ -247,21 +247,52 @@
 - **Tests Performed**:
   - `npm run build` in `0machine-landing`: PASS (Compiled Next.js production build in 1896ms with 0 errors)
   - `git push origin main` (`85392bf` in `0machine-landing`): PASS
+## [2026-10-03 00:08:00] - Update 0machine Visual Color Palette (Graphite & Safety Orange)
+- **Task**: Update visual color palette across `0machine-landing` and `lasercut-planner` to the new 0machine brand identity (Graphite `#111317`, Dark Graphite `#1A1D21`, Graphite `#23262C`, Safety Orange `#FE7733`, Orange Light `#FF925C`, Orange Dark `#E85F20`, Neon Sprout `#B1FA63`) while preserving UI layout, theme architecture, Light/Dark mode differentiation, and semantic success/error/warning/info colors.
+- **Files Changed**:
+  - `0machine-landing/app/globals.css` (Updated `@theme` CSS tokens and background/utility variables)
+  - `0machine-landing/app/components/Pricing.js` (Updated section background and highlight card accent colors)
+  - `0machine-landing/app/api/abandoned-checkout/route.js` (Updated email template brand colors)
+  - `0machine-landing/app/lib/email.js` (Updated email template brand colors)
+  - `lasercut-planner/src/context/ThemeContext.tsx` (Updated `DARK_THEME` & `LIGHT_THEME` definitions)
+  - `lasercut-planner/App.tsx` (Updated local `COLORS` object & loading spinner color)
+  - `lasercut-planner/src/components/ResponsiveTabBar.tsx` (Updated tab bar local `COLORS` object & pro badge background)
+  - `lasercut-planner/src/components/LaserExpertBubble.tsx` (Updated local `COLORS` object & inline brand icons/styles)
+  - `lasercut-planner/src/screens/DashboardScreen.tsx` (Updated primary orange inline hex usages)
+  - `lasercut-planner/src/screens/ProjectsListScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/ProjectDetailsScreen.tsx` (Updated `C` palette object & PDF export banner background)
+  - `lasercut-planner/src/screens/MaterialsScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/OrdersScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/ProductionScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/LaserPresetsScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/QuoteGeneratorScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/InvoiceGeneratorScreen.tsx` (Updated `COLORS` object & inline HTML footer branding)
+  - `lasercut-planner/src/screens/DesignLibraryScreen.tsx` (Updated `COLORS` object)
+  - `lasercut-planner/src/screens/NestingEstimatorScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/MachineProfilesScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/ClientsScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/TemplatesScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/StatsScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/SettingsScreen.tsx` (Updated local `styles` & inline brand usages)
+  - `lasercut-planner/src/screens/AuthScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/DesktopAuthScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/PaywallScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/AdminUploadScreen.tsx` (Updated `COLORS` object)
+  - `lasercut-planner/src/screens/AddProjectScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/CostCalculatorScreen.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/screens/LaserExpertScreen.tsx` (Updated `primaryColor` fallback)
+  - `lasercut-planner/src/components/ProUpgradeModal.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/components/SignupSuccessTransition.tsx` (Updated `C` palette object)
+  - `lasercut-planner/src/components/OTPVerificationModal.tsx` (Updated inline brand styles)
+  - `lasercut-planner/src/components/OnboardingModal.tsx` (Updated inline primary color hex usages)
+  - `lasercut-planner/src/components/AssetDetailsModal.tsx` (Updated `COLORS` object & preview background)
+  - `lasercut-planner/src/components/UnverifiedUserBanner.tsx` (Updated inline brand styles)
+  - `lasercut-planner/public/landing.html` (Updated `:root` CSS variables and screen stats element color)
+- **Tests Performed**:
+  - `npx tsc --noEmit` in `lasercut-planner`: PASS (0 TypeScript errors)
+  - `npm run build` in `0machine-landing`: PASS (0 build errors, 16 static/dynamic routes compiled in 2.1s)
 - **Current Status**: COMPLETE
 - **Known Issues**: None
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

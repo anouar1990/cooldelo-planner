@@ -17,11 +17,11 @@ import * as Sharing from 'expo-sharing';
 import { useWorkshop } from '../context/WorkshopContext';
 
 const COLORS = {
-    bg: '#0A0C12',
-    surface: '#13151F',
-    surfaceHover: '#1A1D27',
+    bg: '#111317',
+    surface: '#1A1D21',
+    surfaceHover: '#23262C',
     border: 'rgba(255,255,255,0.08)',
-    primary: '#FF6B35',
+    primary: '#FE7733',
     textSub: '#8B95A8',
     text: '#F1F5F9',
     success: '#10B981',
@@ -420,8 +420,8 @@ export default function InvoiceGeneratorScreen() {
 
                         <div class="footer" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #64748b;">
                             Thank you for your business!<br/>
-                            <span style="display: inline-block; margin-top: 6px; font-weight: 600; color: #ff6b35;">
-                                ⚡ Quoted with 0Machine Planner — Free Laser Business OS (<a href="https://www.0machine.com" target="_blank" style="color: #ff6b35; text-decoration: none;">www.0machine.com</a>)
+                            <span style="display: inline-block; margin-top: 6px; font-weight: 600; color: #fe7733;">
+                                ⚡ Quoted with 0Machine Planner — Free Laser Business OS (<a href="https://www.0machine.com" target="_blank" style="color: #fe7733; text-decoration: none;">www.0machine.com</a>)
                             </span>
                         </div>
                     </div>

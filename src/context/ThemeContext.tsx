@@ -17,12 +17,12 @@ export interface ThemeColors {
 }
 
 export const DARK_THEME: ThemeColors = {
-  bg: '#0F1117',
-  surface: '#1C2030',
-  surface2: '#242840',
+  bg: '#111317',
+  surface: '#1A1D21',
+  surface2: '#23262C',
   border: 'rgba(255,255,255,0.08)',
-  primary: '#FF6B35',
-  primaryGlow: 'rgba(255,107,53,0.15)',
+  primary: '#FE7733',
+  primaryGlow: 'rgba(254,119,51,0.15)',
   text: '#FFFFFF',
   sub: '#8B95A8',
   dim: '#4B5568',
@@ -34,8 +34,8 @@ export const LIGHT_THEME: ThemeColors = {
   surface: '#FFFFFF',
   surface2: '#F1F5F9',
   border: '#E2E8F0',
-  primary: '#FF6B35',
-  primaryGlow: 'rgba(255,107,53,0.12)',
+  primary: '#FE7733',
+  primaryGlow: 'rgba(254,119,51,0.12)',
   text: '#0F172A',
   sub: '#64748B',
   dim: '#94A3B8',

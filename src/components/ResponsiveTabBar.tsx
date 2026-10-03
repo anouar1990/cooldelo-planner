@@ -9,10 +9,10 @@ import { useRequireVerification } from '../context/VerificationContext';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 const COLORS = {
-    bg: '#0A0C12',
-    surface: '#13151F',
+    bg: '#111317',
+    surface: '#1A1D21',
     border: 'rgba(255,255,255,0.08)',
-    primary: '#FF6B35',
+    primary: '#FE7733',
     textSub: '#8B95A8',
     text: '#F1F5F9',
 };
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -4,
         right: -10,
-        backgroundColor: '#FF6B35',
+        backgroundColor: '#FE7733',
         borderRadius: 4,
         paddingHorizontal: 3,
         paddingVertical: 1,

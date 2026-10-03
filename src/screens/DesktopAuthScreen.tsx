@@ -13,8 +13,8 @@ import { SocialAuthButtons } from '../components/SocialAuthButtons';
 import { SignupSuccessTransition } from '../components/SignupSuccessTransition';
 
 const C = {
-    bg: '#0F1117', surface: '#1C2030', surface2: '#242840',
-    border: 'rgba(255,255,255,0.08)', primary: '#FF6B35',
+    bg: '#111317', surface: '#1A1D21', surface2: '#23262C',
+    border: 'rgba(255,255,255,0.08)', primary: '#FE7733',
     blue: '#3B82F6', amber: '#F59E0B', green: '#10B981',
     text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
     error: '#EF4444', success: '#10B981',

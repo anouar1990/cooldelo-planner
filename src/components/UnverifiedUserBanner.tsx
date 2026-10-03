@@ -11,9 +11,9 @@ export function UnverifiedUserBanner() {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: 'rgba(255, 107, 53, 0.08)',
+        backgroundColor: 'rgba(254, 119, 51, 0.08)',
         borderWidth: 1,
-        borderColor: 'rgba(255, 107, 53, 0.3)',
+        borderColor: 'rgba(254, 119, 51, 0.3)',
         borderRadius: 16,
         padding: 16,
         marginHorizontal: 16,
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 10,
-        backgroundColor: 'rgba(255, 107, 53, 0.15)',
+        backgroundColor: 'rgba(254, 119, 51, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 2,
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        backgroundColor: '#FF6B35',
+        backgroundColor: '#FE7733',
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 10,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
         gap: 6,
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderWidth: 1,
-        borderColor: 'rgba(255, 107, 53, 0.3)',
+        borderColor: 'rgba(254, 119, 51, 0.3)',
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 10,
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     resendBtnText: {
-        color: '#FF6B35',
+        color: '#FE7733',
         fontSize: 13,
         fontWeight: '700',
     },

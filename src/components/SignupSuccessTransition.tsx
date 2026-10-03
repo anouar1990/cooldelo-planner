@@ -8,10 +8,10 @@ interface SignupSuccessTransitionProps {
 }
 
 const C = {
-    bg: '#0F1117',
-    surface: '#1C2030',
+    bg: '#111317',
+    surface: '#1A1D21',
     border: 'rgba(255,255,255,0.08)',
-    primary: '#FF6B35',
+    primary: '#FE7733',
     text: '#FFFFFF',
     sub: '#8B95A8',
     dim: '#4B5568',

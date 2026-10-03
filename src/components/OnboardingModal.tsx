@@ -50,7 +50,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onCom
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.badge}>
-                            <Zap size={14} color="#FF6B35" />
+                            <Zap size={14} color="#FE7733" />
                             <Text style={styles.badgeText}>Quick Setup ({step}/3)</Text>
                         </View>
                         <Text style={styles.title}>
@@ -75,7 +75,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onCom
                                     onPress={() => setSelectedMachine(m.id)}
                                 >
                                     <View style={styles.optionIconContainer}>
-                                        <Cpu size={18} color={selectedMachine === m.id ? "#FF6B35" : "#94A3B8"} />
+                                        <Cpu size={18} color={selectedMachine === m.id ? "#FE7733" : "#94A3B8"} />
                                     </View>
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.optionName}>{m.name}</Text>
@@ -101,7 +101,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onCom
                                     onPress={() => setSelectedMaterial(mat.id)}
                                 >
                                     <View style={styles.optionIconContainer}>
-                                        <Layers size={18} color={selectedMaterial === mat.id ? "#FF6B35" : "#94A3B8"} />
+                                        <Layers size={18} color={selectedMaterial === mat.id ? "#FE7733" : "#94A3B8"} />
                                     </View>
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.optionName}>{mat.name}</Text>
@@ -121,7 +121,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onCom
                     {step === 3 && (
                         <View style={styles.readyCard}>
                             <View style={styles.awardIcon}>
-                                <Award size={32} color="#FF6B35" />
+                                <Award size={32} color="#FE7733" />
                             </View>
                             <Text style={styles.readyTitle}>Setup Complete!</Text>
                             <Text style={styles.readyDesc}>
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         fontSize: 11,
-        color: '#FF6B35',
+        color: '#FE7733',
         fontWeight: '700',
     },
     title: {
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     optionCardSelected: {
-        borderColor: '#FF6B35',
+        borderColor: '#FE7733',
         backgroundColor: 'rgba(255, 107, 53, 0.08)',
     },
     optionIconContainer: {
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
         width: 20,
         height: 20,
         borderRadius: 10,
-        backgroundColor: '#FF6B35',
+        backgroundColor: '#FE7733',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
-        backgroundColor: '#FF6B35',
+        backgroundColor: '#FE7733',
         paddingVertical: 12,
         paddingHorizontal: 20,
         borderRadius: 12,

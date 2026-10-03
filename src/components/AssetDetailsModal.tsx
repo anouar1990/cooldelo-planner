@@ -21,11 +21,11 @@ interface Props {
 }
 
 const COLORS = {
-    bg: '#0A0C12',
-    surface: '#13151F',
-    surfaceHover: '#1A1D27',
+    bg: '#111317',
+    surface: '#1A1D21',
+    surfaceHover: '#23262C',
     border: 'rgba(255,255,255,0.08)',
-    primary: '#FF6B35',
+    primary: '#FE7733',
     textSub: '#8B95A8',
     text: '#F1F5F9',
 };
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     previewArea: {
         width: '100%',
         aspectRatio: 1,
-        backgroundColor: '#0F1117',
+        backgroundColor: '#111317',
         justifyContent: 'center',
         alignItems: 'center',
         borderBottomWidth: 1,

@@ -168,7 +168,7 @@ export default function SettingsScreen() {
                     {/* General Information */}
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
-                            <User color="#FF6B35" size={20} />
+                            <User color="#FE7733" size={20} />
                             <Text style={styles.cardTitle}>General Workshop Profile</Text>
                         </View>
 
@@ -176,10 +176,10 @@ export default function SettingsScreen() {
                         <Text style={styles.label}>Workshop Logo URL</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                             {logoUrl ? (
-                                <Image source={{ uri: logoUrl }} style={{ width: 48, height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#FF6B35' }} />
+                                <Image source={{ uri: logoUrl }} style={{ width: 48, height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#FE7733' }} />
                             ) : (
-                                <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#FF6B3520', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#FF6B35' }}>
-                                    <Text style={{ color: '#FF6B35', fontWeight: '800', fontSize: 18 }}>{workshopName ? workshopName.charAt(0) : 'W'}</Text>
+                                <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#FE773320', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#FE7733' }}>
+                                    <Text style={{ color: '#FE7733', fontWeight: '800', fontSize: 18 }}>{workshopName ? workshopName.charAt(0) : 'W'}</Text>
                                 </View>
                             )}
                             <TextInput
@@ -205,8 +205,8 @@ export default function SettingsScreen() {
                                     onPress={() => setWorkshopType(type)}
                                     style={{
                                         paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1,
-                                        backgroundColor: workshopType === type ? '#FF6B35' : '#242840',
-                                        borderColor: workshopType === type ? '#FF6B35' : 'rgba(255,255,255,0.08)',
+                                        backgroundColor: workshopType === type ? '#FE7733' : '#23262C',
+                                        borderColor: workshopType === type ? '#FE7733' : 'rgba(255,255,255,0.08)',
                                     }}
                                 >
                                     <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFF' }}>{type}</Text>
@@ -306,8 +306,8 @@ export default function SettingsScreen() {
                                     onPress={() => setLanguage(item.code as any)}
                                     style={{
                                         flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, alignItems: 'center',
-                                        backgroundColor: language === item.code ? '#FF6B35' : '#242840',
-                                        borderColor: language === item.code ? '#FF6B35' : 'rgba(255,255,255,0.08)',
+                                        backgroundColor: language === item.code ? '#FE7733' : '#23262C',
+                                        borderColor: language === item.code ? '#FE7733' : 'rgba(255,255,255,0.08)',
                                     }}
                                 >
                                     <Text style={{ fontSize: 12, fontWeight: '800', color: '#FFF' }}>{item.label}</Text>
@@ -447,7 +447,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: '#0F1117' },
+    safe: { flex: 1, backgroundColor: '#111317' },
     loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -456,25 +456,25 @@ const styles = StyleSheet.create({
     },
     backBtn: {
         width: 40, height: 40, borderRadius: 20,
-        backgroundColor: '#1C2030', justifyContent: 'center', alignItems: 'center',
+        backgroundColor: '#1A1D21', justifyContent: 'center', alignItems: 'center',
         borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     },
     headerTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
     saveHeaderBtn: {
-        backgroundColor: '#FF6B35', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+        backgroundColor: '#FE7733', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
         flexDirection: 'row', alignItems: 'center', gap: 6,
     },
     saveHeaderBtnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
     scroll: { padding: 16, gap: 16, paddingBottom: 40 },
     card: {
-        backgroundColor: '#1C2030', borderRadius: 16,
+        backgroundColor: '#1A1D21', borderRadius: 16,
         borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 16,
     },
     cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
     cardTitle: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
     label: { fontSize: 12, fontWeight: '700', color: '#8B95A8', marginBottom: 6 },
     input: {
-        backgroundColor: '#0F1117', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+        backgroundColor: '#111317', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
         borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, color: '#FFFFFF',
         fontSize: 14, marginBottom: 14,
     },
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
         padding: 24,
     },
     modalCard: {
-        backgroundColor: '#1C2030',
+        backgroundColor: '#1A1D21',
         borderRadius: 20,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.08)',
@@ -548,8 +548,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     checkboxActive: {
-        borderColor: '#FF6B35',
-        backgroundColor: '#FF6B35',
+        borderColor: '#FE7733',
+        backgroundColor: '#FE7733',
     },
     checkboxCheck: {
         width: 8,

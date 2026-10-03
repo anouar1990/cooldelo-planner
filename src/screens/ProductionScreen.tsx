@@ -12,13 +12,13 @@ import { useWorkshop, OrderItem, OrderStatus } from '../context/WorkshopContext'
 
 // ─── Design tokens (matching existing app palette) ─────────────────────────
 const C = {
-    bg:       '#0A0C12',
-    surface:  '#13151F',
-    surface2: '#1C1F2E',
-    surface3: '#242840',
+    bg:       '#111317',
+    surface:  '#1A1D21',
+    surface2: '#23262C',
+    surface3: '#2B2F37',
     border:   'rgba(255,255,255,0.07)',
     border2:  'rgba(255,255,255,0.12)',
-    primary:  '#FF6B35',
+    primary:  '#FE7733',
     green:    '#10B981',
     amber:    '#F59E0B',
     red:      '#EF4444',

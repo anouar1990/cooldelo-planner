@@ -18,13 +18,13 @@ interface ProUpgradeModalProps {
 }
 
 const C = {
-  bg: '#0B0D14',
-  surface: '#151924',
-  surface2: '#1F2434',
+  bg: '#111317',
+  surface: '#1A1D21',
+  surface2: '#23262C',
   border: 'rgba(255,255,255,0.1)',
-  borderPrimary: 'rgba(255,107,53,0.4)',
-  primary: '#FF6B35',
-  primaryGlow: 'rgba(255,107,53,0.15)',
+  borderPrimary: 'rgba(254,119,51,0.4)',
+  primary: '#FE7733',
+  primaryGlow: 'rgba(254,119,51,0.15)',
   text: '#FFFFFF',
   sub: '#94A3B8',
   dim: '#64748B',

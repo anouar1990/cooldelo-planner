@@ -9,17 +9,17 @@ import { Bot, Sparkles, X, Send, Maximize2, Trash2, Zap, MessageSquare, RefreshC
 import { useLaserExpert } from '../hooks/useLaserExpert';
 
 const COLORS = {
-    bg: '#0A0C12',
-    surface: '#13151F',
-    surfaceSubtle: '#1C1F2E',
-    border: 'rgba(255, 107, 53, 0.25)',
+    bg: '#111317',
+    surface: '#1A1D21',
+    surfaceSubtle: '#23262C',
+    border: 'rgba(254, 119, 51, 0.25)',
     borderSubtle: 'rgba(255, 255, 255, 0.08)',
-    primary: '#FF6B35',
-    primaryGlow: 'rgba(255, 107, 53, 0.35)',
+    primary: '#FE7733',
+    primaryGlow: 'rgba(254, 119, 51, 0.35)',
     text: '#FFFFFF',
     textSub: '#8B95A8',
     assistantBubble: '#191C29',
-    userBubble: '#FF6B35',
+    userBubble: '#FE7733',
     success: '#10B981',
 };
 
@@ -166,7 +166,7 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                         <View style={[styles.header, isMobile && { paddingTop: Math.max(insets.top, 14) }]}>
                             <View style={styles.headerLeft}>
                                 <View style={styles.headerAvatar}>
-                                    <Bot color="#FF6B35" size={20} />
+                                    <Bot color="#FE7733" size={20} />
                                 </View>
                                 <View>
                                     <View style={styles.headerTitleRow}>
@@ -217,7 +217,7 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                             {messages.length === 0 ? (
                                 <View style={styles.emptyState}>
                                     <View style={styles.emptyIconCircle}>
-                                        <Sparkles color="#FF6B35" size={28} />
+                                        <Sparkles color="#FE7733" size={28} />
                                     </View>
                                     <Text style={styles.emptyTitle}>Ask me anything about Laser & Woodworking!</Text>
                                     <Text style={styles.emptySub}>
@@ -249,7 +249,7 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                                         >
                                             {!isUser && (
                                                 <View style={styles.miniAvatar}>
-                                                    <Zap color="#FF6B35" size={14} />
+                                                    <Zap color="#FE7733" size={14} />
                                                 </View>
                                             )}
                                             <View
@@ -270,10 +270,10 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                             {sending && (
                                 <View style={[styles.messageRow, styles.assistantRow]}>
                                     <View style={styles.miniAvatar}>
-                                        <Zap color="#FF6B35" size={14} />
+                                        <Zap color="#FE7733" size={14} />
                                     </View>
                                     <View style={[styles.messageBubble, styles.assistantBubble, styles.loadingBubble]}>
-                                        <ActivityIndicator size="small" color="#FF6B35" />
+                                        <ActivityIndicator size="small" color="#FE7733" />
                                         <Text style={styles.loadingText}>Thinking...</Text>
                                     </View>
                                 </View>
@@ -334,20 +334,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#13151F',
         borderWidth: 1.5,
-        borderColor: '#FF6B35',
+        borderColor: '#FE7733',
         paddingVertical: 10,
         paddingHorizontal: 16,
         borderRadius: 30,
         ...Platform.select({
             web: {
-                boxShadow: '0 8px 24px rgba(255, 107, 53, 0.4)',
+                boxShadow: '0 8px 24px rgba(254, 119, 51, 0.4)',
                 cursor: 'grab',
                 userSelect: 'none',
                 touchAction: 'none',
             } as any,
             default: {
                 elevation: 10,
-                shadowColor: '#FF6B35',
+                shadowColor: '#FE7733',
                 shadowOffset: { width: 0, height: 6 },
                 shadowOpacity: 0.4,
                 shadowRadius: 10,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
         width: 38,
         height: 38,
         borderRadius: 19,
-        backgroundColor: '#FF6B35',
+        backgroundColor: '#FE7733',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 10,
@@ -611,11 +611,11 @@ const styles = StyleSheet.create({
         borderRadius: 16,
     },
     userBubble: {
-        backgroundColor: '#FF6B35',
+        backgroundColor: '#FE7733',
         borderBottomRightRadius: 4,
     },
     assistantBubble: {
-        backgroundColor: '#1C1F2E',
+        backgroundColor: '#23262C',
         borderBottomLeftRadius: 4,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.06)',
@@ -641,14 +641,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 12,
         paddingVertical: 10,
-        backgroundColor: '#191C29',
+        backgroundColor: '#1A1D21',
         borderTopWidth: 1,
         borderTopColor: 'rgba(255, 255, 255, 0.08)',
         gap: 8,
     },
     input: {
         flex: 1,
-        backgroundColor: '#0A0C12',
+        backgroundColor: '#111317',
         color: '#FFFFFF',
         fontSize: 13,
         paddingHorizontal: 14,
@@ -661,12 +661,12 @@ const styles = StyleSheet.create({
         width: 38,
         height: 38,
         borderRadius: 19,
-        backgroundColor: '#FF6B35',
+        backgroundColor: '#FE7733',
         justifyContent: 'center',
         alignItems: 'center',
     },
     sendBtnDisabled: {
-        backgroundColor: 'rgba(255, 107, 53, 0.4)',
+        backgroundColor: 'rgba(254, 119, 51, 0.4)',
     },
     disclaimerText: {
         color: '#64748B',

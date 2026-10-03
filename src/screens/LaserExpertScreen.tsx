@@ -473,7 +473,7 @@ export default function LaserExpertScreen() {
     const [showSidebar, setShowSidebar] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
 
-    const primaryColor = colors.primary || '#FF6B35';
+    const primaryColor = colors.primary || '#FE7733';
 
     // Auto-scroll to bottom on new messages
     useEffect(() => {

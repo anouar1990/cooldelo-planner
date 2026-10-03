@@ -43,10 +43,10 @@ const DashStack = createNativeStackNavigator();
 const ProjectStack = createNativeStackNavigator();
 
 const COLORS = {
-  bg: '#0A0C12',
-  surface: '#13151F',
+  bg: '#111317',
+  surface: '#1A1D21',
   border: 'rgba(255,255,255,0.08)',
-  primary: '#FF6B35',
+  primary: '#FE7733',
   textSub: '#8B95A8',
 };
 
@@ -90,7 +90,7 @@ export default function App() {
     return (
       <View style={styles.loadingScreen}>
         <Text style={styles.loadingBrand}>⚡ 0machine</Text>
-        <ActivityIndicator color="#FF6B35" size="large" style={{ marginTop: 24 }} />
+        <ActivityIndicator color="#FE7733" size="large" style={{ marginTop: 24 }} />
       </View>
     );
   }
