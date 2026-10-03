@@ -309,6 +309,15 @@
   - `npm run build` in `0machine-landing`: PASS (0 build errors, 16 static/dynamic routes compiled in 2.1s)
   - `npm run vercel-build` in `lasercut-planner`: PASS (Bundled 2362 modules, exported `web-build` cleanly)
   - `git push origin main` (`a7112ed` in `lasercut-planner` & `3a7615b` in `0machine-landing`): PASS
+## [2026-10-03 00:43:00] - Move Dashboard Tab to Top of Navigation Bar
+- **Task**: Move Dashboard tab to the top level of navigation (above PRO Tools section) and remove it from Workshop Tools section.
+- **Files Changed**:
+  - `lasercut-planner/App.tsx` (Reordered `Tab.Navigator` routes placing Dashboard at index 0)
+  - `lasercut-planner/src/components/ResponsiveTabBar.tsx` (Updated sidebar section header triggers so Dashboard renders at top below logo)
+- **Tests Performed**:
+  - `npx tsc --noEmit` in `lasercut-planner`: PASS (0 TypeScript errors)
+  - `npm run vercel-build` in `lasercut-planner`: PASS (Bundled 2362 modules cleanly)
+  - `git push origin main` (`2cde530` in `lasercut-planner`): PASS
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
