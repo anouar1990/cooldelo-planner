@@ -157,13 +157,15 @@ export default function App() {
                     }
                   }}
                 >
+                  {/* OVERVIEW */}
+                  <Tab.Screen name="Dashboard" component={DashboardNavigator} />
+
                   {/* PRO TOOLS */}
                   <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
                   <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
                   <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
 
-                  {/* FREE TOOLS */}
-                  <Tab.Screen name="Dashboard" component={DashboardNavigator} />
+                  {/* WORKSHOP TOOLS */}
                   <Tab.Screen name="Cost Calculator" component={CostCalculatorScreen} />
                   <Tab.Screen name="Materials" component={MaterialsScreen} />
                   <Tab.Screen name="Orders" component={OrdersScreen} />

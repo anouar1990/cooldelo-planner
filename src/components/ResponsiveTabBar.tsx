@@ -97,17 +97,17 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         const isFocused = state.index === index;
                         const Icon = ICONS[route.name] || LayoutDashboard;
                         const isProTab = PRO_TABS.includes(route.name);
-                        const isFirstPro = index === 0;
-                        const isFirstFree = route.name === 'Dashboard';
+                        const isProHeader = route.name === 'Design Library';
+                        const isWorkshopHeader = route.name === 'Cost Calculator';
 
                         return (
                             <React.Fragment key={route.key}>
-                                {isFirstPro && (
-                                    <View style={styles.sectionHeader}>
+                                {isProHeader && (
+                                    <View style={[styles.sectionHeader, { marginTop: 14 }]}>
                                         <Text style={styles.sectionHeaderText}>⚡ PRO TOOLS</Text>
                                     </View>
                                 )}
-                                {isFirstFree && (
+                                {isWorkshopHeader && (
                                     <View style={[styles.sectionHeader, { marginTop: 14 }]}>
                                         <Text style={styles.sectionHeaderText}>🛠️ WORKSHOP TOOLS</Text>
                                     </View>
