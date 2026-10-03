@@ -124,10 +124,10 @@ export default function DashboardScreen({ navigation }: any) {
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                     <Text style={[styles.brand, { color: colors.text }]}>{profile.workshopName}</Text>
                                     <View style={{
-                                        backgroundColor: isPro ? '#FE7733' : isStarter ? '#3B82F6' : '#242840',
+                                        backgroundColor: isPro ? '#B1FA63' : isStarter ? '#3B82F6' : '#23262C',
                                         borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
                                     }}>
-                                        <Text style={{ fontSize: 9, fontWeight: '800', color: '#FFF' }}>
+                                        <Text style={{ fontSize: 9, fontWeight: '800', color: isPro ? '#111317' : '#FFF' }}>
                                             {isPro ? 'WORKSHOP PRO' : isStarter ? 'STARTER' : 'FREE PLAN'}
                                         </Text>
                                     </View>

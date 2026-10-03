@@ -20,6 +20,8 @@ const C = {
     borderPrimary: 'rgba(254,119,51,0.4)',
     primary: '#FE7733',
     primaryGlow: 'rgba(254,119,51,0.15)',
+    neon: '#B1FA63',
+    neonGlow: 'rgba(177,250,99,0.2)',
     text: '#FFFFFF',
     sub: '#94A3B8',
     dim: '#64748B',

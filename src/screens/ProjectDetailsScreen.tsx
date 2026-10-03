@@ -46,7 +46,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 function ProBadge() {
     return (
         <View style={styles.proBadge}>
-            <Zap color={C.primary} size={10} fill={C.primary} />
+            <Zap color="#B1FA63" size={10} fill="#B1FA63" />
             <Text style={styles.proBadgeText}>PRO</Text>
         </View>
     );
@@ -466,8 +466,8 @@ const styles = StyleSheet.create({
     totalCostValue: { fontSize: 22, fontWeight: '800', color: C.primary },
     exportBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.surface2, borderRadius: 14, paddingVertical: 14, borderWidth: 1, borderColor: C.border },
     exportBtnText: { color: C.text, fontWeight: '700', fontSize: 15 },
-    proBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: C.primary + '20', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3, borderWidth: 1, borderColor: C.primary + '40' },
-    proBadgeText: { fontSize: 9, fontWeight: '800', color: C.primary, letterSpacing: 0.5 },
+    proBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(177, 250, 99, 0.15)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3, borderWidth: 1, borderColor: 'rgba(177, 250, 99, 0.4)' },
+    proBadgeText: { fontSize: 9, fontWeight: '800', color: '#B1FA63', letterSpacing: 0.5 },
     addLogCard: { backgroundColor: C.surface2, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border },
     addLogTitle: { fontSize: 14, fontWeight: '700', color: C.text, marginBottom: 14 },
     logInputRow: { flexDirection: 'row', gap: 12, marginBottom: 14 },
