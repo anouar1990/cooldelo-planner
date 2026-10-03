@@ -291,6 +291,8 @@
 - **Tests Performed**:
   - `npx tsc --noEmit` in `lasercut-planner`: PASS (0 TypeScript errors)
   - `npm run build` in `0machine-landing`: PASS (0 build errors, 16 static/dynamic routes compiled in 2.1s)
+  - `npm run vercel-build` in `lasercut-planner`: PASS (Bundled 2360 modules, exported `web-build` cleanly)
+  - `git push origin main` (`8777f80` in `lasercut-planner` & `eebcef5` in `0machine-landing`): PASS
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
