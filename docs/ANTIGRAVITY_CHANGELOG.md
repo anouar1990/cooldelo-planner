@@ -293,6 +293,22 @@
   - `npm run build` in `0machine-landing`: PASS (0 build errors, 16 static/dynamic routes compiled in 2.1s)
   - `npm run vercel-build` in `lasercut-planner`: PASS (Bundled 2360 modules, exported `web-build` cleanly)
   - `git push origin main` (`8777f80` in `lasercut-planner` & `eebcef5` in `0machine-landing`): PASS
+## [2026-10-03 00:38:00] - Apply Neon Sprout (#B1FA63) Brand Accent Highlights
+- **Task**: Apply Neon Sprout (`#B1FA63`) brand accent to Pro badges, active highlights, pricing plan callouts, and glow elements while keeping Safety Orange (`#FE7733`) for primary CTA buttons.
+- **Files Changed**:
+  - `0machine-landing/app/globals.css` (Added `--color-neon-sprout: #B1FA63;` and `--color-glow-neon`)
+  - `0machine-landing/app/components/Pricing.js` (Updated featured plan badge and discount tags to Neon Sprout)
+  - `lasercut-planner/src/components/ResponsiveTabBar.tsx` (Updated `mobileProBadge` to Neon Sprout)
+  - `lasercut-planner/src/screens/DashboardScreen.tsx` (Updated `isPro` workshop badge to Neon Sprout `#B1FA63` with dark text)
+  - `lasercut-planner/src/screens/ProjectDetailsScreen.tsx` (Updated `ProBadge` border and text to Neon Sprout)
+  - `lasercut-planner/src/screens/PaywallScreen.tsx` (Added `neon: #B1FA63` token)
+  - `lasercut-planner/src/components/ProUpgradeModal.tsx` (Added `neon: #B1FA63` token)
+  - `lasercut-planner/public/landing.html` (Added `--neon-sprout: #B1FA63;`)
+- **Tests Performed**:
+  - `npx tsc --noEmit` in `lasercut-planner`: PASS (0 TypeScript errors)
+  - `npm run build` in `0machine-landing`: PASS (0 build errors, 16 static/dynamic routes compiled in 2.1s)
+  - `npm run vercel-build` in `lasercut-planner`: PASS (Bundled 2362 modules, exported `web-build` cleanly)
+  - `git push origin main` (`a7112ed` in `lasercut-planner` & `3a7615b` in `0machine-landing`): PASS
 - **Current Status**: COMPLETE
 - **Known Issues**: None
 
