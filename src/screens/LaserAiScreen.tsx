@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 
-const STUDIO_URL = '/nest/index.html?tool=laserai';
+const STUDIO_URL = '/nest?tool=laserai';
 
 export default function LaserAiScreen() {
     const { isPro, isStarter } = useSubscription();

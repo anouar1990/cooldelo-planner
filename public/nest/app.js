@@ -813,13 +813,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (openLaserAiBtn) openLaserAiBtn.addEventListener('click', openLaserAiModal);
     if (openLaserAiSidebarBtn) openLaserAiSidebarBtn.addEventListener('click', openLaserAiModal);
-    if (closeLaserAiModalBtn) closeLaserAiModalBtn.addEventListener('click', closeLaserAiModal);
+    if (closeLaserAiModalBtn) {
+        closeLaserAiModalBtn.addEventListener('click', () => {
+            if (laserAiModal && laserAiModal.classList.contains('standalone-mode')) {
+                laserAiModal.classList.remove('standalone-mode');
+            }
+            closeLaserAiModal();
+        });
+    }
 
     // Auto-open LaserAI modal if URL parameter ?tool=laserai or ?modal=ai is present
     try {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('tool') === 'laserai' || urlParams.get('modal') === 'ai') {
-            setTimeout(openLaserAiModal, 120);
+            if (laserAiModal) {
+                laserAiModal.classList.add('standalone-mode');
+                laserAiModal.classList.add('active');
+            }
         }
     } catch (e) {
         // Ignore URL parsing errors in non-browser environments
@@ -828,12 +838,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close on escape or outside click
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && laserAiModal && laserAiModal.classList.contains('active')) {
-            closeLaserAiModal();
+            if (!laserAiModal.classList.contains('standalone-mode')) {
+                closeLaserAiModal();
+            }
         }
     });
 
     laserAiModal.addEventListener('click', (e) => {
-        if (e.target === laserAiModal) closeLaserAiModal();
+        if (e.target === laserAiModal && !laserAiModal.classList.contains('standalone-mode')) {
+            closeLaserAiModal();
+        }
     });
 
     // Tab Navigation

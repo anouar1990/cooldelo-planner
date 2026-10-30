@@ -6,6 +6,8 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/auth/callback", "destination": "/index.html" },
-    { "source": "/((?!assets/|_expo/|.*\\..*).*)", "destination": "/index.html" }
+    { "source": "/nest", "destination": "/nest/index.html" },
+    { "source": "/nest/(.*)", "destination": "/nest/$1" },
+    { "source": "/((?!assets/|_expo/|nest|.*\\..*).*)", "destination": "/index.html" }
   ]
 }
