@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { 
     View, Text, StyleSheet, TextInput, FlatList, 
     TouchableOpacity, Image, ActivityIndicator, useWindowDimensions,
-    Modal, ScrollView
+    Modal, ScrollView, Platform, Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Filter, Download, FileType2, X, Lock, Zap, Library, Heart, TrendingUp, Sparkles } from 'lucide-react-native';
@@ -147,6 +147,39 @@ export default function DesignLibraryScreen() {
                 )}
             </View>
 
+            {/* LaserAI Studio & Vector Generator Banner */}
+            <TouchableOpacity 
+                style={styles.laserAiBanner}
+                onPress={() => {
+                    if (Platform.OS === 'web') {
+                        window.open('/nest/index.html', '_blank');
+                    } else {
+                        Linking.openURL('https://planner.0machine.ai/nest/index.html');
+                    }
+                }}
+                activeOpacity={0.85}
+            >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                        <View style={styles.laserAiIconBox}>
+                            <Sparkles size={20} color="#FE7733" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <Text style={styles.laserAiTitle}>✨ LaserAI Studio & Vector Generator</Text>
+                                <View style={styles.laserAiBadge}><Text style={styles.laserAiBadgeText}>NEW</Text></View>
+                            </View>
+                            <Text style={styles.laserAiSub}>
+                                Generate custom closed-contour laser DXF & SVG designs with Google Imagen 3
+                            </Text>
+                        </View>
+                    </View>
+                    <View style={styles.laserAiActionBtn}>
+                        <Text style={styles.laserAiActionBtnText}>Generate Vectors ↗</Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
+
             {/* Quick Filters / Search Bar */}
             <View style={styles.searchSection}>
                 <View style={styles.searchBar}>
@@ -244,6 +277,39 @@ const styles = StyleSheet.create({
     subtitle: { fontSize: 12, color: COLORS.textSub, marginTop: 2 },
     adminBtn: { backgroundColor: COLORS.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
     adminBtnText: { color: '#FFF', fontWeight: '700', fontSize: 12 },
+
+    laserAiBanner: {
+        backgroundColor: '#1E1410',
+        borderRadius: 14,
+        borderWidth: 1.5,
+        borderColor: '#FE7733',
+        padding: 12,
+        marginHorizontal: 16,
+        marginBottom: 10,
+        shadowColor: '#FE7733',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+    },
+    laserAiIconBox: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: 'rgba(254, 119, 51, 0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    laserAiTitle: { fontSize: 13, fontWeight: '800', color: '#FFF' },
+    laserAiBadge: { backgroundColor: 'rgba(254, 119, 51, 0.25)', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
+    laserAiBadgeText: { fontSize: 9, fontWeight: '800', color: '#FE7733' },
+    laserAiSub: { fontSize: 11, color: COLORS.textSub, marginTop: 2 },
+    laserAiActionBtn: {
+        backgroundColor: '#FE7733',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 7,
+    },
+    laserAiActionBtnText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
 
     searchSection: { paddingHorizontal: 16, marginBottom: 10 },
     searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, borderRadius: 12, paddingHorizontal: 12, height: 42, borderWidth: 1, borderColor: COLORS.border },

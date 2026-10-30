@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
-    TouchableOpacity, TextInput, Platform,
+    TouchableOpacity, TextInput, Platform, Linking,
 } from 'react-native';
 import { Grid, RotateCcw, Info, Lock, Zap, Check, AlertCircle } from 'lucide-react-native';
 import { useSubscription } from '../hooks/useSubscription';
@@ -124,6 +124,38 @@ export default function NestingEstimatorScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.scroll}>
+                {/* 0machine Autonomous CAD/CAM Nesting & LaserAI Launcher */}
+                <TouchableOpacity 
+                    style={styles.camNestingCard}
+                    onPress={() => {
+                        if (Platform.OS === 'web') {
+                            window.open('/nest/index.html', '_blank');
+                        } else {
+                            Linking.openURL('https://planner.0machine.ai/nest/index.html');
+                        }
+                    }}
+                    activeOpacity={0.85}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                            <View style={styles.camIconBox}>
+                                <Zap size={20} color="#FE7733" fill="#FE7733" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                    <Text style={styles.camTitle}>0machine Autonomous CAM Nesting</Text>
+                                    <View style={styles.camBadge}><Text style={styles.camBadgeText}>AI & DXF</Text></View>
+                                </View>
+                                <Text style={styles.camSubtitle}>
+                                    Irregular genetic packing, DXF import, common-line cutting & LaserAI Studio
+                                </Text>
+                            </View>
+                        </View>
+                        <View style={styles.camActionBtn}>
+                            <Text style={styles.camActionBtnText}>Open Studio ↗</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
                 {/* Upgrade Notification Banner if not Pro */}
                 {!isPro && (
                     <TouchableOpacity style={styles.upgradeBanner} onPress={() => setShowProModal(true)}>
@@ -281,4 +313,35 @@ const styles = StyleSheet.create({
 
     lockOverlayBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.primary, borderRadius: 10, paddingVertical: 12, marginTop: 6 },
     lockOverlayText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
+
+    camNestingCard: {
+        backgroundColor: '#1E1410',
+        borderRadius: 14,
+        borderWidth: 1.5,
+        borderColor: '#FE7733',
+        padding: 14,
+        shadowColor: '#FE7733',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+    },
+    camIconBox: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: 'rgba(254, 119, 51, 0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    camTitle: { fontSize: 13, fontWeight: '800', color: '#FFF' },
+    camBadge: { backgroundColor: 'rgba(254, 119, 51, 0.25)', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
+    camBadgeText: { fontSize: 9, fontWeight: '800', color: '#FE7733' },
+    camSubtitle: { fontSize: 11, color: C.sub, marginTop: 2 },
+    camActionBtn: {
+        backgroundColor: '#FE7733',
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 7,
+    },
+    camActionBtnText: { color: '#FFF', fontSize: 11, fontWeight: '800' },
 });
