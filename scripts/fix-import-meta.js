@@ -35,3 +35,16 @@ if (fs.existsSync(callbackSource)) {
     console.log('Successfully generated auth/callback/index.html and auth/callback.html');
 }
 
+
+// Ensure public/nest is copied into web-build/nest
+const nestSource = path.join(__dirname, '../public/nest');
+const nestDest = path.join(__dirname, '../web-build/nest');
+if (fs.existsSync(nestSource)) {
+    if (fs.cpSync) {
+        fs.cpSync(nestSource, nestDest, { recursive: true });
+    } else {
+        const { execSync } = require('child_process');
+        execSync(`cp -r "${nestSource}" "${nestDest}"`);
+    }
+    console.log('Successfully copied public/nest to web-build/nest');
+}
