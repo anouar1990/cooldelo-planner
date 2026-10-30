@@ -19,6 +19,8 @@ import LaserPresetsScreen from './src/screens/LaserPresetsScreen';
 import QuoteGeneratorScreen from './src/screens/QuoteGeneratorScreen';
 import InvoiceGeneratorScreen from './src/screens/InvoiceGeneratorScreen';
 import NestingEstimatorScreen from './src/screens/NestingEstimatorScreen';
+import LaserToolsScreen from './src/screens/LaserToolsScreen';
+import LaserAiScreen from './src/screens/LaserAiScreen';
 import LaserExpertScreen from './src/screens/LaserExpertScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import DesktopAuthScreen from './src/screens/DesktopAuthScreen';
@@ -161,7 +163,9 @@ export default function App() {
                   <Tab.Screen name="Dashboard" component={DashboardNavigator} />
 
                   {/* PRO TOOLS */}
+                  <Tab.Screen name="LaserAI Studio" component={LaserAiScreen} />
                   <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
+                  <Tab.Screen name="Laser Tools" component={LaserToolsScreen} />
                   <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
                   <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
 

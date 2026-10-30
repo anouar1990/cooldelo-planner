@@ -815,6 +815,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (openLaserAiSidebarBtn) openLaserAiSidebarBtn.addEventListener('click', openLaserAiModal);
     if (closeLaserAiModalBtn) closeLaserAiModalBtn.addEventListener('click', closeLaserAiModal);
 
+    // Auto-open LaserAI modal if URL parameter ?tool=laserai or ?modal=ai is present
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tool') === 'laserai' || urlParams.get('modal') === 'ai') {
+            setTimeout(openLaserAiModal, 120);
+        }
+    } catch (e) {
+        // Ignore URL parsing errors in non-browser environments
+    }
+
     // Close on escape or outside click
     window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && laserAiModal && laserAiModal.classList.contains('active')) {

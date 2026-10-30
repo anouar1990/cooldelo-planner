@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { 
     Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut, Settings,
-    Calculator, FileText, Layers, Zap, Folder, Users, Package, Grid, AlertTriangle, Download, DollarSign, MapPin
+    Calculator, FileText, Layers, Zap, Folder, Users, Package, Grid, AlertTriangle, Download, DollarSign, MapPin, Sliders, Sparkles
 } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
@@ -243,6 +243,28 @@ export default function DashboardScreen({ navigation }: any) {
                         <Text style={[styles.sectionTitle, { color: colors.sub }]}>{t('dash_quick_start')}</Text>
                     </View>
                     <View style={styles.toolsGrid}>
+                        <QuickToolCard
+                            icon={<Sparkles color="#FE7733" size={20} />}
+                            title="LaserAI Studio"
+                            desc="Text-to-CAD laser vectorizer & prompt studio"
+                            color="#FE7733"
+                            colors={colors}
+                            onPress={() => {
+                                if (!isPro) {
+                                    setShowProModal(true);
+                                    return;
+                                }
+                                navigateTab('LaserAI Studio');
+                            }}
+                        />
+                        <QuickToolCard
+                            icon={<Sliders color="#B1FA63" size={20} />}
+                            title="Laser CAD Tools"
+                            desc="Kerf test matrix, box maker & living hinges"
+                            color="#B1FA63"
+                            colors={colors}
+                            onPress={() => navigateTab('Laser Tools')}
+                        />
                         <QuickToolCard
                             icon={<Calculator color="#FE7733" size={20} />}
                             title={t('calc_title')}

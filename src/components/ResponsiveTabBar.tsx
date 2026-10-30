@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform, Image, ScrollView, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle, Receipt, Factory, Bot } from 'lucide-react-native';
+import { LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, FileText, Grid, Library, HelpCircle, Receipt, Factory, Bot, Sliders, Sparkles } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useLanguage } from '../context/LanguageContext';
@@ -19,7 +19,9 @@ const COLORS = {
 
 const ICONS: Record<string, any> = {
     Dashboard: LayoutDashboard,
+    'LaserAI Studio': Sparkles,
     'Cost Calculator': Calculator,
+    'Laser Tools': Sliders,
     Materials: Package,
     Orders: Calendar,
     'Production': Factory,
@@ -41,11 +43,13 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
     const initials = displayName.charAt(0).toUpperCase();
 
     const isDesktop = width > 768;
-    const PRO_TABS = ['Design Library', 'Nesting Estimator', 'Invoice Generator'];
+    const PRO_TABS = ['LaserAI Studio', 'Design Library', 'Laser Tools', 'Nesting Estimator', 'Invoice Generator'];
 
     const routeTitleMap: Record<string, string> = {
         'Dashboard': 'nav_dashboard',
+        'LaserAI Studio': 'nav_laser_ai',
         'Cost Calculator': 'nav_calculator',
+        'Laser Tools': 'nav_laser_tools',
         'Materials': 'nav_materials',
         'Orders': 'nav_orders',
         'Production': 'nav_production',
@@ -97,7 +101,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         const isFocused = state.index === index;
                         const Icon = ICONS[route.name] || LayoutDashboard;
                         const isProTab = PRO_TABS.includes(route.name);
-                        const isProHeader = route.name === 'Design Library';
+                        const isProHeader = route.name === 'LaserAI Studio';
                         const isWorkshopHeader = route.name === 'Cost Calculator';
 
                         return (

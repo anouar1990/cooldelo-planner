@@ -33,6 +33,8 @@ export const DICTIONARY: Translations = {
   nav_orders: { en: 'Orders Tracker', fr: 'Suivi des Commandes', es: 'Seguimiento Pedidos' },
   nav_production: { en: 'Production', fr: 'Production', es: 'Producción' },
   nav_presets: { en: 'Laser Presets', fr: 'Préréglages Laser', es: 'Ajustes Láser' },
+  nav_laser_tools: { en: 'Laser CAD Tools', fr: 'Outils Laser CAD', es: 'Herramientas Láser CAD' },
+  nav_laser_ai: { en: 'LaserAI Studio', fr: 'LaserAI Studio', es: 'LaserAI Studio' },
   nav_designs: { en: 'Design Vault', fr: 'Bibliothèque Vectorielle', es: 'Biblioteca de Diseños' },
   nav_clients: { en: 'Clients CRM', fr: 'Clients CRM', es: 'Clientes CRM' },
   nav_settings: { en: 'Settings', fr: 'Paramètres', es: 'Ajustes' },
