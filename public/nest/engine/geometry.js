@@ -5,14 +5,18 @@
 
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
-        define([], factory);
+        define(['./clipper.js'], factory);
     } else if (typeof module === 'object' && module.exports) {
-        module.exports = factory();
+        let ClipperLib;
+        try { ClipperLib = require('./clipper.js'); } catch (e) {}
+        module.exports = factory(ClipperLib);
     } else {
-        root.GeometryUtil = factory();
+        root.GeometryUtil = factory(root.ClipperLib);
     }
-}(typeof self !== 'undefined' ? self : this, function () {
+}(typeof self !== 'undefined' ? self : this, function (ClipperLibParam) {
     'use strict';
+
+    const ClipperLib = ClipperLibParam || (typeof self !== 'undefined' && self.ClipperLib) || (typeof global !== 'undefined' && global.ClipperLib) || (typeof window !== 'undefined' && window.ClipperLib);
 
     const GeometryUtil = {
         TOLERANCE: 1e-6,
@@ -207,10 +211,93 @@
             return true; // No separating axis -> overlap
         },
 
+        distancePointToSegment: function (p, a, b) {
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const l2 = dx * dx + dy * dy;
+
+            if (l2 === 0) return Math.hypot(p.x - a.x, p.y - a.y);
+
+            let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2;
+            t = Math.max(0, Math.min(1, t));
+
+            const projX = a.x + t * dx;
+            const projY = a.y + t * dy;
+
+            return Math.hypot(p.x - projX, p.y - projY);
+        },
+
+        doSegmentsIntersect: function (p1, p2, p3, p4) {
+            function ccw(a, b, c) {
+                return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+            }
+            return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
+        },
+
+        // True 2D polygon intersection supporting concave & convex shapes
+        doPolygonsIntersect: function (polyA, polyB) {
+            if (!polyA || !polyB || polyA.length < 3 || polyB.length < 3) return false;
+            // 1. Edge-edge segment intersection
+            for (let i = 0; i < polyA.length; i++) {
+                const nextI = (i + 1) % polyA.length;
+                for (let j = 0; j < polyB.length; j++) {
+                    const nextJ = (j + 1) % polyB.length;
+                    if (this.doSegmentsIntersect(polyA[i], polyA[nextI], polyB[j], polyB[nextJ])) {
+                        return true;
+                    }
+                }
+            }
+            // 2. Vertex containment (one shape completely nested inside the other)
+            if (this.pointInPolygon(polyA[0], polyB) || this.pointInPolygon(polyB[0], polyA)) {
+                return true;
+            }
+            return false;
+        },
+
+        // Minimum Euclidean distance between two polygons; returns 0 if intersecting.
+        // Optional threshold stops checking early as soon as any distance < threshold (massive speedup for clearance checks)
+        minDistanceBetweenPolygons: function (polyA, polyB, threshold = -1) {
+            if (!polyA || !polyB || polyA.length < 3 || polyB.length < 3) return Infinity;
+
+            if (this.clipperIntersect(polyA, polyB)) {
+                return 0;
+            }
+
+            let minDist = Infinity;
+
+            // Vertices of A to edges of B
+            for (let i = 0; i < polyA.length; i++) {
+                for (let j = 0; j < polyB.length; j++) {
+                    const nextJ = (j + 1) % polyB.length;
+                    const d = this.distancePointToSegment(polyA[i], polyB[j], polyB[nextJ]);
+                    if (d < minDist) {
+                        minDist = d;
+                        if (threshold >= 0 && minDist < threshold) return minDist;
+                        if (minDist <= 1e-4) return 0;
+                    }
+                }
+            }
+
+            // Vertices of B to edges of A
+            for (let i = 0; i < polyB.length; i++) {
+                for (let j = 0; j < polyA.length; j++) {
+                    const nextJ = (j + 1) % polyA.length;
+                    const d = this.distancePointToSegment(polyB[i], polyA[j], polyA[nextJ]);
+                    if (d < minDist) {
+                        minDist = d;
+                        if (threshold >= 0 && minDist < threshold) return minDist;
+                        if (minDist <= 1e-4) return 0;
+                    }
+                }
+            }
+
+            return minDist;
+        },
+
         // Exact collision test using ClipperLib boolean intersection
         clipperIntersect: function (polyA, polyB, scale = 1000) {
             if (typeof ClipperLib === 'undefined') {
-                return this.satIntersect(polyA, polyB);
+                return this.doPolygonsIntersect(polyA, polyB);
             }
             const pathA = polyA.map(p => ({ X: Math.round(p.x * scale), Y: Math.round(p.y * scale) }));
             const pathB = polyB.map(p => ({ X: Math.round(p.x * scale), Y: Math.round(p.y * scale) }));

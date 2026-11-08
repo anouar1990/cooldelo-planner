@@ -40,7 +40,9 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
     const { openVerificationModal } = useRequireVerification();
     const { isPro } = useSubscription();
     const { t } = useLanguage();
-    const initials = displayName.charAt(0).toUpperCase();
+    const initials = displayName.includes(' ')
+        ? displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+        : displayName.charAt(0).toUpperCase();
 
     const isDesktop = width > 768;
     const PRO_TABS = ['LaserAI Studio', 'Design Library', 'Laser Tools', 'Nesting Estimator', 'Invoice Generator'];
@@ -101,6 +103,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         const isFocused = state.index === index;
                         const Icon = ICONS[route.name] || LayoutDashboard;
                         const isProTab = PRO_TABS.includes(route.name);
+                        const isWhatsAppTab = route.name === 'Quote Generator' || route.name === 'Invoice Generator';
                         const isProHeader = route.name === 'LaserAI Studio';
                         const isWorkshopHeader = route.name === 'Cost Calculator';
 
@@ -125,6 +128,11 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                                     <Text style={[styles.sidebarLabel, isFocused && styles.sidebarLabelActive, { flex: 1 }]}>
                                         {getRouteTitle(route.name)}
                                     </Text>
+                                    {isWhatsAppTab && (
+                                        <View style={{ backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.35)', borderWidth: 1, borderRadius: 8, paddingHorizontal: 5, paddingVertical: 1, marginRight: isProTab ? 4 : 0 }}>
+                                            <Text style={{ color: '#25D366', fontSize: 9, fontWeight: '800' }}>WA</Text>
+                                        </View>
+                                    )}
                                     {isProTab && (
                                         <View style={styles.proBadge}>
                                             <Text style={styles.proBadgeText}>PRO</Text>
@@ -200,6 +208,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                     const isFocused = state.index === index;
                     const Icon = ICONS[route.name] || LayoutDashboard;
                     const isProTab = PRO_TABS.includes(route.name);
+                    const isWhatsAppTab = route.name === 'Quote Generator' || route.name === 'Invoice Generator';
 
                     return (
                         <TouchableOpacity
@@ -210,6 +219,11 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         >
                             <View style={styles.iconBadgeWrapper}>
                                 <Icon color={isFocused ? COLORS.primary : COLORS.textSub} size={24} />
+                                {isWhatsAppTab && (
+                                    <View style={{ position: 'absolute', top: -3, right: isProTab ? 16 : -4, backgroundColor: '#25D366', borderRadius: 6, paddingHorizontal: 3, paddingVertical: 1 }}>
+                                        <Text style={{ color: '#000000', fontSize: 7, fontWeight: '900' }}>WA</Text>
+                                    </View>
+                                )}
                                 {isProTab && (
                                     <View style={styles.mobileProBadge}>
                                         <Text style={styles.mobileProBadgeText}>PRO</Text>

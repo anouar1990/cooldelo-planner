@@ -8,6 +8,7 @@ import { useSubscription } from '../hooks/useSubscription';
 import { useLanguage } from '../context/LanguageContext';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { trackEvent } from '../lib/analytics';
+import { calculateNestingScore, Sheet as NestSheet, Part as NestPart } from '../nest';
 
 const C = {
     bg: '#111317', surface: '#1A1D21', surface2: '#23262C',
@@ -92,12 +93,49 @@ export default function NestingEstimatorScreen() {
         const totalPartArea = qty * partArea;
         const totalSheetArea = sheetsNeeded * sheetArea;
         const usagePct = Math.min(100, (totalPartArea / totalSheetArea) * 100);
-        const wastePct = 100 - usagePct;
+        const wastePct = Math.max(0, 100 - usagePct);
+
+        // Core Engine Scoring Integration
+        const engineSheet: NestSheet = {
+            id: 'nest_sheet_estimate',
+            name: `${sw}x${sh}mm`,
+            width: sw,
+            height: sh,
+            margin: Math.min(sp, 5),
+            spacing: sp,
+            materialPricePerSheet: cost
+        };
+        const samplePart: NestPart = {
+            id: 'part_estimate',
+            sourceFileName: 'estimator.svg',
+            name: `${pw}x${ph}mm`,
+            geometry: {
+                contours: [[
+                    { x: 0, y: 0 }, { x: pw, y: 0 }, { x: pw, y: ph }, { x: 0, y: ph }, { x: 0, y: 0 }
+                ]],
+                holes: [],
+                bounds: { minX: 0, minY: 0, maxX: pw, maxY: ph, width: pw, height: ph },
+                area: partArea
+            },
+            quantity: Math.min(qty, bestPerSheet),
+            width: pw,
+            height: ph,
+            area: partArea,
+            position: { x: engineSheet.margin, y: engineSheet.margin },
+            rotation: rotated ? 90 : 0,
+            locked: false,
+            selected: false
+        };
+        const engineScore = calculateNestingScore([samplePart], engineSheet);
 
         return {
             perSheet: bestPerSheet, cols, rows, rotated,
             sheetsNeeded, totalSheetCost, costPerPart,
-            totalRevenue, totalProfit, usagePct, wastePct
+            totalRevenue, totalProfit,
+            usagePct: Number(usagePct.toFixed(1)),
+            wastePct: Number(wastePct.toFixed(1)),
+            engineScore: engineScore.score,
+            usableSheetAreaMm2: engineScore.sheetUsableAreaMm2
         };
     }, [sheetW, sheetH, partW, partH, partQty, spacing, sheetCost, partSellPrice, allowRotation]);
 
@@ -128,10 +166,11 @@ export default function NestingEstimatorScreen() {
                 <TouchableOpacity 
                     style={styles.camNestingCard}
                     onPress={() => {
+                        const nestUrl = `/nest/index.html?sw=${sheetW}&sh=${sheetH}&sp=${spacing}&pw=${partW}&ph=${partH}&qty=${partQty}`;
                         if (Platform.OS === 'web') {
-                            window.open('/nest/index.html', '_blank');
+                            window.open(nestUrl, '_blank');
                         } else {
-                            Linking.openURL('https://planner.0machine.ai/nest/index.html');
+                            Linking.openURL('https://planner.0machine.ai' + nestUrl);
                         }
                     }}
                     activeOpacity={0.85}
@@ -144,10 +183,10 @@ export default function NestingEstimatorScreen() {
                             <View style={{ flex: 1 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                     <Text style={styles.camTitle}>0machine Autonomous CAM Nesting</Text>
-                                    <View style={styles.camBadge}><Text style={styles.camBadgeText}>AI & DXF</Text></View>
+                                    <View style={styles.camBadge}><Text style={styles.camBadgeText}>SVG, DXF & AI</Text></View>
                                 </View>
                                 <Text style={styles.camSubtitle}>
-                                    Irregular genetic packing, DXF import, common-line cutting & LaserAI Studio
+                                    True-shape nesting, SVG & DXF import, hole utilization, common-line cutting & LaserAI Studio
                                 </Text>
                             </View>
                         </View>

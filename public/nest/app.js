@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rotations: 4,
         maxGenerations: 50
     });
+    window.nester = nester;
 
     // Color Palette based on 0machine & Neon Accents
     const colorPalette = [
@@ -158,6 +159,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const hudHoles = document.getElementById('hudHoles');
     const hudSharedCut = document.getElementById('hudSharedCut');
     const hudSheetCount = document.getElementById('hudSheetCount');
+    const hudSheetDisplay = document.getElementById('hudSheetDisplay');
+    const prevSheetBtn = document.getElementById('prevSheetBtn');
+    const nextSheetBtn = document.getElementById('nextSheetBtn');
+    let currentSheetIndex = 0;
+
+    function updateSheetPagination() {
+        const totalSheets = (nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets.length) || 1;
+        if (currentSheetIndex >= totalSheets) {
+            currentSheetIndex = Math.max(0, totalSheets - 1);
+        }
+        if (currentSheetIndex < 0) {
+            currentSheetIndex = 0;
+        }
+        if (hudSheetDisplay) {
+            hudSheetDisplay.textContent = `${currentSheetIndex + 1} / ${totalSheets}`;
+        }
+        if (hudSheetCount) {
+            hudSheetCount.textContent = `${totalSheets}`;
+        }
+        if (prevSheetBtn) {
+            prevSheetBtn.disabled = currentSheetIndex <= 0;
+        }
+        if (nextSheetBtn) {
+            nextSheetBtn.disabled = currentSheetIndex >= totalSheets - 1;
+        }
+    }
 
     // Auto fit sheet into canvas viewport
     function fitToView() {
@@ -171,6 +198,51 @@ document.addEventListener('DOMContentLoaded', () => {
         panX = (canvas.width - sw * zoom) / 2;
         panY = (canvas.height - sh * zoom) / 2;
         draw();
+    }
+
+    // Parse URL Search Parameters from 0machine App Nesting Yield launcher
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pSw = parseInt(urlParams.get('sw'));
+        const pSh = parseInt(urlParams.get('sh'));
+        const pSp = parseFloat(urlParams.get('sp'));
+        const pMg = parseFloat(urlParams.get('margin') || urlParams.get('mg'));
+        const pPw = parseFloat(urlParams.get('pw'));
+        const pPh = parseFloat(urlParams.get('ph'));
+        const pQty = parseInt(urlParams.get('qty'));
+
+        if (pSw && pSw > 0) {
+            nester.config.sheetWidth = pSw;
+            if (sheetWidthInput) sheetWidthInput.value = pSw;
+        }
+        if (pSh && pSh > 0) {
+            nester.config.sheetHeight = pSh;
+            if (sheetHeightInput) sheetHeightInput.value = pSh;
+        }
+        if (!isNaN(pSp) && pSp >= 0) {
+            nester.config.spacing = pSp;
+            if (spacingSlider) spacingSlider.value = pSp;
+            if (spacingVal) spacingVal.textContent = `${pSp} mm`;
+        }
+        if (!isNaN(pMg) && pMg >= 0) {
+            nester.config.margin = pMg;
+            if (marginSlider) marginSlider.value = pMg;
+            if (marginVal) marginVal.textContent = `${pMg} mm`;
+        }
+        if (pPw > 0 && pPh > 0 && pQty > 0) {
+            nester.clearParts();
+            const color = colorPalette[0];
+            nester.addPart({
+                name: `Part ${pPw}x${pPh}mm`,
+                polygon: [
+                    { x: 0, y: 0 }, { x: pPw, y: 0 }, { x: pPw, y: pPh }, { x: 0, y: pPh }
+                ],
+                quantity: pQty,
+                color: color
+            });
+        }
+    } catch (e) {
+        // Ignore URL parsing errors
     }
 
     // Resize Canvas to fit container
@@ -314,7 +386,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Draw Placed Parts if available
         if (nester.bestResult && nester.bestResult.sheets.length > 0) {
-            const sheet = nester.bestResult.sheets[0]; // Primary sheet
+            const sheetIdx = Math.min(currentSheetIndex, nester.bestResult.sheets.length - 1);
+            const sheet = nester.bestResult.sheets[sheetIdx]; // Active sheet
             sheet.placements.forEach((p, idx) => {
                 ctx.save();
                 ctx.fillStyle = p.color;
@@ -446,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hudSharedCut) {
             hudSharedCut.innerHTML = `${result.sharedCutMm || 0}<span>mm</span>`;
         }
-        hudSheetCount.textContent = result.sheets.length;
+        updateSheetPagination();
         updateDevis(result);
         draw();
     };
@@ -542,6 +615,8 @@ document.addEventListener('DOMContentLoaded', () => {
         stopBtn.disabled = true;
         statusPill.querySelector('.pulse-dot').classList.remove('working');
         statusText.textContent = 'Nesting Ready';
+        updateSheetPagination();
+        draw();
     });
 
     stopBtn.addEventListener('click', () => {
@@ -555,18 +630,46 @@ document.addEventListener('DOMContentLoaded', () => {
     resetBtn.addEventListener('click', () => {
         nester.stopNesting();
         nester.bestResult = null;
+        currentSheetIndex = 0;
+        updateSheetPagination();
         hudEfficiency.innerHTML = `0<span>%</span>`;
         hudPlaced.textContent = '0 / 0';
         if (hudHoles) hudHoles.textContent = '0';
         if (hudSharedCut) hudSharedCut.innerHTML = `0<span>mm</span>`;
-        hudSheetCount.textContent = '1';
         updateDevis(null);
         fitToView();
     });
 
+    // Sheet Pagination Buttons
+    if (prevSheetBtn) {
+        prevSheetBtn.addEventListener('click', () => {
+            if (currentSheetIndex > 0) {
+                currentSheetIndex--;
+                updateSheetPagination();
+                draw();
+            }
+        });
+    }
+
+    if (nextSheetBtn) {
+        nextSheetBtn.addEventListener('click', () => {
+            const totalSheets = (nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets.length) || 1;
+            if (currentSheetIndex < totalSheets - 1) {
+                currentSheetIndex++;
+                updateSheetPagination();
+                draw();
+            }
+        });
+    }
+
     // Export SVG
     exportBtn.addEventListener('click', () => {
-        const svgContent = nester.exportSVG(0);
+        if (!nester.bestResult || !nester.bestResult.sheets || nester.bestResult.sheets.length === 0) {
+            alert('Please run nesting before exporting.');
+            return;
+        }
+        const sheetIdx = Math.min(currentSheetIndex, nester.bestResult.sheets.length - 1);
+        const svgContent = nester.exportSVG(sheetIdx);
         if (!svgContent) {
             alert('Please run nesting before exporting.');
             return;
@@ -575,7 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `0machine_nest_sheet1_${Date.now()}.svg`;
+        a.download = `0machine_nest_sheet${sheetIdx + 1}_${Date.now()}.svg`;
         a.click();
         URL.revokeObjectURL(url);
     });
@@ -653,6 +756,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function parseAndAddSvg(svgContent, baseName) {
+        if (typeof SvgImporter !== 'undefined' && SvgImporter.parseSvgString) {
+            try {
+                const result = SvgImporter.parseSvgString(svgContent, baseName);
+                if (result && result.parts && result.parts.length > 0) {
+                    let added = 0;
+                    result.parts.forEach((p) => {
+                        const contours = (p.contours && p.contours.length > 0) ? p.contours :
+                                         (p.geometry && p.geometry.contours && p.geometry.contours.length > 0) ? p.geometry.contours :
+                                         p.polygon ? [p.polygon] : [];
+                        if (contours.length === 0) return;
+
+                        const allHoles = p.holes || (p.geometry && p.geometry.holes) || [];
+
+                        if (contours.length === 1) {
+                            const poly = contours[0];
+                            if (!poly || !Array.isArray(poly) || poly.length < 3) return;
+                            const color = colorPalette[nester.parts.length % colorPalette.length];
+                            nester.addPart({
+                                name: p.name || baseName,
+                                polygon: poly,
+                                holes: allHoles,
+                                quantity: 2,
+                                color: color
+                            });
+                            added++;
+                        } else {
+                            // Multiple disjoint outer contours: add each so no shape is silently dropped
+                            contours.forEach((cPoly, cIdx) => {
+                                if (!cPoly || !Array.isArray(cPoly) || cPoly.length < 3) return;
+                                const subHoles = allHoles.filter(h => {
+                                    return h.length > 0 && GeometryUtil.pointInPolygon(h[0], cPoly);
+                                });
+                                const color = colorPalette[nester.parts.length % colorPalette.length];
+                                nester.addPart({
+                                    name: `${p.name || baseName} #${cIdx + 1}`,
+                                    polygon: cPoly,
+                                    holes: subHoles,
+                                    quantity: 2,
+                                    color: color
+                                });
+                                added++;
+                            });
+                        }
+                    });
+
+                    if (added > 0) {
+                        renderPartsList();
+                        fitToView();
+                        return;
+                    }
+                }
+                if (result && result.errors && result.errors.length > 0) {
+                    console.warn('[SVG Importer] Errors:', result.errors);
+                }
+            } catch (err) {
+                console.warn('[SVG Importer] Advanced parser fallback triggered:', err);
+            }
+        }
+
         const parser = new DOMParser();
         const doc = parser.parseFromString(svgContent, 'image/svg+xml');
         const paths = doc.querySelectorAll('path, polygon, rect');
@@ -674,7 +836,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 poly = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }];
             }
 
-            if (poly.length >= 3) {
+            if (poly && poly.length >= 3) {
                 const color = colorPalette[nester.parts.length % colorPalette.length];
                 nester.addPart({
                     name: `${baseName} #${i + 1}`,
@@ -707,6 +869,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 parseAndAddDxf(r2, 'DXF Motor Flange');
             } catch (err) {
                 console.error('Failed to load sample DXF:', err);
+            }
+        });
+    }
+
+    // Load Sample SVG Button
+    const loadSampleSvgBtn = document.getElementById('loadSampleSvgBtn');
+    if (loadSampleSvgBtn) {
+        loadSampleSvgBtn.addEventListener('click', async () => {
+            try {
+                const [s1, s2] = await Promise.all([
+                    fetch('samples/sample_gears.svg').then(r => r.text()),
+                    fetch('samples/sample_enclosure.svg').then(r => r.text())
+                ]);
+                parseAndAddSvg(s1, 'Spur Gear');
+                parseAndAddSvg(s2, 'Enclosure Mount');
+            } catch (err) {
+                console.error('Failed to load sample SVG:', err);
             }
         });
     }

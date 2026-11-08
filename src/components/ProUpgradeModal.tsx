@@ -178,19 +178,20 @@ export function ProUpgradeModal({
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.priceNumber}>
-                      {cycle === 'annual' ? '$149' : '$19'}
+                      {cycle === 'annual' ? '$14.90' : '$19'}
                     </Text>
                     <Text style={styles.pricePeriod}>
-                      {cycle === 'annual' ? '$12.41/mo' : '/month'}
+                      {cycle === 'annual' ? '/mo ($149/yr)' : '/month'}
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.benefitList}>
-                  <BenefitRow text="Unlimited Projects & Machines" bold />
-                  <BenefitRow text="Nesting Yield & Material Costing" bold />
-                  <BenefitRow text="PDF Quotes, Invoices & WhatsApp" bold />
-                  <BenefitRow text="500+ Commercial Vector Packs" bold />
+                  <BenefitRow text="⚡ 300 LaserAI Generations / mo" bold />
+                  <BenefitRow text="💎 Unlimited Vault (5,000+ Packs)" bold />
+                  <BenefitRow text="🧩 Unlimited Multi-Sheet Nesting" bold />
+                  <BenefitRow text="⏱️ Kerf Math & WhatsApp Sharing" bold />
+                  <BenefitRow text="🚀 LightBurn & xTool DXF Export" bold />
                 </View>
               </TouchableOpacity>
 
@@ -210,18 +211,21 @@ export function ProUpgradeModal({
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.priceNumberStarter}>
-                      {cycle === 'annual' ? '$59' : '$9'}
+                      {cycle === 'annual' ? '$7.90' : '$9'}
                     </Text>
                     <Text style={styles.pricePeriod}>
-                      {cycle === 'annual' ? '$4.91/mo' : '/month'}
+                      {cycle === 'annual' ? '/mo ($79/yr)' : '/month'}
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.benefitList}>
+                  <BenefitRow text="⚡ 50 LaserAI Generations / mo" />
+                  <BenefitRow text="💎 50 Commercial Packs / mo" />
+                  <BenefitRow text="🧩 True-Shape Nesting (25 parts)" />
                   <BenefitRow text="Unlimited Projects & Machines" />
                   <BenefitRow text="Material Inventory & Presets" />
-                  <BenefitRow text="PDF Quotes & Invoices" />
+                  <BenefitRow text="PDF Quotes & Invoices (WhatsApp Dispatch)" />
                 </View>
               </TouchableOpacity>
             </View>
@@ -256,7 +260,7 @@ export function ProUpgradeModal({
                 </View>
                 <View style={styles.timelineContent}>
                   <Text style={styles.timelineStepTitle}>GROW YOUR BUSINESS</Text>
-                  <Text style={styles.timelineStepDesc}>Send professional PDF quotes & invoices.</Text>
+                  <Text style={styles.timelineStepDesc}>Send professional PDF quotes & invoices via WhatsApp.</Text>
                 </View>
               </View>
             </View>
@@ -362,14 +366,22 @@ export function ProUpgradeModal({
 }
 
 function BenefitRow({ text, bold }: { text: string; bold?: boolean }) {
+  const isWhatsApp = text.toLowerCase().includes('whatsapp') || text.toLowerCase().includes('quote') || text.toLowerCase().includes('invoice');
   return (
     <View style={styles.benefitRow}>
-      <View style={[styles.checkCircle, bold && styles.checkCircleBold]}>
+      <View style={[styles.checkCircle, bold && styles.checkCircleBold, isWhatsApp && { backgroundColor: '#25D366' }]}>
         <Check color="#FFFFFF" size={11} strokeWidth={3} />
       </View>
-      <Text style={[styles.benefitText, bold && styles.benefitTextBold]}>
-        {text}
-      </Text>
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+        <Text style={[styles.benefitText, bold && styles.benefitTextBold]}>
+          {text}
+        </Text>
+        {isWhatsApp && !text.includes('⏱️') && !text.includes('📲') && (
+          <View style={{ backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.4)', borderWidth: 1, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1 }}>
+            <Text style={{ color: '#25D366', fontSize: 10, fontWeight: '700' }}>WhatsApp</Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }

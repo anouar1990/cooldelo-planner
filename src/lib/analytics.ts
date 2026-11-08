@@ -33,13 +33,20 @@ export function captureUTMs() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const utms: Record<string, string> = {};
-        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((key) => {
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'variant'].forEach((key) => {
             const val = urlParams.get(key);
             if (val) utms[key] = val;
         });
 
+        const v = urlParams.get('variant')?.toUpperCase();
+        if (v && ['A', 'B', 'C', 'D', 'E'].includes(v)) {
+            utms.variant = v;
+            localStorage.setItem('0machine_variant', v);
+        }
+
         if (Object.keys(utms).length > 0) {
-            localStorage.setItem('0machine_utm', JSON.stringify(utms));
+            const existing = getSavedUTMs();
+            localStorage.setItem('0machine_utm', JSON.stringify({ ...existing, ...utms }));
         }
     } catch (e) {
         // Ignore storage errors
@@ -47,13 +54,20 @@ export function captureUTMs() {
 }
 
 /**
- * Retrieve saved UTM parameters.
+ * Retrieve saved UTM parameters and experiment variant.
  */
 export function getSavedUTMs(): Record<string, string> {
     if (!IS_WEB || typeof window === 'undefined') return {};
     try {
         const raw = localStorage.getItem('0machine_utm');
-        return raw ? JSON.parse(raw) : {};
+        const parsed = raw ? JSON.parse(raw) : {};
+        if (!parsed.variant) {
+            const v = localStorage.getItem('0machine_variant')?.toUpperCase();
+            if (v && ['A', 'B', 'C', 'D', 'E'].includes(v)) {
+                parsed.variant = v;
+            }
+        }
+        return parsed;
     } catch (e) {
         return {};
     }

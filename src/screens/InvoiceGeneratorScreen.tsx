@@ -495,7 +495,13 @@ export default function InvoiceGeneratorScreen() {
             <View style={styles.invoiceCard}>
                 <View style={styles.invoiceCardHeader}>
                     <View>
-                        <Text style={styles.invoiceNumText}>{item.invoice_number}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={styles.invoiceNumText}>{item.invoice_number}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.3)', borderWidth: 1, borderRadius: 10, paddingHorizontal: 5, paddingVertical: 1 }}>
+                                <MessageSquare color="#25D366" size={10} style={{ marginRight: 2 }} />
+                                <Text style={{ color: '#25D366', fontSize: 9, fontWeight: '700' }}>WhatsApp</Text>
+                            </View>
+                        </View>
                         <Text style={styles.invoiceClientText}>{item.client_name}</Text>
                     </View>
                     <View style={styles.statusBadgeRow}>
@@ -523,11 +529,11 @@ export default function InvoiceGeneratorScreen() {
 
                 <View style={styles.invoiceCardActions}>
                     <TouchableOpacity 
-                        style={[styles.actionIconButton, { borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.1)' }]}
+                        style={[styles.actionIconButton, { borderColor: '#25D366', backgroundColor: '#25D366', paddingHorizontal: 10 }]}
                         onPress={() => handleWhatsAppInvoice(item)}
                     >
-                        <MessageSquare size={16} color="#10B981" />
-                        <Text style={[styles.actionIconText, { color: '#10B981', fontWeight: '700' }]}>WhatsApp</Text>
+                        <MessageSquare size={15} color="#000000" />
+                        <Text style={[styles.actionIconText, { color: '#000000', fontWeight: '800' }]}>Send via WhatsApp</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 
@@ -558,8 +564,14 @@ export default function InvoiceGeneratorScreen() {
                         <Receipt color={COLORS.primary} size={22} />
                     </View>
                     <View>
-                        <Text style={styles.title}>Invoice Generator</Text>
-                        <Text style={styles.subtitle}>Create & manage professional PDF invoices for your clients</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Text style={styles.title}>Invoice Generator</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.4)', borderWidth: 1, borderRadius: 12, paddingHorizontal: 7, paddingVertical: 2 }}>
+                                <MessageSquare color="#25D366" size={11} style={{ marginRight: 3 }} />
+                                <Text style={{ color: '#25D366', fontSize: 10, fontWeight: '700' }}>WhatsApp Ready</Text>
+                            </View>
+                        </View>
+                        <Text style={styles.subtitle}>Create & manage professional PDF invoices with 1-click WhatsApp dispatch</Text>
                     </View>
                 </View>
             </View>

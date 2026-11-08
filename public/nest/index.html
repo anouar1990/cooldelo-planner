@@ -92,20 +92,30 @@
                         <div class="dropzone-sub">Drag & drop AutoCAD, SolidWorks or Fusion DXF</div>
                     </div>
 
-                    <!-- Quick Sample DXF Loader & LaserAI Studio -->
+                    <!-- Quick Sample DXF / SVG Loader & LaserAI Studio -->
                     <div style="display: flex; flex-direction: column; gap: 8px; margin-top: -6px;">
                         <button class="ai-banner-btn" id="openLaserAiSidebarBtn">
                             <span class="ai-sparkle">✨</span>
                             <span>Generate CAD from Text or Photo (AI)</span>
                         </button>
-                        <button class="btn-secondary" id="loadSampleDxfBtn" style="padding: 8px 12px; font-size: 11px; border-radius: 8px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            + Import Sample DXF Parts
-                        </button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <button class="btn-secondary" id="loadSampleDxfBtn" style="padding: 8px 10px; font-size: 11px; border-radius: 8px; justify-content: center;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>Sample DXF</span>
+                            </button>
+                            <button class="btn-secondary" id="loadSampleSvgBtn" style="padding: 8px 10px; font-size: 11px; border-radius: 8px; justify-content: center;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>Sample SVG</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Parts List -->
@@ -124,7 +134,10 @@
                     <div class="viewport-info">
                         <div class="viewport-tag">
                             <span>Sheet:</span>
-                            <strong id="hudSheetCount">1</strong>
+                            <button class="sheet-nav-btn" id="prevSheetBtn" title="Previous Sheet" disabled>◀</button>
+                            <strong id="hudSheetDisplay">1 / 1</strong>
+                            <button class="sheet-nav-btn" id="nextSheetBtn" title="Next Sheet" disabled>▶</button>
+                            <span style="opacity: 0.6; font-size: 11px;">(<strong id="hudSheetCount">1</strong> total)</span>
                         </div>
                         <div class="viewport-tag">
                             <span>Scroll to Zoom</span>
@@ -562,6 +575,7 @@
     <script src="/nest/engine/clipper.js?v=25"></script>
     <script src="/nest/engine/geometry.js?v=25"></script>
     <script src="/nest/engine/dxf-parser.js?v=25"></script>
+    <script src="/nest/engine/svg-importer.js?v=25"></script>
     <script src="/nest/engine/cost-calculator.js?v=25"></script>
     <script src="/nest/engine/nester.js?v=25"></script>
     <script src="/nest/engine/laser-ai.js?v=25"></script>

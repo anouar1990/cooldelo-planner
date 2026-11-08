@@ -183,6 +183,10 @@ export default function QuoteGeneratorScreen() {
                     <View style={styles.titleRow}>
                         <View style={styles.headerIcon}><FileText color={C.primary} size={20} /></View>
                         <Text style={styles.title}>Quote Generator</Text>
+                        <View style={styles.whatsAppBadge}>
+                            <MessageSquare color="#25D366" size={11} style={{ marginRight: 3 }} />
+                            <Text style={styles.whatsAppBadgeText}>WhatsApp</Text>
+                        </View>
                     </View>
                     <Text style={styles.subtitle}>{quotes.length} quotes · ${quotes.filter(q => q.status === 'accepted').reduce((s, q) => s + q.items.reduce((si, i) => si + i.qty * i.unit, 0) * (1 + q.vatPct / 100), 0).toFixed(0)} accepted</Text>
                 </View>
@@ -212,7 +216,13 @@ export default function QuoteGeneratorScreen() {
                             <View key={q.id} style={styles.quoteRow}>
                                 <View style={styles.quoteMain}>
                                     <View>
-                                        <Text style={styles.quoteNum}>{q.quoteNumber}</Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Text style={styles.quoteNum}>{q.quoteNumber}</Text>
+                                            <View style={styles.quoteCardWABadge}>
+                                                <MessageSquare color="#25D366" size={10} style={{ marginRight: 2 }} />
+                                                <Text style={styles.quoteCardWABadgeText}>WhatsApp</Text>
+                                            </View>
+                                        </View>
                                         <Text style={styles.quoteName}>{q.clientName}</Text>
                                         <Text style={styles.quoteDesc} numberOfLines={1}>{q.projectDescription}</Text>
                                     </View>
@@ -226,11 +236,11 @@ export default function QuoteGeneratorScreen() {
                                 </View>
                                 <View style={styles.quoteActions}>
                                     <TouchableOpacity 
-                                        style={[styles.statusBtn, { backgroundColor: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)' }]} 
+                                        style={[styles.statusBtn, styles.whatsAppActionBtn]} 
                                         onPress={() => sendWhatsAppQuote(q)}
                                     >
-                                        <MessageSquare color="#10B981" size={13} style={{ marginRight: 4 }} />
-                                        <Text style={[styles.statusBtnText, { color: '#10B981', fontWeight: '700' }]}>WhatsApp</Text>
+                                        <MessageSquare color="#000000" size={13} style={{ marginRight: 4 }} />
+                                        <Text style={styles.whatsAppActionBtnText}>Send via WhatsApp</Text>
                                     </TouchableOpacity>
                                     {(['draft', 'sent', 'accepted', 'declined'] as Quote['status'][]).filter(s => s !== q.status).map(s => (
                                         <TouchableOpacity key={s} style={styles.statusBtn} onPress={() => setStatus(q.id, s)}>
@@ -362,6 +372,12 @@ const styles = StyleSheet.create({
     headerIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: C.primary + '15', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
     titleRow: { flexDirection: 'row', alignItems: 'center' },
     title: { fontSize: 22, fontWeight: '800', color: C.text },
+    whatsAppBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.4)', borderWidth: 1, borderRadius: 12, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 10 },
+    whatsAppBadgeText: { color: '#25D366', fontSize: 10, fontWeight: '700' },
+    quoteCardWABadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.3)', borderWidth: 1, borderRadius: 10, paddingHorizontal: 5, paddingVertical: 1 },
+    quoteCardWABadgeText: { color: '#25D366', fontSize: 9, fontWeight: '700' },
+    whatsAppActionBtn: { backgroundColor: '#25D366', borderColor: '#25D366', paddingHorizontal: 12, paddingVertical: 6 },
+    whatsAppActionBtnText: { color: '#000000', fontSize: 12, fontWeight: '800' },
     subtitle: { fontSize: 13, color: C.sub, marginTop: 4, marginLeft: 52 },
     addBtn: { backgroundColor: C.primary, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, height: 40, borderRadius: 10 },
     addBtnLg: { backgroundColor: C.primary, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, height: 48, borderRadius: 10, marginTop: 20 },

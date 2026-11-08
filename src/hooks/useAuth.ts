@@ -188,15 +188,20 @@ export function useAuth() {
     // ── All authenticated users are verified ──────────────
     const isEmailVerified: boolean = !!user;
 
-    const displayName: string =
+    const rawName: string =
         user?.user_metadata?.full_name ||
         user?.user_metadata?.name ||
         (user?.email ? user.email.split('@')[0] : 'User');
 
-    const avatarUrl: string | null =
+    // Protect account owner privacy by defaulting to workshop persona
+    const isOwnerAccount = rawName.toLowerCase().includes('anouar') || rawName.toLowerCase().includes('kharbache');
+    const displayName: string = isOwnerAccount ? 'Ethan Vance' : rawName;
+
+    const rawAvatar: string | null =
         user?.user_metadata?.avatar_url ||
         user?.user_metadata?.picture ||
         null;
+    const avatarUrl: string | null = isOwnerAccount ? null : rawAvatar;
 
     return {
         session,

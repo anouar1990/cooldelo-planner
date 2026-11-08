@@ -157,7 +157,7 @@ export default function PaywallScreen() {
                                     ANNUAL
                                 </Text>
                                 <View style={styles.saveBadge}>
-                                    <Text style={styles.saveBadgeText}>SAVE 35%</Text>
+                                    <Text style={styles.saveBadgeText}>SAVE UP TO 25%</Text>
                                 </View>
                             </View>
                         </TouchableOpacity>
@@ -187,20 +187,21 @@ export default function PaywallScreen() {
                                 </View>
                                 <View style={{ alignItems: 'flex-end' }}>
                                     <Text style={styles.priceNumber}>
-                                        {cycle === 'annual' ? '$149' : '$19'}
+                                        {cycle === 'annual' ? '$14.90' : '$19'}
                                     </Text>
                                     <Text style={styles.pricePeriod}>
-                                        {cycle === 'annual' ? '$12.41/mo billed yearly' : 'per month'}
+                                        {cycle === 'annual' ? '/mo billed yearly ($149)' : 'per month'}
                                     </Text>
                                 </View>
                             </View>
 
                             <View style={styles.benefitList}>
-                                <BenefitRow text="Unlimited Projects & Machine Profiles" bold />
-                                <BenefitRow text="Nesting Yield & Material Cost Calculator" bold />
-                                <BenefitRow text="PDF Quotes, Invoices & 1-Click WhatsApp Sharing" bold />
-                                <BenefitRow text="500+ Commercial DXF/SVG Design Library" bold />
-                                <BenefitRow text="Team Workspace (3 Users) & CSV/Excel Exports" bold />
+                                <BenefitRow text="⚡ 300 LaserAI Vector Generations / mo" bold />
+                                <BenefitRow text="💎 Unlimited Commercial Vault (5,000+ Packs)" bold />
+                                <BenefitRow text="🧩 Unlimited Multi-Sheet Nesting (ClipperLib)" bold />
+                                <BenefitRow text="⏱️ Kerf Compensation & Speed/Pierce Math" bold />
+                                <BenefitRow text="📲 1-Click WhatsApp Client Quote Sharing" bold />
+                                <BenefitRow text="🚀 Direct LightBurn & xTool DXF Export" bold />
                             </View>
                         </TouchableOpacity>
 
@@ -220,18 +221,21 @@ export default function PaywallScreen() {
                                 </View>
                                 <View style={{ alignItems: 'flex-end' }}>
                                     <Text style={styles.priceNumberStarter}>
-                                        {cycle === 'annual' ? '$59' : '$9'}
+                                        {cycle === 'annual' ? '$7.90' : '$9'}
                                     </Text>
                                     <Text style={styles.pricePeriod}>
-                                        {cycle === 'annual' ? '$4.91/mo billed yearly' : 'per month'}
+                                        {cycle === 'annual' ? '/mo billed yearly ($79)' : 'per month'}
                                     </Text>
                                 </View>
                             </View>
 
                             <View style={styles.benefitList}>
-                                <BenefitRow text="Unlimited Projects & Machines" />
+                                <BenefitRow text="⚡ 50 LaserAI Vector Generations / mo" />
+                                <BenefitRow text="💎 50 Commercial Design Packs / mo" />
+                                <BenefitRow text="🧩 True-Shape Sheet Nesting (Up to 25 parts)" />
+                                <BenefitRow text="Unlimited Projects & Machine Profiles" />
                                 <BenefitRow text="Material Inventory & Laser Presets" />
-                                <BenefitRow text="PDF Quote & Invoice Generator" />
+                                <BenefitRow text="PDF Quotes & Invoices (WhatsApp Dispatch)" />
                             </View>
                         </TouchableOpacity>
                     </View>
@@ -247,7 +251,7 @@ export default function PaywallScreen() {
                             <View style={styles.timelineContent}>
                                 <Text style={styles.timelineStepTitle}>TODAY</Text>
                                 <Text style={styles.timelineStepDesc}>
-                                    Instant unlock for all Pro features & 500+ commercial laser design files.
+                                    Instant unlock for all Pro features & 5,000+ commercial laser design vault.
                                 </Text>
                             </View>
                         </View>
@@ -376,14 +380,22 @@ export default function PaywallScreen() {
 }
 
 function BenefitRow({ text, bold }: { text: string; bold?: boolean }) {
+    const isWhatsApp = text.toLowerCase().includes('whatsapp') || text.toLowerCase().includes('quote') || text.toLowerCase().includes('invoice');
     return (
         <View style={styles.benefitRow}>
-            <View style={[styles.checkCircle, bold && styles.checkCircleBold]}>
+            <View style={[styles.checkCircle, bold && styles.checkCircleBold, isWhatsApp && { backgroundColor: '#25D366' }]}>
                 <Check color="#FFFFFF" size={13} strokeWidth={3} />
             </View>
-            <Text style={[styles.benefitText, bold && styles.benefitTextBold]}>
-                {text}
-            </Text>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                <Text style={[styles.benefitText, bold && styles.benefitTextBold]}>
+                    {text}
+                </Text>
+                {isWhatsApp && !text.includes('📲') && (
+                    <View style={{ backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.4)', borderWidth: 1, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1 }}>
+                        <Text style={{ color: '#25D366', fontSize: 10, fontWeight: '700' }}>WhatsApp</Text>
+                    </View>
+                )}
+            </View>
         </View>
     );
 }

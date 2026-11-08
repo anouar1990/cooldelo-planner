@@ -131,8 +131,8 @@
 
                     if (minX > maxX || minY > maxY) continue;
 
-                    const xStep = Math.max(stepSize, 6);
-                    const yStep = Math.max(stepSize, 6);
+                    const xStep = Math.max(stepSize || 6, 6);
+                    const yStep = Math.max(stepSize || 6, 6);
 
                     for (let x = minX; x <= maxX; x += xStep) {
                         for (let y = minY; y <= maxY; y += yStep) {
@@ -143,10 +143,15 @@
                                 continue;
                             }
 
-                            // Check 2: Must not intersect any already nested parts in this hole
+                            // Check 2: Must not intersect or breach clearance with already nested parts in this hole
                             let collision = false;
+                            const checkPoly = opt.offsetPoly ?
+                                GeometryUtil.translatePolygon(opt.offsetPoly, x, y) :
+                                candidatePoly;
+
                             for (let p = 0; p < holeObj.nestedPlacements.length; p++) {
-                                if (GeometryUtil.clipperIntersect(candidatePoly, holeObj.nestedPlacements[p].polygon, 100)) {
+                                const placedCheckPoly = holeObj.nestedPlacements[p].offsetPolygon || holeObj.nestedPlacements[p].polygon;
+                                if (GeometryUtil.clipperIntersect(checkPoly, placedCheckPoly, 100)) {
                                     collision = true;
                                     break;
                                 }
@@ -164,7 +169,8 @@
                                         maxX: x + opt.bounds.width,
                                         maxY: y + opt.bounds.height
                                     },
-                                    finalPolygon: candidatePoly
+                                    finalPolygon: candidatePoly,
+                                    offsetPolygon: checkPoly
                                 };
                             }
                         }
@@ -177,7 +183,7 @@
         // Heuristic Packing for a specific ordering and rotation set
         evaluateSequence(instances) {
             const { sheetWidth, sheetHeight, spacing, margin, stepSize } = this.config;
-            const halfSpacing = spacing / 2;
+            const halfSpacing = (spacing || 0) / 2;
             const allowedRotations = this.getRotationAngles();
 
             const sheets = [{
@@ -202,9 +208,13 @@
                     const rotPoly = GeometryUtil.rotatePolygon(item.polygon, angle);
                     const normRotPoly = GeometryUtil.normalizePolygon(rotPoly);
                     const bounds = GeometryUtil.getBounds(normRotPoly);
+                    const offsetPoly = halfSpacing > 0 && GeometryUtil.offsetPolygon ?
+                        (GeometryUtil.offsetPolygon(normRotPoly, halfSpacing)[0] || normRotPoly) :
+                        normRotPoly;
                     return {
                         angle: angle,
                         poly: normRotPoly,
+                        offsetPoly: offsetPoly,
                         bounds: bounds
                     };
                 });
@@ -216,7 +226,8 @@
                         const holePlacement = this.findBestPositionInHoles(sheet, rotationOptions, halfSpacing, stepSize);
                         if (holePlacement) {
                             holePlacement.holeObj.nestedPlacements.push({
-                                polygon: holePlacement.finalPolygon
+                                polygon: holePlacement.finalPolygon,
+                                offsetPolygon: holePlacement.offsetPolygon || holePlacement.finalPolygon
                             });
 
                             sheet.placements.push({
@@ -225,6 +236,7 @@
                                 name: item.name,
                                 color: item.color,
                                 polygon: holePlacement.finalPolygon,
+                                offsetPolygon: holePlacement.offsetPolygon || holePlacement.finalPolygon,
                                 rotation: holePlacement.angle,
                                 x: holePlacement.x,
                                 y: holePlacement.y,
@@ -255,6 +267,7 @@
                                 name: item.name,
                                 color: item.color,
                                 polygon: bestPlacement.finalPolygon,
+                                offsetPolygon: bestPlacement.offsetPolygon || bestPlacement.finalPolygon,
                                 rotation: bestPlacement.angle,
                                 x: bestPlacement.x,
                                 y: bestPlacement.y,
@@ -309,6 +322,7 @@
                             name: item.name,
                             color: item.color,
                             polygon: bestPlacement.finalPolygon,
+                            offsetPolygon: bestPlacement.offsetPolygon || bestPlacement.finalPolygon,
                             rotation: bestPlacement.angle,
                             x: bestPlacement.x,
                             y: bestPlacement.y,
@@ -425,8 +439,8 @@
                 });
 
                 // Also add regular grid steps to prevent getting trapped in local minima
-                const xStep = Math.max(stepSize, 10);
-                const yStep = Math.max(stepSize, 10);
+                const xStep = Math.max(stepSize || 8, 10);
+                const yStep = Math.max(stepSize || 8, 10);
 
                 for (let x = margin; x <= maxX; x += xStep * 2) candidateXs.add(x);
                 for (let y = margin; y <= maxY; y += yStep * 2) candidateYs.add(y);
@@ -463,8 +477,11 @@
                                 candidateBounds.minY > pb.maxY)) {
                                 
                                 // AABB overlaps: Perform exact polygon intersection
-                                const transPoly = GeometryUtil.translatePolygon(opt.poly, x, y);
-                                if (GeometryUtil.clipperIntersect(transPoly, placements[p].polygon, 100)) {
+                                const transPoly = opt.offsetPoly ?
+                                    GeometryUtil.translatePolygon(opt.offsetPoly, x, y) :
+                                    GeometryUtil.translatePolygon(opt.poly, x, y);
+                                const checkPoly = placements[p].offsetPolygon || placements[p].polygon;
+                                if (GeometryUtil.clipperIntersect(transPoly, checkPoly, 100)) {
                                     collision = true;
                                     break;
                                 }
@@ -484,7 +501,8 @@
                                     maxX: x + pWidth,
                                     maxY: y + pHeight
                                 },
-                                finalPolygon: finalPoly
+                                finalPolygon: finalPoly,
+                                offsetPolygon: opt.offsetPoly ? GeometryUtil.translatePolygon(opt.offsetPoly, x, y) : finalPoly
                             };
                             break; // Greedy step for this X
                         }
