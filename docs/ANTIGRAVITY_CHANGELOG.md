@@ -512,3 +512,37 @@
 - **Known Issues**: None
 
 
+
+## [2026-11-08 19:02:00] - Production Deployment to Vercel (0Machine Landing & Lasercut Planner App)
+- **Task**: Deploy tested 5-Variant A/B/C/D/E split testing experiment, WhatsApp quotes/invoices dispatch, LaserAI video showcase, and credit paywall to production on Vercel.
+- **Repositories & Commits Deployed**:
+  - `0machine-landing`: Commit `d640683` pushed to `main` on `https://github.com/anouar1990/0machine-landing.git` (Vercel Project: `0machine-landing` -> `https://www.0machine.com` / `https://0machine.com`).
+  - `lasercut-planner`: Commit `6a129fb` pushed to `main` on `https://github.com/anouar1990/cooldelo-planner.git` (Vercel Project: `lasercut-planner` -> `https://app.0machine.com`).
+- **Files Changed in Release**:
+  - `0machine-landing/app/variants/VariantA.js`
+  - `0machine-landing/app/variants/VariantB.js`
+  - `0machine-landing/app/variants/VariantC.js`
+  - `0machine-landing/app/variants/VariantD.js`
+  - `0machine-landing/app/variants/VariantE.js`
+  - `0machine-landing/app/context/ExperimentContext.js`
+  - `0machine-landing/app/admin/components/ExperimentDashboardTab.js`
+  - `0machine-landing/app/components/LaserAiDemoVideo.js`
+  - `0machine-landing/app/components/LaserAiCreditModal.js`
+  - `0machine-landing/app/components/ProductShowcase.js`
+  - `0machine-landing/app/components/Pricing.js`
+  - `0machine-landing/app/calculator/page.js`
+  - `lasercut-planner/src/screens/QuoteGeneratorScreen.tsx`
+  - `lasercut-planner/src/screens/InvoiceGeneratorScreen.tsx`
+  - `lasercut-planner/src/screens/PaywallScreen.tsx`
+  - `lasercut-planner/src/components/ProUpgradeModal.tsx`
+  - `lasercut-planner/src/components/ResponsiveTabBar.tsx`
+- **Tests Performed**:
+  - Pre-deployment Next.js build: PASS (46/46 routes compiled cleanly in 4.1s).
+  - Pre-deployment Metro web export (`npm run vercel-build`): PASS (1.7s, assets and nest files copied).
+  - Production HTTP status check (`curl -sI https://0machine.com`): PASS (307 redirect to www.0machine.com).
+  - Production HTTP status check (`curl -sI https://www.0machine.com`): PASS (HTTP 200 OK).
+  - Production HTTP status check (`curl -sI https://app.0machine.com`): PASS (HTTP 200 OK).
+  - Production bundle inspection: PASS (`0machine_variant` cookie & experiment logic verified in live client bundle `static/chunks/0_p3u2cne7fy_.js`).
+- **Test Results**: All pre- and post-deployment checks PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None
