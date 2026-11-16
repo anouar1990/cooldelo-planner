@@ -679,3 +679,23 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+
+## [2026-11-16 23:10:00] - 0Machine AI Studio Upgrade & Direct CAM Vectorization
+- **Task**: Upgrade AI Studio in 0Machine Planner with direct CAM vectorization, 3-layer separation (Cut, Score, Engrave), duplicate segment elimination, contour healing, and instant 1-click CAM sheet packing.
+- **Files Changed**:
+  - `public/nest/engine/laser-ai.js`: Duplicate line removal, contour auto-healing, cloud API integration, DXF/SVG 3-layer export.
+  - `public/nest/index.html`: Replaced API key card with Cloud CAM status bar, added layer toggle pills and updated telemetry HUD.
+  - `public/nest/app.js`: Layer visibility toggling in preview, and instant auto-pack placement in `addToNestBtn`.
+  - `src/screens/LaserAiScreen.tsx`: Updated Pro upgrade modal and feature descriptions to highlight 3-layer CAM separation.
+  - `web-build/nest/`: Synchronized updated engine, HTML, and app scripts.
+  - `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md`: Appended entry.
+- **Tests Performed**:
+  - Node.js CAM Geometry & Healing Test: PASS
+  - DXF Layer Compliance Test: PASS
+  - SVG 3-Layer Compliance Test: PASS
+  - TypeScript compilation check (`npx tsc --noEmit`): PASS (0 errors)
+  - Web bundle synchronization (`cp -r public/nest/* web-build/nest/`): PASS
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None

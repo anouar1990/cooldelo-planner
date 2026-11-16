@@ -1647,48 +1647,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const statDim = document.getElementById('statDim');
     const statPerimeter = document.getElementById('statPerimeter');
     const statHoles = document.getElementById('statHoles');
+    const statScoreLength = document.getElementById('statScoreLength');
+    const statContours = document.getElementById('statContours');
     const statCost = document.getElementById('statCost');
 
-    const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
-    const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
     const apiKeyStatus = document.getElementById('apiKeyStatus');
+
+    // CAM Layer Toggles
+    const toggleCutLayer = document.getElementById('toggleCutLayer');
+    const toggleScoreLayer = document.getElementById('toggleScoreLayer');
+    const toggleEngraveLayer = document.getElementById('toggleEngraveLayer');
+    let showCutLayer = true;
+    let showScoreLayer = true;
+    let showEngraveLayer = true;
+
+    if (toggleCutLayer) {
+        toggleCutLayer.addEventListener('click', () => {
+            showCutLayer = !showCutLayer;
+            toggleCutLayer.style.opacity = showCutLayer ? '1' : '0.35';
+            if (currentLaserPart) renderStudioPreview(currentLaserPart);
+        });
+    }
+    if (toggleScoreLayer) {
+        toggleScoreLayer.addEventListener('click', () => {
+            showScoreLayer = !showScoreLayer;
+            toggleScoreLayer.style.opacity = showScoreLayer ? '1' : '0.35';
+            if (currentLaserPart) renderStudioPreview(currentLaserPart);
+        });
+    }
+    if (toggleEngraveLayer) {
+        toggleEngraveLayer.addEventListener('click', () => {
+            showEngraveLayer = !showEngraveLayer;
+            toggleEngraveLayer.style.opacity = showEngraveLayer ? '1' : '0.35';
+            if (currentLaserPart) renderStudioPreview(currentLaserPart);
+        });
+    }
 
     const addToNestBtn = document.getElementById('addToNestBtn');
     const exportLaserSvgBtn = document.getElementById('exportLaserSvgBtn');
     const exportLaserDxfBtn = document.getElementById('exportLaserDxfBtn');
-
-    // Google AI Studio API Key Storage
-    const savedApiKey = localStorage.getItem('0machine_gemini_api_key');
-    if (savedApiKey && geminiApiKeyInput) {
-        geminiApiKeyInput.value = savedApiKey;
-        updateApiKeyBadge(true);
-    }
-
-    function updateApiKeyBadge(hasKey) {
-        if (!apiKeyStatus) return;
-        if (hasKey) {
-            apiKeyStatus.textContent = "Connected (Imagen 3)";
-            apiKeyStatus.className = "api-status-badge connected";
-        } else {
-            apiKeyStatus.textContent = "Offline Presets";
-            apiKeyStatus.className = "api-status-badge";
-        }
-    }
-
-    if (saveApiKeyBtn && geminiApiKeyInput) {
-        saveApiKeyBtn.addEventListener('click', () => {
-            const val = geminiApiKeyInput.value.trim();
-            if (val) {
-                localStorage.setItem('0machine_gemini_api_key', val);
-                updateApiKeyBadge(true);
-                showStudioLoading("Connected to Google AI Studio! Testing Imagen 3...");
-                triggerAiGeneration();
-            } else {
-                localStorage.removeItem('0machine_gemini_api_key');
-                updateApiKeyBadge(false);
-            }
-        });
-    }
 
     // Open/Close Modal
     function openLaserAiModal() {
@@ -1958,6 +1955,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const poly = part.polygon;
         const holes = part.holes || [];
+        const scoreLines = part.scoreLines || [];
+        const engravePolys = part.engravePolys || [];
         if (!poly || poly.length < 3) return;
 
         // Bounding Box
@@ -1972,7 +1971,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const partW = maxX - minX || 1;
         const partH = maxY - minY || 1;
 
-        // Auto-scale with 40px margin
+        // Auto-scale with 50px margin
         const margin = 50;
         const scale = Math.min((cw - margin * 2) / partW, (ch - margin * 2) / partH);
         const offsetX = (cw - partW * scale) / 2 - minX * scale;
@@ -1983,84 +1982,132 @@ document.addEventListener('DOMContentLoaded', () => {
             y: p.y * scale + offsetY
         });
 
-        // 1. Draw Subtle Part Fill (Wood / Steel look)
-        ctx.save();
-        ctx.beginPath();
-        const p0 = toScreen(poly[0]);
-        ctx.moveTo(p0.x, p0.y);
-        poly.slice(1).forEach(p => {
-            const sp = toScreen(p);
-            ctx.lineTo(sp.x, sp.y);
-        });
-        ctx.closePath();
+        // 1. LAYER 02: ENGRAVE (Black / Solid Fill Silhouette)
+        if (showEngraveLayer) {
+            ctx.save();
+            ctx.beginPath();
+            const p0 = toScreen(poly[0]);
+            ctx.moveTo(p0.x, p0.y);
+            poly.slice(1).forEach(p => {
+                const sp = toScreen(p);
+                ctx.lineTo(sp.x, sp.y);
+            });
+            ctx.closePath();
 
-        // Cutout holes in fill using evenodd rule
-        holes.forEach(hole => {
-            if (hole.length > 2) {
-                const hp0 = toScreen(hole[0]);
-                ctx.moveTo(hp0.x, hp0.y);
-                hole.slice(1).forEach(p => {
-                    const sp = toScreen(p);
-                    ctx.lineTo(sp.x, sp.y);
+            // Cutout holes in fill using evenodd rule
+            holes.forEach(hole => {
+                if (hole.length > 2) {
+                    const hp0 = toScreen(hole[0]);
+                    ctx.moveTo(hp0.x, hp0.y);
+                    hole.slice(1).forEach(p => {
+                        const sp = toScreen(p);
+                        ctx.lineTo(sp.x, sp.y);
+                    });
+                    ctx.closePath();
+                }
+            });
+
+            ctx.fillStyle = 'rgba(254, 119, 51, 0.08)';
+            ctx.fill('evenodd');
+
+            // Draw any explicit raster/engrave geometry
+            if (engravePolys && engravePolys.length > 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+                engravePolys.forEach(ep => {
+                    if (ep.length > 2) {
+                        ctx.beginPath();
+                        const ep0 = toScreen(ep[0]);
+                        ctx.moveTo(ep0.x, ep0.y);
+                        ep.slice(1).forEach(p => {
+                            const sp = toScreen(p);
+                            ctx.lineTo(sp.x, sp.y);
+                        });
+                        ctx.closePath();
+                        ctx.fill();
+                    }
                 });
-                ctx.closePath();
             }
-        });
+            ctx.restore();
+        }
 
-        ctx.fillStyle = 'rgba(254, 119, 51, 0.08)';
-        ctx.fill('evenodd');
-        ctx.restore();
+        // 2. LAYER 01: SCORE (Blue #3B82F6 - LightBurn Layer 01 / DXF SCORE)
+        if (showScoreLayer && scoreLines && scoreLines.length > 0) {
+            ctx.save();
+            ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
+            ctx.shadowBlur = 6;
+            ctx.strokeStyle = '#3B82F6';
+            ctx.lineWidth = 1.8;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-        // 2. Draw Outer Cut Contour (Neon Laser Red #FF0055)
-        ctx.save();
-        ctx.shadowColor = 'rgba(255, 0, 85, 0.5)';
-        ctx.shadowBlur = 8;
-        ctx.strokeStyle = '#FF0055';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(p0.x, p0.y);
-        poly.slice(1).forEach(p => {
-            const sp = toScreen(p);
-            ctx.lineTo(sp.x, sp.y);
-        });
-        ctx.closePath();
-        ctx.stroke();
-        ctx.restore();
+            scoreLines.forEach(line => {
+                if (line && line.length > 1) {
+                    ctx.beginPath();
+                    const sp0 = toScreen(line[0]);
+                    ctx.moveTo(sp0.x, sp0.y);
+                    line.slice(1).forEach(p => {
+                        const sp = toScreen(p);
+                        ctx.lineTo(sp.x, sp.y);
+                    });
+                    ctx.stroke();
+                }
+            });
+            ctx.restore();
+        }
 
-        // 3. Draw Internal Cutouts / Holes (Cyan #00D2FF)
-        ctx.save();
-        ctx.shadowColor = 'rgba(0, 210, 255, 0.4)';
-        ctx.shadowBlur = 6;
-        ctx.strokeStyle = '#00D2FF';
-        ctx.lineWidth = 1.8;
-        holes.forEach(hole => {
-            if (hole.length > 2) {
-                ctx.beginPath();
-                const hp0 = toScreen(hole[0]);
-                ctx.moveTo(hp0.x, hp0.y);
-                hole.slice(1).forEach(p => {
-                    const sp = toScreen(p);
-                    ctx.lineTo(sp.x, sp.y);
-                });
-                ctx.closePath();
-                ctx.stroke();
-            }
-        });
-        ctx.restore();
+        // 3. LAYER 00: CUT (Neon Red #EF4444 - LightBurn Layer 00 / DXF CUT)
+        if (showCutLayer) {
+            ctx.save();
+            ctx.shadowColor = 'rgba(239, 68, 68, 0.6)';
+            ctx.shadowBlur = 8;
+            ctx.strokeStyle = '#EF4444';
+            ctx.lineWidth = 2.4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Outer cut perimeter
+            ctx.beginPath();
+            const p0 = toScreen(poly[0]);
+            ctx.moveTo(p0.x, p0.y);
+            poly.slice(1).forEach(p => {
+                const sp = toScreen(p);
+                ctx.lineTo(sp.x, sp.y);
+            });
+            ctx.closePath();
+            ctx.stroke();
+
+            // Inner cutouts (Holes)
+            ctx.strokeStyle = '#F87171';
+            ctx.lineWidth = 1.8;
+            holes.forEach(hole => {
+                if (hole.length > 2) {
+                    ctx.beginPath();
+                    const hp0 = toScreen(hole[0]);
+                    ctx.moveTo(hp0.x, hp0.y);
+                    hole.slice(1).forEach(p => {
+                        const sp = toScreen(p);
+                        ctx.lineTo(sp.x, sp.y);
+                    });
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+            });
+            ctx.restore();
+        }
 
         // 4. Draw CAD Dimension Callouts
         ctx.save();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
         ctx.font = '10px monospace';
         ctx.textAlign = 'center';
 
         // Bottom width dimension
-        const botY = maxY * scale + offsetY + 20;
-        ctx.fillText(`W: ${part.stats.width} mm`, cw / 2, botY);
+        const botY = maxY * scale + offsetY + 22;
+        ctx.fillText(`W: ${part.stats.width} mm`, cw / 2, Math.min(botY, ch - 8));
 
         // Left height dimension
         ctx.save();
-        ctx.translate(minX * scale + offsetX - 18, ch / 2);
+        ctx.translate(Math.max(minX * scale + offsetX - 18, 12), ch / 2);
         ctx.rotate(-Math.PI / 2);
         ctx.fillText(`H: ${part.stats.height} mm`, 0, 0);
         ctx.restore();
@@ -2068,20 +2115,24 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
 
         // Update Telemetry HUD
-        if (statDim) statDim.textContent = `${part.stats.width} x ${part.stats.height} mm`;
-        if (statPerimeter) statPerimeter.textContent = `${part.stats.cutPerimeterMm} mm`;
-        if (statHoles) statHoles.textContent = `${part.stats.holesCount} Cutout${part.stats.holesCount === 1 ? '' : 's'}`;
-        if (statCost) statCost.textContent = `${part.stats.estCostMad} MAD`;
+        if (statDim) statDim.textContent = `${part.stats.width} × ${part.stats.height} mm`;
+        if (statPerimeter) statPerimeter.textContent = `${part.stats.cutPerimeterMm || 0} mm`;
+        if (statScoreLength) statScoreLength.textContent = `${part.stats.scoreLengthMm || 0} mm`;
+        if (statContours) statContours.textContent = `${part.stats.closedContours || 1} Closed Loop${(part.stats.closedContours || 1) === 1 ? '' : 's'}`;
+        if (statHoles) statHoles.textContent = `${part.stats.holesCount || 0} Cutout${(part.stats.holesCount || 0) === 1 ? '' : 's'}`;
+        if (statCost) statCost.textContent = `${part.stats.estCostMad || 0} MAD`;
     }
 
-    // Add to Active Nesting Inventory
+    // Add to Active Nesting Inventory & Auto-Pack
     if (addToNestBtn) {
         addToNestBtn.addEventListener('click', () => {
             if (!currentLaserPart) return;
 
             const color = colorPalette[nester.parts.length % colorPalette.length];
+            const partName = currentLaserPart.name || 'Laser_AI_Part';
+
             nester.addPart({
-                name: currentLaserPart.name || 'Laser_AI_Part',
+                name: partName,
                 polygon: currentLaserPart.polygon,
                 holes: currentLaserPart.holes || [],
                 quantity: 2,
@@ -2089,12 +2140,30 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             renderPartsList();
+
+            // Auto-pack so user immediately sees their part placed on the sheet
+            try {
+                const instances = nester.expandInstances().sort((a, b) => b.area - a.area);
+                if (instances.length > 0) {
+                    nester.bestResult = nester.evaluateSequence(instances);
+                    nester.finalizeBestResult(nester.bestResult);
+                    updateSheetPagination();
+                    updateDevis(nester.bestResult);
+                    if (hudEfficiency) hudEfficiency.innerHTML = `${nester.bestResult.compactEfficiency}<span>%</span>`;
+                    if (hudPlaced) hudPlaced.textContent = `${nester.bestResult.totalPlaced} / ${nester.bestResult.totalItems}`;
+                    if (hudSharedCut) hudSharedCut.innerHTML = `${nester.bestResult.sharedCutMm || 0} mm`;
+                }
+            } catch (e) {
+                console.warn('Auto-pack layout error:', e);
+            }
+
             fitToView();
+            draw();
             closeLaserAiModal();
 
             // Status message
             const statusText = document.getElementById('statusText');
-            if (statusText) statusText.textContent = `Added "${currentLaserPart.name}" to Nest!`;
+            if (statusText) statusText.textContent = `✓ Added "${partName}" to sheet & optimized layout!`;
         });
     }
 

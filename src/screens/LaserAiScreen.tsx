@@ -35,13 +35,13 @@ export default function LaserAiScreen() {
                             LaserAI Studio & Vectorizer
                         </Text>
                         <Text style={[styles.lockedDesc, { color: colors.sub }]}>
-                            Turn text descriptions, photos, and sketches into laser-ready closed-contour DXF and SVG files with separate cut and engrave layers using Google Imagen 3.
+                            Turn text descriptions, photos, and sketches into laser-ready closed-contour DXF and SVG files with separate Cut, Score, and Engrave CAM layers.
                         </Text>
 
                         <View style={styles.featureList}>
                             <View style={styles.featureItem}>
                                 <ShieldCheck size={14} color="#10B981" />
-                                <Text style={[styles.featureText, { color: colors.text }]}>Text-to-CAD Woodcut & Stencil Generator</Text>
+                                <Text style={[styles.featureText, { color: colors.text }]}>Direct AI Text-to-CAD Vector Generator (Zero duplicate lines)</Text>
                             </View>
                             <View style={styles.featureItem}>
                                 <ShieldCheck size={14} color="#10B981" />
@@ -49,11 +49,11 @@ export default function LaserAiScreen() {
                             </View>
                             <View style={styles.featureItem}>
                                 <ShieldCheck size={14} color="#10B981" />
-                                <Text style={[styles.featureText, { color: colors.text }]}>Automatic Cut (Red) vs Engrave (Blue) Layer Separation</Text>
+                                <Text style={[styles.featureText, { color: colors.text }]}>3-Layer CAM Separation: Cut (Red), Score (Blue), Engrave (Black)</Text>
                             </View>
                             <View style={styles.featureItem}>
                                 <ShieldCheck size={14} color="#10B981" />
-                                <Text style={[styles.featureText, { color: colors.text }]}>1-Click "+ Add to Nest Sheet" CAM Packing</Text>
+                                <Text style={[styles.featureText, { color: colors.text }]}>1-Click "+ Add to Nest Sheet" Instant CAM Packing</Text>
                             </View>
                         </View>
 
