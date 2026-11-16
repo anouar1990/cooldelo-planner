@@ -28,7 +28,7 @@ export const DICTIONARY: Translations = {
   nav_calculator: { en: 'Cost Calculator', fr: 'Calculateur de Coût', es: 'Calculadora de Costes' },
   nav_quotes: { en: 'Quotes', fr: 'Devis', es: 'Presupuestos' },
   nav_invoices: { en: 'Invoices', fr: 'Factures', es: 'Facturas' },
-  nav_nesting: { en: 'Nesting Yield', fr: 'Imbrication / Nesting', es: 'Optimización Nesting' },
+  nav_nesting: { en: '0machine Nesting', fr: '0machine Nesting', es: '0machine Nesting' },
   nav_materials: { en: 'Material Stock', fr: 'Stock Matériaux', es: 'Stock de Materiales' },
   nav_orders: { en: 'Orders Tracker', fr: 'Suivi des Commandes', es: 'Seguimiento Pedidos' },
   nav_production: { en: 'Production', fr: 'Production', es: 'Producción' },

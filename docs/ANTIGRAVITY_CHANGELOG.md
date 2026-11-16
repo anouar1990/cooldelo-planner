@@ -586,3 +586,19 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+
+## [2026-11-16 16:33:00] - Replace Nesting Yield with 0machine Nesting in PRO TOOLS Navigation & Landing
+- **Task**: Replace the tab title "Nesting Yield" with branded "0machine Nesting" under the `⚡ PRO TOOLS` section in the application navigation sidebar/tab bar across all 3 supported languages (EN, FR, ES), and synchronize the Pro feature bullet in the landing page translations.
+- **Files Changed**:
+  - `lasercut-planner/src/context/LanguageContext.tsx` (Updated `nav_nesting` dictionary to `'0machine Nesting'` across EN, FR, and ES)
+  - `0machine-landing/app/lib/translations.js` (Updated `pro_bullet_2` across EN, FR, and ES to 0machine Nesting)
+  - `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md`, `0machine-landing/docs/ANTIGRAVITY_CHANGELOG.md`, `docs/ANTIGRAVITY_CHANGELOG.md` (Appended)
+- **Tests Performed**:
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build` in `lasercut-planner`: PASS (971ms clean web bundle export)
+  - `npm run build` in `0machine-landing`: PASS (63/63 routes compiled cleanly in 4.5s)
+  - Node.js automated dictionary assertions: PASS
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None
