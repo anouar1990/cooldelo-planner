@@ -636,3 +636,29 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+
+## [2026-11-16 21:30:00] - App Icon & Landing Favicon Modernization (Unified 0machine Visual Identity)
+- **Task**: Replace legacy placeholder app icons and distorted favicon banners across 0machine Nest (`lasercut-planner`) and the 0machine landing page (`0machine-landing`) with a modern, high-precision SVG vector mark and optimized multi-resolution raster icons matching the dark industrial CAD visual identity (#FE7733, #0F1117).
+- **Files Changed**:
+  - `lasercut-planner/assets/icon.svg`, `public/icon.svg`, `public/favicon.svg` (Created master precision SVG icon: obsidian squircle base, registration ticks, chrome '0' outline, and 45° glowing laser cutting beam)
+  - `0machine-landing/public/icon.svg`, `public/favicon.svg` (Deployed master vector icon as browser tab icon and favicon)
+  - `lasercut-planner/assets/icon.png` (Regenerated 1024x1024 high-res master app icon)
+  - `lasercut-planner/assets/favicon.png`, `public/favicon.png` (Regenerated 48x48 web favicon)
+  - `lasercut-planner/public/favicon.ico`, `0machine-landing/public/favicon.ico` (Generated multi-resolution 16x16, 32x32, 48x48 fallback ICO)
+  - `lasercut-planner/assets/splash-icon.png`, `android-icon-foreground.png`, `android-icon-monochrome.png` (512x512 updated app icons)
+  - `0machine-landing/public/apple-icon.png` (180x180 iOS touch icon), `icon-192.png` (192x192), `icon-512.png` (512x512 PWA icons)
+  - `0machine-landing/app/layout.js` (Configured SVG icon link tags and metadata icon declarations)
+  - `lasercut-planner/app.json` (Updated `adaptiveIcon.backgroundColor` to `#0F1117`)
+  - `lasercut-planner/public/index.html` (Replaced distorted banner logo with vector SVG and 48px PNG favicon tags)
+  - `lasercut-planner/public/nest/index.html` (Updated favicon and aligned workspace header brand icon with 0machine vector mark)
+  - `lasercut-planner/scripts/fix-import-meta.js` (Added automated copier for all new vector & raster icon assets to `web-build/` and `%PUBLIC_URL%` normalization)
+  - `docs/ANTIGRAVITY_CHANGELOG.md`, `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md`, `0machine-landing/docs/ANTIGRAVITY_CHANGELOG.md` (Appended)
+- **Tests Performed**:
+  - Sharp / PIL raster verification: PASS (All dimensions, aspect ratios, alpha channels, and bit depths verified)
+  - TypeScript compilation check (`cd lasercut-planner && npx tsc --noEmit`): PASS (0 errors)
+  - Expo Web production build (`cd lasercut-planner && npm run vercel-build`): PASS (821ms compile, 100% icon asset propagation to web-build)
+  - Next.js production build (`cd 0machine-landing && npm run build`): PASS (63/63 pages compiled cleanly in 4.5s)
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None

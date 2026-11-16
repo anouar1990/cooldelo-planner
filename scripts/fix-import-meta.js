@@ -48,3 +48,23 @@ if (fs.existsSync(nestSource)) {
     }
     console.log('Successfully copied public/nest to web-build/nest');
 }
+
+// Copy icon and favicon assets to web-build root
+const publicFiles = ['icon.svg', 'favicon.svg', 'favicon.png', 'favicon.ico', 'icon-192.png', 'logo.png'];
+for (const file of publicFiles) {
+    const src = path.join(__dirname, '../public', file);
+    const dest = path.join(__dirname, '../web-build', file);
+    if (fs.existsSync(src)) {
+        fs.copyFileSync(src, dest);
+        console.log(`Successfully copied public/${file} to web-build/${file}`);
+    }
+}
+
+// Replace %PUBLIC_URL% in web-build/index.html
+const indexHtmlPath = path.join(__dirname, '../web-build/index.html');
+if (fs.existsSync(indexHtmlPath)) {
+    let indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+    indexHtml = indexHtml.replace(/%PUBLIC_URL%\//g, '/').replace(/%PUBLIC_URL%/g, '');
+    fs.writeFileSync(indexHtmlPath, indexHtml);
+    console.log('Successfully normalized %PUBLIC_URL% in web-build/index.html');
+}

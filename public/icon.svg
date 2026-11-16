@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="omBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141722"/>
+      <stop offset="50%" stop-color="#0E1017"/>
+      <stop offset="100%" stop-color="#07080C"/>
+    </linearGradient>
+
+    <!-- Border Glow Gradient -->
+    <linearGradient id="omBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FE7733" stop-opacity="0.85"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FE7733" stop-opacity="0.45"/>
+    </linearGradient>
+
+    <!-- Laser Orange Gradient -->
+    <linearGradient id="omLaser" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFA266"/>
+      <stop offset="45%" stop-color="#FE7733"/>
+      <stop offset="100%" stop-color="#E85F20"/>
+    </linearGradient>
+
+    <!-- Chrome/Metal Shell Gradient -->
+    <linearGradient id="omShell" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+
+    <!-- Ambient Center Laser Glow -->
+    <radialGradient id="omCenterGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FE7733" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#FE7733" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#FE7733" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Laser Cutting Spark Radial Glow -->
+    <radialGradient id="omSpark" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="25%" stop-color="#FFD6BA"/>
+      <stop offset="65%" stop-color="#FE7733"/>
+      <stop offset="100%" stop-color="#FE7733" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Laser Beam Glow Filter -->
+    <filter id="omGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Squircle Base Container -->
+  <rect x="12" y="12" width="488" height="488" rx="116" fill="url(#omBg)"/>
+  <rect x="12" y="12" width="488" height="488" rx="116" fill="none" stroke="url(#omBorder)" stroke-width="4"/>
+
+  <!-- Ambient Glow Behind Icon -->
+  <circle cx="256" cy="256" r="190" fill="url(#omCenterGlow)"/>
+
+  <!-- Precision CAD Calibration Ticks -->
+  <g stroke="#FE7733" stroke-width="3" opacity="0.35" stroke-linecap="round">
+    <line x1="256" y1="52" x2="256" y2="76"/>
+    <line x1="256" y1="436" x2="256" y2="460"/>
+    <line x1="52" y1="256" x2="76" y2="256"/>
+    <line x1="436" y1="256" x2="460" y2="256"/>
+  </g>
+
+  <!-- Geometric "0" Machine Mark -->
+  <g id="zeroMark">
+    <!-- Top-Right Shell -->
+    <path d="M 235 96
+             C 335 96, 408 168, 408 268
+             C 408 304, 396 339, 375 367
+             L 326 318
+             C 338 303, 344 286, 344 268
+             C 344 204, 296 160, 235 160
+             C 204 160, 177 172, 157 192
+             L 110 145
+             C 142 114, 185 96, 235 96 Z"
+          fill="url(#omShell)"/>
+
+    <!-- Bottom-Left Shell -->
+    <path d="M 277 416
+             C 177 416, 104 344, 104 244
+             C 104 208, 116 173, 137 145
+             L 186 194
+             C 174 209, 168 226, 168 244
+             C 168 308, 216 352, 277 352
+             C 308 352, 335 340, 355 320
+             L 402 367
+             C 370 398, 327 416, 277 416 Z"
+          fill="url(#omShell)"/>
+
+    <!-- Dynamic 45-deg Laser Beam Cut Blade -->
+    <line x1="72" y1="440" x2="440" y2="72"
+          stroke="url(#omLaser)" stroke-width="22" stroke-linecap="round"
+          filter="url(#omGlow)"/>
+    
+    <!-- White Hot Central Laser Core -->
+    <line x1="108" y1="404" x2="404" y2="108"
+          stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.95"/>
+
+    <!-- Focal Laser Cutting Spot (Spark Glow & Origin Point) -->
+    <circle cx="256" cy="256" r="38" fill="url(#omSpark)"/>
+    <circle cx="256" cy="256" r="10" fill="#FFFFFF"/>
+  </g>
+</svg>
