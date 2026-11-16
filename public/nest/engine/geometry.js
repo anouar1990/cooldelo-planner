@@ -137,30 +137,35 @@
 
         // Check if innerPoly is completely inside outerPoly
         isPolygonInsidePolygon: function (innerPoly, outerPoly, scale = 1000) {
-            if (typeof ClipperLib === 'undefined') {
-                for (let i = 0; i < innerPoly.length; i++) {
-                    if (!this.pointInPolygon(innerPoly[i], outerPoly)) return false;
+            if (!innerPoly || !outerPoly || innerPoly.length < 3 || outerPoly.length < 3) return false;
+
+            // Fast Check 1: AABB bounds check
+            const innerBounds = this.getBounds(innerPoly);
+            const outerBounds = this.getBounds(outerPoly);
+            if (innerBounds.minX < outerBounds.minX - 1e-3 ||
+                innerBounds.maxX > outerBounds.maxX + 1e-3 ||
+                innerBounds.minY < outerBounds.minY - 1e-3 ||
+                innerBounds.maxY > outerBounds.maxY + 1e-3) {
+                return false;
+            }
+
+            // Fast Check 2: All vertices must be inside outerPoly
+            for (let i = 0; i < innerPoly.length; i++) {
+                if (!this.pointInPolygon(innerPoly[i], outerPoly)) return false;
+            }
+
+            // Fast Check 3: Edges must not intersect
+            for (let i = 0; i < innerPoly.length; i++) {
+                const nextI = (i + 1) % innerPoly.length;
+                for (let j = 0; j < outerPoly.length; j++) {
+                    const nextJ = (j + 1) % outerPoly.length;
+                    if (this.doSegmentsIntersect(innerPoly[i], innerPoly[nextI], outerPoly[j], outerPoly[nextJ])) {
+                        return false;
+                    }
                 }
-                return true;
             }
-            const pathInner = innerPoly.map(p => ({ X: Math.round(p.x * scale), Y: Math.round(p.y * scale) }));
-            const pathOuter = outerPoly.map(p => ({ X: Math.round(p.x * scale), Y: Math.round(p.y * scale) }));
 
-            const clipper = new ClipperLib.Clipper();
-            // Difference: pathInner - pathOuter
-            clipper.AddPath(pathInner, ClipperLib.PolyType.ptSubject, true);
-            clipper.AddPath(pathOuter, ClipperLib.PolyType.ptClip, true);
-
-            const solution = new ClipperLib.Paths();
-            clipper.Execute(ClipperLib.ClipType.ctDifference, solution, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
-
-            // If the difference is empty or negligible area, then innerPoly is 100% inside outerPoly!
-            if (solution.length === 0) return true;
-            let outsideArea = 0;
-            for (let i = 0; i < solution.length; i++) {
-                outsideArea += Math.abs(ClipperLib.Clipper.Area(solution[i]));
-            }
-            return (outsideArea / (scale * scale)) < 0.2;
+            return true;
         },
 
         pointInPolygon: function (point, polygon) {
@@ -252,6 +257,11 @@
                 return true;
             }
             return false;
+        },
+
+        // Alias for doPolygonsIntersect
+        intersectPolygons: function (polyA, polyB) {
+            return this.doPolygonsIntersect(polyA, polyB);
         },
 
         // Minimum Euclidean distance between two polygons; returns 0 if intersecting.

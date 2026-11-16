@@ -877,17 +877,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>
             `;
 
-            // Click part card to select its placed counterpart on canvas
+            // Click part card to select its placed counterpart on canvas or place it
             itemEl.addEventListener('click', (e) => {
                 if (e.target.closest('.qty-btn') || e.target.closest('.part-delete-btn')) return;
-                if (sheet && sheet.placements) {
-                    const foundIdx = sheet.placements.findIndex(p => p.name === part.name);
+
+                if (!nester.bestResult) {
+                    nester.bestResult = {
+                        sheets: [{
+                            id: 1,
+                            width: nester.config.sheetWidth,
+                            height: nester.config.sheetHeight,
+                            placements: [],
+                            availableHoles: [],
+                            bounds: { minX: nester.config.sheetWidth, minY: nester.config.sheetHeight, maxX: 0, maxY: 0 }
+                        }],
+                        totalPlaced: 0,
+                        totalItems: nester.expandInstances().length,
+                        compactEfficiency: 0,
+                        globalEfficiency: 0
+                    };
+                    currentSheetIndex = 0;
+                }
+
+                const currentSheet = nester.bestResult.sheets[currentSheetIndex];
+                if (currentSheet) {
+                    const foundIdx = currentSheet.placements.findIndex(p => p.name === part.name);
                     if (foundIdx >= 0) {
                         selectedSheetPlacementIndex = foundIdx;
-                        renderInspector();
-                        renderPartsList();
-                        draw();
+                    } else {
+                        // Place a new instance on the active sheet
+                        const m = nester.config.margin || 8;
+                        const posX = m + (currentSheet.placements.length * 20) % Math.max(100, (nester.config.sheetWidth - 200));
+                        const posY = m + (currentSheet.placements.length * 20) % Math.max(100, (nester.config.sheetHeight - 200));
+                        const translatedPoly = GeometryUtil.translatePolygon(part.polygon, posX, posY);
+                        const newPlacement = {
+                            instanceId: `manual_${Date.now()}_${Math.random()}`,
+                            partId: part.id || `p_${Date.now()}`,
+                            name: part.name,
+                            color: part.color,
+                            polygon: translatedPoly,
+                            offsetPolygon: translatedPoly,
+                            rotation: 0,
+                            x: posX,
+                            y: posY,
+                            area: part.area || (part.bounds.width * part.bounds.height),
+                            bounds: GeometryUtil.getBounds(translatedPoly),
+                            isInsideHole: false
+                        };
+                        currentSheet.placements.push(newPlacement);
+                        selectedSheetPlacementIndex = currentSheet.placements.length - 1;
+                        nester.bestResult.totalPlaced = currentSheet.placements.length;
                     }
+                    renderInspector();
+                    renderPartsList();
+                    draw();
                 }
             });
 
@@ -2083,9 +2126,25 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
     }
 
-    // Initial render
+    // Initial render: greedy solution for instant visualization (<25ms)
+    try {
+        const instances = nester.expandInstances().sort((a, b) => b.area - a.area);
+        if (instances.length > 0) {
+            nester.bestResult = nester.evaluateSequence(instances);
+            nester.finalizeBestResult(nester.bestResult);
+            updateSheetPagination();
+            updateDevis(nester.bestResult);
+            if (hudEfficiency) hudEfficiency.innerHTML = `${nester.bestResult.compactEfficiency}<span>%</span>`;
+            if (hudPlaced) hudPlaced.textContent = `${nester.bestResult.totalPlaced} / ${nester.bestResult.totalItems}`;
+            if (hudSharedCut) hudSharedCut.innerHTML = `${nester.bestResult.sharedCutMm || 0} mm`;
+        }
+    } catch (e) {
+        console.warn('Initial layout generation error:', e);
+    }
+
     renderPartsList();
     renderInspector();
+    fitToView();
     draw();
 });
 

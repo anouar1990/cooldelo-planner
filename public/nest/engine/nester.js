@@ -22,10 +22,10 @@
                 spacing: 4,         // Spacing between parts (Kerf)
                 margin: 8,          // Distance from sheet edge
                 rotations: 4,       // 1 (0°), 2 (0, 180°), 4 (0, 90, 180, 270), 8 (45° steps)
-                stepSize: 8,        // Grid step resolution in mm
+                stepSize: 12,       // Grid step resolution in mm
                 useHoles: true,     // Nest smaller parts inside holes of larger parts
                 commonLine: true,   // Detect and optimize shared edge cutting
-                maxGenerations: 50, // GA iterations
+                maxGenerations: 15, // GA iterations (fast, responsive)
                 populationSize: 8,
                 mutationRate: 0.25
             }, config);
@@ -361,9 +361,6 @@
             // Calculate overall efficiency & cutting perimeters
             let totalUsedSheetArea = 0;
             let totalPerimeterMm = 0;
-            let totalSharedMm = 0;
-            const allSharedSegments = [];
-            const edgeTolerance = Math.max(spacing * 1.25, 2.5);
 
             sheets.forEach(sheet => {
                 sheet.sharedSegments = [];
@@ -375,18 +372,6 @@
                     const pls = sheet.placements;
                     for (let i = 0; i < pls.length; i++) {
                         totalPerimeterMm += GeometryUtil.polygonPerimeter(pls[i].polygon);
-
-                        // Check shared edges with other parts on same sheet if commonLine enabled
-                        if (this.config.commonLine !== false) {
-                            for (let j = i + 1; j < pls.length; j++) {
-                                const segs = GeometryUtil.findSharedSegments(pls[i].polygon, pls[j].polygon, edgeTolerance);
-                                segs.forEach(s => {
-                                    totalSharedMm += s.length;
-                                    sheet.sharedSegments.push(s);
-                                    allSharedSegments.push(s);
-                                });
-                            }
-                        }
                     }
                 }
             });
@@ -403,12 +388,50 @@
                 unplaced: unplaced,
                 totalPlacedArea: totalPlacedArea,
                 totalPerimeterMm: Math.round(totalPerimeterMm),
-                sharedCutMm: Math.round(totalSharedMm),
-                sharedSegments: allSharedSegments,
+                sharedCutMm: 0,
+                sharedSegments: [],
                 sheetCapacity: sheetCapacity,
                 globalEfficiency: Math.min(100, Number(globalEfficiency.toFixed(2))),
                 compactEfficiency: Math.min(100, Number(compactEfficiency.toFixed(2)))
             };
+        }
+
+        // Finalize best result by computing common-line shared cuts only once
+        finalizeBestResult(result) {
+            if (!result || !result.sheets || this.config.commonLine === false) return result;
+            const edgeTolerance = Math.max((this.config.spacing || 0) * 1.25, 2.5);
+            let totalSharedMm = 0;
+            const allSharedSegments = [];
+
+            result.sheets.forEach(sheet => {
+                sheet.sharedSegments = [];
+                const pls = sheet.placements;
+                if (!pls || pls.length < 2) return;
+
+                for (let i = 0; i < pls.length; i++) {
+                    for (let j = i + 1; j < pls.length; j++) {
+                        // Quick AABB pre-filter
+                        const b1 = pls[i].bounds;
+                        const b2 = pls[j].bounds;
+                        if (b1 && b2) {
+                            if (b1.maxX < b2.minX - edgeTolerance || b2.maxX < b1.minX - edgeTolerance ||
+                                b1.maxY < b2.minY - edgeTolerance || b2.maxY < b1.minY - edgeTolerance) {
+                                continue;
+                            }
+                        }
+                        const segs = GeometryUtil.findSharedSegments(pls[i].polygon, pls[j].polygon, edgeTolerance);
+                        segs.forEach(s => {
+                            totalSharedMm += s.length;
+                            sheet.sharedSegments.push(s);
+                            allSharedSegments.push(s);
+                        });
+                    }
+                }
+            });
+
+            result.sharedCutMm = Math.round(totalSharedMm);
+            result.sharedSegments = allSharedSegments;
+            return result;
         }
 
         // Search for the optimal bottom-left coordinate
@@ -427,23 +450,24 @@
 
                 if (maxX < margin || maxY < margin) continue;
 
-                // Generate candidate X coordinates (origin + contact points of placed parts)
+                // Contact-point heuristic: candidates adjacent to placed bounds + margin
                 const candidateXs = new Set([margin]);
                 const candidateYs = new Set([margin]);
 
-                placements.forEach(placed => {
-                    const rightEdge = placed.bounds.maxX + halfSpacing * 2;
-                    const topEdge = placed.bounds.maxY + halfSpacing * 2;
+                for (let p = 0; p < placements.length; p++) {
+                    const pb = placements[p].bounds;
+                    const rightEdge = pb.maxX + halfSpacing * 2;
+                    const topEdge = pb.maxY + halfSpacing * 2;
                     if (rightEdge <= maxX) candidateXs.add(Math.round(rightEdge));
                     if (topEdge <= maxY) candidateYs.add(Math.round(topEdge));
-                });
+                    if (pb.minX <= maxX) candidateXs.add(Math.round(pb.minX));
+                    if (pb.minY <= maxY) candidateYs.add(Math.round(pb.minY));
+                }
 
-                // Also add regular grid steps to prevent getting trapped in local minima
-                const xStep = Math.max(stepSize || 8, 10);
-                const yStep = Math.max(stepSize || 8, 10);
-
-                for (let x = margin; x <= maxX; x += xStep * 2) candidateXs.add(x);
-                for (let y = margin; y <= maxY; y += yStep * 2) candidateYs.add(y);
+                // Coarse grid steps to escape local minima without combinatorial explosion
+                const coarseStep = Math.max(stepSize || 25, 35);
+                for (let x = margin; x <= maxX; x += coarseStep) candidateXs.add(x);
+                for (let y = margin; y <= maxY; y += coarseStep) candidateYs.add(y);
 
                 const sortedXs = Array.from(candidateXs).sort((a, b) => a - b);
                 const sortedYs = Array.from(candidateYs).sort((a, b) => a - b);
@@ -452,13 +476,17 @@
                     const x = sortedXs[xi];
                     if (x > maxX) break;
 
+                    // Score pruning on X: if minimum possible score for this X exceeds minScore, stop checking all further X's
+                    if ((x * 2.5 + sortedYs[0] * 1.0) >= minScore) break;
+
                     for (let yi = 0; yi < sortedYs.length; yi++) {
                         const y = sortedYs[yi];
                         if (y > maxY) break;
 
                         // Gravity score: heavily prioritize bottom-left placement
                         const score = (x * 2.5) + (y * 1.0);
-                        if (score >= minScore) continue;
+                        // Score pruning on Y: subsequent Y's are strictly larger
+                        if (score >= minScore) break;
 
                         const candidateBounds = {
                             minX: x - halfSpacing,
@@ -476,12 +504,12 @@
                                 candidateBounds.maxY < pb.minY ||
                                 candidateBounds.minY > pb.maxY)) {
                                 
-                                // AABB overlaps: Perform exact polygon intersection
+                                // AABB overlaps: Perform fast vector polygon intersection
                                 const transPoly = opt.offsetPoly ?
                                     GeometryUtil.translatePolygon(opt.offsetPoly, x, y) :
                                     GeometryUtil.translatePolygon(opt.poly, x, y);
                                 const checkPoly = placements[p].offsetPolygon || placements[p].polygon;
-                                if (GeometryUtil.clipperIntersect(transPoly, checkPoly, 100)) {
+                                if (GeometryUtil.doPolygonsIntersect(transPoly, checkPoly)) {
                                     collision = true;
                                     break;
                                 }
@@ -535,8 +563,14 @@
                 this.onProgress(bestResult, 0);
             }
 
+            // Yield to browser event loop immediately after greedy pass
+            await new Promise(r => setTimeout(r, 16));
+
+            let stagnationCount = 0;
+            const maxGenerations = Math.min(this.config.maxGenerations || 15, 25);
+
             // 2. Iterative Optimization (Simulated Annealing / Genetic Permutation)
-            while (this.isNesting && this.currentIteration < this.config.maxGenerations) {
+            while (this.isNesting && this.currentIteration < maxGenerations) {
                 this.currentIteration++;
 
                 // Clone and mutate instance sequence
@@ -570,14 +604,28 @@
                     bestResult = candidate;
                     bestResult.durationMs = Math.round(performance.now() - startTime);
                     this.bestResult = bestResult;
+                    stagnationCount = 0;
+                } else {
+                    stagnationCount++;
                 }
 
                 if (this.onProgress) {
                     this.onProgress(this.bestResult, this.currentIteration);
                 }
 
-                // Yield to event loop to keep UI 60fps responsive
-                await new Promise(r => setTimeout(r, 20));
+                // If optimal packing reached or stagnated for 4 generations, stop early
+                if (stagnationCount >= 4 && this.currentIteration >= 6) {
+                    break;
+                }
+
+                // Yield 16ms to keep UI 60fps responsive and handle clicks/stop
+                await new Promise(r => setTimeout(r, 16));
+            }
+
+            // Finalize shared cut edges once for best solution
+            this.finalizeBestResult(this.bestResult);
+            if (this.bestResult) {
+                this.bestResult.durationMs = Math.round(performance.now() - startTime);
             }
 
             this.isNesting = false;

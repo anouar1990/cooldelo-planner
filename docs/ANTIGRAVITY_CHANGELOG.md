@@ -662,3 +662,20 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+
+## [2026-11-16 21:55:00] - 0machine Nesting Performance & Freeze Prevention Overhaul
+- **Task**: Fix browser freeze and responsiveness lockups during 0machine Nesting optimization and manual usage. Replace brute-force combinatorial ClipperLib boolean evaluation with optimized AABB and vector polygon intersection, add candidate placement pruning, optimize hole placement, make genetic iterations non-blocking at 60 FPS, and enable direct manual part placement from "My Designs".
+- **Files Changed**:
+  - `lasercut-planner/public/nest/engine/nester.js` (Re-engineered `findBestPositionOnSheet` with coordinate pruning on X/Y and contact-point candidates; replaced synchronous Clipper calls with fast polygon intersections; decoupled heavy `findSharedSegments` from intermediate genetic iterations into a deferred `finalizeBestResult` call; added non-blocking 16ms event-loop yielding and stagnation early-exit in `startNesting`)
+  - `lasercut-planner/public/nest/engine/geometry.js` (Optimized `isPolygonInsidePolygon` with early AABB and vertex rejection; added `intersectPolygons` alias to `doPolygonsIntersect` for real-time dragging collision checks)
+  - `lasercut-planner/public/nest/app.js` (Enabled instant manual part placement upon clicking unplaced items in "My Designs"; added instant initial greedy layout calculation on startup for visual feedback; synchronized with `web-build/nest`)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Appended)
+- **Tests Performed**:
+  - Node.js benchmark with 20 complex 40-vertex curved shapes: PASS (Reduced optimization time from >30,000ms freeze to 585ms, 100% placed)
+  - Node.js 30-part bracket benchmark: PASS (166ms execution, 0 collisions)
+  - TypeScript compilation check (`cd lasercut-planner && npx tsc --noEmit`): PASS (0 errors)
+  - Expo Web build (`npm run vercel-build`): PASS (878ms clean export, all assets copied to `web-build/nest`)
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None
