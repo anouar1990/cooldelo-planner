@@ -555,3 +555,20 @@
   - Linked lasercut-planner app tools (Nesting Studio, Laser Presets, Cost Calculator, Quotes/Invoices) to landing page organic search entry points.
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+
+## [2026-11-16 15:55:00] - 0machine Nest Dashboard Integration, Design Layer Trash Button & White Workspace Canvas
+- **Task**: Keep and integrate "0machine Nest" prominently as a PRO feature in the main Dashboard (`DashboardScreen.tsx`), add a dedicated trash button (`courbille`) to delete individual imported CAD design layers in `0machine Nest` (`public/nest/`), and change the workspace sheet and canvas background to clean solid white (`#FFFFFF`) with dark labels and refined contrast.
+- **Files Changed**:
+  - `lasercut-planner/src/screens/DashboardScreen.tsx` (Added `badge` support to `QuickToolCard`, integrated `0machine Nest` with `PRO` badge, subscription paywall gating, and web direct open link)
+  - `lasercut-planner/public/nest/styles.css` (Added `.part-delete-btn` trash styling, set `.canvas-panel` and `.canvas-container` background to `#FFFFFF`, updated canvas shadow, and styled toolbar navigation)
+  - `lasercut-planner/public/nest/app.js` (Added trash button DOM rendering, part deletion handler with state reset/re-nesting, clean white sheet canvas background rendering with soft shadow, dark dimension labels `#1F2937`, and dark subtle grid lines)
+  - `lasercut-planner/web-build/nest/styles.css` & `web-build/nest/app.js` (Synced through export build pipeline)
+  - `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` & `docs/ANTIGRAVITY_CHANGELOG.md` (Appended)
+- **Tests Performed**:
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build`: PASS (Clean web bundle export and nest assets copied)
+  - Node.js automated DOM and logic assertions: PASS (Dashboard PRO badge, layer delete button, splice handler, white canvas styling)
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None

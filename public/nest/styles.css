@@ -436,21 +436,48 @@ body {
     color: #fff;
 }
 
-/* Center Canvas Viewport */
+.part-delete-btn {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #EF4444;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.part-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #EF4444;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.part-delete-btn:active {
+    transform: scale(0.95);
+}
+
+/* Center Canvas Viewport — Clean White Workspace */
 .canvas-panel {
     display: flex;
     flex-direction: column;
     position: relative;
-    background: #06070a;
+    background: #FFFFFF;
 }
 
 .canvas-toolbar {
     padding: 14px 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
     backdrop-filter: blur(10px);
+    background: #F8FAFC;
 }
 
 .viewport-info {
@@ -458,42 +485,28 @@ body {
     align-items: center;
     gap: 16px;
     font-size: 12px;
-    color: var(--text-muted);
-}
-
-.viewport-tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    color: #64748B;
 }
 
 .viewport-tag strong {
-    color: var(--text-primary);
+    color: #0F172A;
 }
 
-.sheet-nav-btn {
-    background: rgba(254, 119, 51, 0.1);
-    border: 1px solid rgba(254, 119, 51, 0.3);
-    color: var(--brand-color);
-    cursor: pointer;
-    border-radius: 4px;
-    padding: 1px 7px;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 16px;
-    transition: all 0.2s ease;
+.canvas-toolbar .btn-icon {
+    background: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    color: #334155;
 }
 
-.sheet-nav-btn:hover:not(:disabled) {
-    background: rgba(254, 119, 51, 0.25);
-    border-color: var(--brand-color);
+.canvas-toolbar .btn-icon:hover {
+    background: #F1F5F9;
+    color: #0F172A;
 }
 
-.sheet-nav-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    border-color: transparent;
-    background: transparent;
+.canvas-toolbar .sheet-nav-btn {
+    background: rgba(254, 119, 51, 0.12);
+    border: 1px solid rgba(254, 119, 51, 0.4);
+    color: #EA580C;
 }
 
 .canvas-container {
@@ -504,6 +517,7 @@ body {
     align-items: center;
     justify-content: center;
     cursor: grab;
+    background: #FFFFFF;
 }
 
 .canvas-container:active {
@@ -511,8 +525,8 @@ body {
 }
 
 #nestCanvas {
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-    border-radius: 4px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
 }
 
 /* Telemetry Stats (HUD) */

@@ -314,6 +314,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="qty-val">${part.quantity}</span>
                     <button class="qty-btn" data-action="inc" data-index="${index}">+</button>
                 </div>
+                <button class="part-delete-btn" data-index="${index}" title="Delete design layer" aria-label="Delete design layer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </button>
             `;
             partsListEl.appendChild(itemEl);
         });
@@ -331,9 +339,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderPartsList();
             });
         });
+
+        // Add event listeners to delete buttons
+        partsListEl.querySelectorAll('.part-delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(btn.dataset.index);
+                if (idx >= 0 && idx < nester.parts.length) {
+                    nester.parts.splice(idx, 1);
+                    nester.stopNesting();
+                    nester.bestResult = null;
+                    currentSheetIndex = 0;
+                    updateSheetPagination();
+                    hudEfficiency.innerHTML = `0<span>%</span>`;
+                    hudPlaced.textContent = '0 / 0';
+                    if (hudHoles) hudHoles.textContent = '0';
+                    if (hudSharedCut) hudSharedCut.innerHTML = `0<span>mm</span>`;
+                    updateDevis(null);
+                    renderPartsList();
+                    draw();
+                }
+            });
+        });
     }
 
-    // Canvas Drawing Function
+    // Canvas Drawing Function — Clean White Workspace
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
@@ -345,12 +375,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const sw = nester.config.sheetWidth;
         const sh = nester.config.sheetHeight;
 
-        // Draw Sheet Background (0machine Dark Slate)
-        ctx.fillStyle = '#0F1219';
+        // Draw Sheet Drop Shadow & Background (Clean White Sheet)
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 6;
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, sw, sh);
+        ctx.restore();
 
         // Draw Sheet Grid (50mm steps)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.04)';
         ctx.lineWidth = 1;
         for (let x = 0; x <= sw; x += 50) {
             ctx.beginPath();
@@ -367,22 +403,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Draw Margin boundary
         const m = nester.config.margin;
-        ctx.strokeStyle = 'rgba(254, 119, 51, 0.15)';
+        ctx.strokeStyle = 'rgba(254, 119, 51, 0.35)';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
         ctx.strokeRect(m, m, sw - 2 * m, sh - 2 * m);
         ctx.setLineDash([]);
 
-        // Draw Outer Sheet Boundary with 0machine Orange glow
+        // Draw Outer Sheet Boundary with 0machine Orange
         ctx.strokeStyle = '#FE7733';
         ctx.lineWidth = 2.5;
         ctx.strokeRect(0, 0, sw, sh);
 
-        // Draw Dimensions Label
-        ctx.fillStyle = '#9CA3AF';
-        ctx.font = '12px Inter';
+        // Draw Dimensions Label (Dark Slate for crisp contrast on white)
+        ctx.fillStyle = '#1F2937';
+        ctx.font = '600 12px Inter, sans-serif';
         ctx.fillText(`${sw} mm`, sw / 2 - 25, -12);
-        ctx.fillText(`${sh} mm`, -45, sh / 2);
+        ctx.fillText(`${sh} mm`, -50, sh / 2);
 
         // Draw Placed Parts if available
         if (nester.bestResult && nester.bestResult.sheets.length > 0) {
@@ -443,9 +479,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.restore();
                 }
 
-                // Part label & index
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = '10px Inter';
+                // Part label & index (Dark text for high contrast on white sheet)
+                ctx.fillStyle = '#0F172A';
+                ctx.font = 'bold 11px Inter, sans-serif';
                 const labelText = p.isInsideHole ? `#${idx + 1} ★` : `#${idx + 1}`;
                 ctx.fillText(labelText, p.x + 8, p.y + 14);
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Image, useWindowDimensions, Platform } from 'react-native';
 import { 
     Plus, Activity, CheckCircle, Clock, TrendingUp, ArrowRight, LogOut, Settings,
     Calculator, FileText, Layers, Zap, Folder, Users, Package, Grid, AlertTriangle, Download, DollarSign, MapPin, Sliders, Sparkles
@@ -46,9 +46,9 @@ function StatCard({
 }
 
 function QuickToolCard({
-    icon, title, desc, color, colors, onPress
+    icon, title, desc, color, colors, onPress, badge
 }: {
-    icon: React.ReactNode; title: string; desc: string; color: string; colors: any; onPress: () => void
+    icon: React.ReactNode; title: string; desc: string; color: string; colors: any; onPress: () => void; badge?: string;
 }) {
     return (
         <TouchableOpacity
@@ -60,7 +60,14 @@ function QuickToolCard({
                 {icon}
             </View>
             <View style={{ flex: 1 }}>
-                <Text style={[styles.toolTitle, { color: colors.text }]}>{title}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[styles.toolTitle, { color: colors.text }]}>{title}</Text>
+                    {badge && (
+                        <View style={{ backgroundColor: '#B1FA63', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                            <Text style={{ fontSize: 9, fontWeight: '800', color: '#111317' }}>{badge}</Text>
+                        </View>
+                    )}
+                </View>
                 <Text style={[styles.toolDesc, { color: colors.sub }]} numberOfLines={1}>{desc}</Text>
             </View>
             <ArrowRight color={colors.dim} size={16} />
@@ -246,6 +253,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<Sparkles color="#FE7733" size={20} />}
                             title="LaserAI Studio"
+                            badge="PRO"
                             desc="Text-to-CAD laser vectorizer & prompt studio"
                             color="#FE7733"
                             colors={colors}
@@ -283,11 +291,22 @@ export default function DashboardScreen({ navigation }: any) {
                         />
                         <QuickToolCard
                             icon={<Layers color="#8B5CF6" size={20} />}
-                            title={t('nest_title')}
-                            desc="Sheet layout & material waste optimizer"
+                            title="0machine Nest"
+                            badge="PRO"
+                            desc="Autonomous True-Shape sheet nesting & CAD/CAM engine"
                             color="#8B5CF6"
                             colors={colors}
-                            onPress={() => navigateTab('Nesting Estimator')}
+                            onPress={() => {
+                                if (!isPro) {
+                                    setShowProModal(true);
+                                    return;
+                                }
+                                if (Platform.OS === 'web') {
+                                    window.open('/nest/index.html', '_blank');
+                                } else {
+                                    navigateTab('Nesting Estimator');
+                                }
+                            }}
                         />
                         <QuickToolCard
                             icon={<Zap color="#F59E0B" size={20} />}
