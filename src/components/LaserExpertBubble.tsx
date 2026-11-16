@@ -37,9 +37,30 @@ interface LaserExpertBubbleProps {
 export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [inputText, setInputText] = useState('');
+    const [isDismissed, setIsDismissed] = useState(() => {
+        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.sessionStorage) {
+            try {
+                return sessionStorage.getItem('0machine_expert_bubble_dismissed') === 'true';
+            } catch (e) {
+                return false;
+            }
+        }
+        return false;
+    });
     const { width, height } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const isMobile = width < 640;
+
+    const handleDismiss = () => {
+        setIsDismissed(true);
+        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.sessionStorage) {
+            try {
+                sessionStorage.setItem('0machine_expert_bubble_dismissed', 'true');
+            } catch (e) {
+                // Ignore storage errors in private browsing
+            }
+        }
+    };
 
     const {
         messages,
@@ -117,9 +138,11 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
         await sendMessage(content);
     };
 
+    if (isDismissed) return null;
+
     return (
         <>
-            {/* FLOATING DRAGGABLE BUBBLE BUTTON */}
+            {/* FLOATING DRAGGABLE BUBBLE BUTTON & DISMISS BUTTON */}
             {!isOpen && (
                 <Animated.View
                     {...panResponder.panHandlers}
@@ -129,32 +152,44 @@ export function LaserExpertBubble({ onOpenFullScreen }: LaserExpertBubbleProps) 
                         { transform: pan.getTranslateTransform() }
                     ]}
                 >
-                    <TouchableOpacity
-                        activeOpacity={0.85}
-                        onPress={() => {
-                            if (!isDraggingRef.current) {
-                                setIsOpen(true);
-                            }
-                        }}
-                        style={[styles.bubbleButton, isMobile && styles.bubbleButtonMobile]}
-                    >
-                        <View style={[styles.bubbleIconWrapper, isMobile && styles.bubbleIconWrapperMobile]}>
-                            <Bot color="#FFFFFF" size={isMobile ? 20 : 26} />
-                            <Animated.View
-                                style={[
-                                    styles.pulseDot,
-                                    isMobile && styles.pulseDotMobile,
-                                    { transform: [{ scale: pulseAnim }] }
-                                ]}
-                            />
-                        </View>
-                        <View style={styles.bubbleTextContainer}>
-                            <Text style={[styles.bubbleTitle, isMobile && styles.bubbleTitleMobile]}>0machine AI</Text>
-                            {!isMobile && (
-                                <Text style={styles.bubbleSubtitle}>Laser & CNC Expert</Text>
-                            )}
-                        </View>
-                    </TouchableOpacity>
+                    <View style={styles.bubbleRowContainer}>
+                        <TouchableOpacity
+                            activeOpacity={0.85}
+                            onPress={() => {
+                                if (!isDraggingRef.current) {
+                                    setIsOpen(true);
+                                }
+                            }}
+                            style={[styles.bubbleButton, isMobile && styles.bubbleButtonMobile]}
+                        >
+                            <View style={[styles.bubbleIconWrapper, isMobile && styles.bubbleIconWrapperMobile]}>
+                                <Bot color="#FFFFFF" size={isMobile ? 13 : 15} />
+                                <Animated.View
+                                    style={[
+                                        styles.pulseDot,
+                                        isMobile && styles.pulseDotMobile,
+                                        { transform: [{ scale: pulseAnim }] }
+                                    ]}
+                                />
+                            </View>
+                            <View style={styles.bubbleTextContainer}>
+                                <Text style={[styles.bubbleTitle, isMobile && styles.bubbleTitleMobile]}>0machine AI</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={(e: any) => {
+                                e?.stopPropagation?.();
+                                handleDismiss();
+                            }}
+                            style={[styles.dismissBtn, isMobile && styles.dismissBtnMobile]}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            accessibilityLabel="Dismiss AI bubble"
+                        >
+                            <X color="#94A3B8" size={isMobile ? 12 : 13} />
+                        </TouchableOpacity>
+                    </View>
                 </Animated.View>
             )}
 
@@ -329,69 +364,74 @@ const styles = StyleSheet.create({
         bottom: 85,
         right: 16,
     },
+    bubbleRowContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
     bubbleButton: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#13151F',
-        borderWidth: 1.5,
+        borderWidth: 1.2,
         borderColor: '#FE7733',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 30,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 20,
         ...Platform.select({
             web: {
-                boxShadow: '0 8px 24px rgba(254, 119, 51, 0.4)',
+                boxShadow: '0 4px 16px rgba(254, 119, 51, 0.3)',
                 cursor: 'grab',
                 userSelect: 'none',
                 touchAction: 'none',
             } as any,
             default: {
-                elevation: 10,
+                elevation: 6,
                 shadowColor: '#FE7733',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.4,
-                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.35,
+                shadowRadius: 6,
             },
         }),
     },
     bubbleButtonMobile: {
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 24,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 16,
     },
     bubbleIconWrapper: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+        width: 26,
+        height: 26,
+        borderRadius: 13,
         backgroundColor: '#FE7733',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 10,
+        marginRight: 7,
         position: 'relative',
     },
     bubbleIconWrapperMobile: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        marginRight: 8,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        marginRight: 5,
     },
     pulseDot: {
         position: 'absolute',
         top: -1,
         right: -1,
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+        width: 7,
+        height: 7,
+        borderRadius: 3.5,
         backgroundColor: '#10B981',
         borderWidth: 1.5,
         borderColor: '#13151F',
     },
     pulseDotMobile: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        top: 0,
-        right: 0,
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        top: -1,
+        right: -1,
     },
     bubbleTextContainer: {
         justifyContent: 'center',
@@ -399,16 +439,36 @@ const styles = StyleSheet.create({
     bubbleTitle: {
         color: '#FFFFFF',
         fontWeight: '700',
-        fontSize: 14,
+        fontSize: 12,
+        letterSpacing: 0.2,
     },
     bubbleTitleMobile: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '700',
     },
-    bubbleSubtitle: {
-        color: '#8B95A8',
-        fontSize: 11,
-        fontWeight: '500',
+    dismissBtn: {
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        backgroundColor: 'rgba(26, 29, 33, 0.95)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.16)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...Platform.select({
+            web: {
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.35)',
+                cursor: 'pointer',
+            } as any,
+            default: {
+                elevation: 4,
+            },
+        }),
+    },
+    dismissBtnMobile: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
     },
 
     /* FLOATING CHAT POPUP */

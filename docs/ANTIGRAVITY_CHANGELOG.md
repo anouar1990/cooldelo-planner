@@ -572,3 +572,17 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+
+## [2026-11-16 16:18:00] - Compact Laser Expert Bubble & Dismissal ('X') Button
+- **Task**: Reduce the visual footprint of the floating 0machine Laser Expert AI bubble widget and add an adjacent 'X' button to dismiss/hide the bubble from the screen with session persistence.
+- **Files Changed**:
+  - `lasercut-planner/src/components/LaserExpertBubble.tsx` (Reduced bubble dimensions by ~40%, optimized typography and padding, introduced `isDismissed` state with `sessionStorage` fallback, added adjacent `dismissBtn` with lucide `X` icon and touch hitSlop)
+  - `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` & `docs/ANTIGRAVITY_CHANGELOG.md` (Appended)
+- **Tests Performed**:
+  - `npx tsc --noEmit`: PASS (0 errors)
+  - `npm run vercel-build`: PASS (1057ms clean web bundle export)
+  - Node.js automated unit assertions: PASS (Verified `isDismissed`, `handleDismiss`, `bubbleRowContainer`, compact sizing, `dismissBtn`)
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None
