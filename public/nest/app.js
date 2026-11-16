@@ -8,12 +8,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('canvasContainer');
 
-    // State
+    // Workspace & Canvas State
     let zoom = 0.85;
     let panX = 40;
     let panY = 40;
-    let isDragging = false;
+    let activeTool = 'select'; // 'select' | 'pan'
+    let selectedSheetPlacementIndex = -1; // Index in nester.bestResult.sheets[currentSheetIndex].placements
+    let isDraggingPart = false;
+    let isPanning = false;
+    let dragStartSheetPt = { x: 0, y: 0 };
+    let hasCollision = false;
     let startX = 0, startY = 0;
+    let partSearchQuery = '';
 
     // Initialize Nester
     const nester = new Nester({
@@ -122,6 +128,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusPill = document.getElementById('statusPill');
     const statusText = document.getElementById('statusText');
 
+    // Toolbar Tools & View Controls
+    const toolSelectBtn = document.getElementById('toolSelectBtn');
+    const toolPanBtn = document.getElementById('toolPanBtn');
+    const fitSheetBtn = document.getElementById('fitSheetBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const toolbarPartActions = document.getElementById('toolbarPartActions');
+    const toolbarRotateBtn = document.getElementById('toolbarRotateBtn');
+    const toolbarDeleteBtn = document.getElementById('toolbarDeleteBtn');
+
+    // Left Sidebar Elements
+    const addDesignBtn = document.getElementById('addDesignBtn');
+    const designsCountBadge = document.getElementById('designsCountBadge');
+    const totalItemsSummary = document.getElementById('totalItemsSummary');
+    const partSearchInput = document.getElementById('partSearchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const emptyPartsState = document.getElementById('emptyPartsState');
+
+    // Right Sidebar Inspector Elements
+    const sheetInspectorMode = document.getElementById('sheetInspectorMode');
+    const partInspectorMode = document.getElementById('partInspectorMode');
+    const deselectPartBtn = document.getElementById('deselectPartBtn');
+    const deselectPartBottomBtn = document.getElementById('deselectPartBottomBtn');
+    const inspectorTitleText = document.getElementById('inspectorTitleText');
+
+    // Inspector Part Elements
+    const selectedPartName = document.getElementById('selectedPartName');
+    const selectedPartDims = document.getElementById('selectedPartDims');
+    const selectedPartX = document.getElementById('selectedPartX');
+    const selectedPartY = document.getElementById('selectedPartY');
+    const selectedPartRotationVal = document.getElementById('selectedPartRotationVal');
+    const selectedPartLockToggle = document.getElementById('selectedPartLockToggle');
+    const inspectorPartPreview = document.getElementById('inspectorPartPreview');
+    const rotatePartBtn = document.getElementById('rotatePartBtn');
+    const deletePartFromSheetBtn = document.getElementById('deletePartFromSheetBtn');
+
     // Controls
     const sheetWidthInput = document.getElementById('sheetWidth');
     const sheetHeightInput = document.getElementById('sheetHeight');
@@ -133,36 +175,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const useHolesToggle = document.getElementById('useHolesToggle');
     const commonLineToggle = document.getElementById('commonLineToggle');
 
-    // Tabs & Devis Elements
-    const tabTelemetryBtn = document.getElementById('tabTelemetryBtn');
-    const tabDevisBtn = document.getElementById('tabDevisBtn');
-    const telemetryTabContent = document.getElementById('telemetryTabContent');
-    const devisTabContent = document.getElementById('devisTabContent');
+    // Cost Calculator & Devis Elements
+    const costCalc = new CostCalculator();
     const materialSelect = document.getElementById('materialSelect');
     const thicknessSelect = document.getElementById('thicknessSelect');
     const devisSavingsPill = document.getElementById('devisSavingsPill');
-    const devisWeight = document.getElementById('devisWeight');
-    const devisMaterialCost = document.getElementById('devisMaterialCost');
-    const devisTime = document.getElementById('devisTime');
-    const devisMachineCost = document.getElementById('devisMachineCost');
-    const devisSharedCut = document.getElementById('devisSharedCut');
     const devisTotalMAD = document.getElementById('devisTotalMAD');
     const devisUnitPart = document.getElementById('devisUnitPart');
     const printDevisBtn = document.getElementById('printDevisBtn');
 
-    // Cost Calculator
-    const costCalc = new CostCalculator();
-
     // HUD Elements
     const hudEfficiency = document.getElementById('hudEfficiency');
     const hudPlaced = document.getElementById('hudPlaced');
-    const hudHoles = document.getElementById('hudHoles');
     const hudSharedCut = document.getElementById('hudSharedCut');
     const hudSheetCount = document.getElementById('hudSheetCount');
     const hudSheetDisplay = document.getElementById('hudSheetDisplay');
     const prevSheetBtn = document.getElementById('prevSheetBtn');
     const nextSheetBtn = document.getElementById('nextSheetBtn');
     let currentSheetIndex = 0;
+
+    // Convert Screen (Client) coordinates to Sheet coordinates (mm)
+    function screenToSheet(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: (clientX - rect.left - panX) / zoom,
+            y: (clientY - rect.top - panY) / zoom
+        };
+    }
+
+    // Auto fit sheet into canvas viewport
+    function fitToView() {
+        const sw = nester.config.sheetWidth;
+        const sh = nester.config.sheetHeight;
+        const padding = 50;
+        const availableW = canvas.width - padding * 2;
+        const availableH = canvas.height - padding * 2;
+        if (availableW <= 0 || availableH <= 0) return;
+        zoom = Math.min(availableW / sw, availableH / sh, 1.4);
+        panX = (canvas.width - sw * zoom) / 2;
+        panY = (canvas.height - sh * zoom) / 2;
+        draw();
+    }
 
     function updateSheetPagination() {
         const totalSheets = (nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets.length) || 1;
@@ -186,19 +239,417 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Auto fit sheet into canvas viewport
-    function fitToView() {
-        const sw = nester.config.sheetWidth;
-        const sh = nester.config.sheetHeight;
-        const padding = 40;
-        const availableW = canvas.width - padding * 2;
-        const availableH = canvas.height - padding * 2;
-        if (availableW <= 0 || availableH <= 0) return;
-        zoom = Math.min(availableW / sw, availableH / sh, 1.5);
-        panX = (canvas.width - sw * zoom) / 2;
-        panY = (canvas.height - sh * zoom) / 2;
+    // Render Contextual Right Inspector (Sheet Settings vs Selected Part)
+    function renderInspector() {
+        const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+        const p = (sheet && sheet.placements && selectedSheetPlacementIndex >= 0 && selectedSheetPlacementIndex < sheet.placements.length)
+            ? sheet.placements[selectedSheetPlacementIndex]
+            : null;
+
+        if (p) {
+            // Mode B: Part Inspector
+            if (sheetInspectorMode) sheetInspectorMode.style.display = 'none';
+            if (partInspectorMode) partInspectorMode.style.display = 'flex';
+            if (deselectPartBtn) deselectPartBtn.style.display = 'block';
+            if (inspectorTitleText) inspectorTitleText.textContent = 'Selected Design';
+            if (toolbarPartActions) {
+                toolbarPartActions.style.opacity = '1';
+                toolbarPartActions.style.pointerEvents = 'auto';
+            }
+
+            if (selectedPartName) selectedPartName.value = p.name || 'Design';
+            const w = Math.round(p.bounds ? p.bounds.width : 0);
+            const h = Math.round(p.bounds ? p.bounds.height : 0);
+            if (selectedPartDims) selectedPartDims.textContent = `${w} × ${h} mm`;
+            if (selectedPartX) selectedPartX.value = Math.round(p.x);
+            if (selectedPartY) selectedPartY.value = Math.round(p.y);
+            if (selectedPartRotationVal) selectedPartRotationVal.textContent = `${Math.round(p.rotation || 0)}°`;
+            if (selectedPartLockToggle) selectedPartLockToggle.checked = !!p.locked;
+
+            // Highlight rotation button
+            const curRot = Math.round(p.rotation || 0) % 360;
+            document.querySelectorAll('.rot-quick-btn').forEach(btn => {
+                const deg = parseInt(btn.dataset.deg);
+                btn.classList.toggle('active', deg === curRot);
+            });
+
+            // Mini SVG Preview in Inspector
+            if (inspectorPartPreview && p.polygon && p.polygon.length > 2) {
+                const minX = p.bounds ? p.bounds.minX : 0;
+                const minY = p.bounds ? p.bounds.minY : 0;
+                const pw = Math.max(1, p.bounds ? p.bounds.width : 50);
+                const ph = Math.max(1, p.bounds ? p.bounds.height : 50);
+                const pts = p.polygon.map(pt => `${pt.x - minX},${pt.y - minY}`).join(' ');
+                inspectorPartPreview.innerHTML = `
+                    <svg width="44" height="44" viewBox="0 0 ${pw} ${ph}">
+                        <polygon points="${pts}" fill="${p.color || '#FE7733'}" fill-opacity="0.35" stroke="${p.color || '#FE7733'}" stroke-width="2" />
+                    </svg>
+                `;
+            }
+        } else {
+            // Mode A: Sheet & Material Inspector
+            if (sheetInspectorMode) sheetInspectorMode.style.display = 'flex';
+            if (partInspectorMode) partInspectorMode.style.display = 'none';
+            if (deselectPartBtn) deselectPartBtn.style.display = 'none';
+            if (inspectorTitleText) inspectorTitleText.textContent = 'Sheet & Material';
+            if (toolbarPartActions) {
+                toolbarPartActions.style.opacity = '0.4';
+                toolbarPartActions.style.pointerEvents = 'none';
+            }
+        }
+    }
+
+    function deselectCurrentPart() {
+        selectedSheetPlacementIndex = -1;
+        hasCollision = false;
+        const collisionBadge = document.getElementById('canvasCollisionWarning');
+        if (collisionBadge) collisionBadge.style.display = 'none';
+        renderInspector();
+        renderPartsList();
         draw();
     }
+
+    if (deselectPartBtn) deselectPartBtn.addEventListener('click', deselectCurrentPart);
+    if (deselectPartBottomBtn) deselectPartBottomBtn.addEventListener('click', deselectCurrentPart);
+
+    // Rotate Selected Part
+    function rotateSelectedPart(deltaDeg) {
+        const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+        const p = (sheet && sheet.placements && selectedSheetPlacementIndex >= 0) ? sheet.placements[selectedSheetPlacementIndex] : null;
+        if (!p || !p.polygon || p.polygon.length < 3) return;
+
+        const cx = (p.bounds.minX + p.bounds.maxX) / 2;
+        const cy = (p.bounds.minY + p.bounds.maxY) / 2;
+        const rad = (deltaDeg * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        p.polygon.forEach(pt => {
+            const relX = pt.x - cx;
+            const relY = pt.y - cy;
+            pt.x = cx + relX * cos - relY * sin;
+            pt.y = cy + relX * sin + relY * cos;
+        });
+
+        if (p.polygon.holes) {
+            p.polygon.holes.forEach(hole => {
+                hole.forEach(pt => {
+                    const relX = pt.x - cx;
+                    const relY = pt.y - cy;
+                    pt.x = cx + relX * cos - relY * sin;
+                    pt.y = cy + relX * sin + relY * cos;
+                });
+            });
+        }
+
+        // Recompute bounds
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        p.polygon.forEach(pt => {
+            if (pt.x < minX) minX = pt.x;
+            if (pt.x > maxX) maxX = pt.x;
+            if (pt.y < minY) minY = pt.y;
+            if (pt.y > maxY) maxY = pt.y;
+        });
+
+        p.bounds = { minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
+        p.rotation = ((p.rotation || 0) + deltaDeg + 360) % 360;
+        p.x = minX;
+        p.y = minY;
+
+        checkPlacementCollision(p, currentSheet);
+        renderInspector();
+        draw();
+    }
+
+    if (toolbarRotateBtn) toolbarRotateBtn.addEventListener('click', () => rotateSelectedPart(90));
+    if (rotatePartBtn) rotatePartBtn.addEventListener('click', () => rotateSelectedPart(90));
+
+    // Quick Rotation Buttons in Inspector (0°, 90°, 180°, 270°)
+    document.querySelectorAll('.rot-quick-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetDeg = parseInt(btn.dataset.deg) || 0;
+            const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+            const p = (sheet && sheet.placements && selectedSheetPlacementIndex >= 0) ? sheet.placements[selectedSheetPlacementIndex] : null;
+            if (p) {
+                const currentDeg = Math.round(p.rotation || 0) % 360;
+                let delta = targetDeg - currentDeg;
+                if (delta < 0) delta += 360;
+                rotateSelectedPart(delta);
+            }
+        });
+    });
+
+    // Delete Selected Placement from Sheet
+    function deleteSelectedPlacement() {
+        const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+        if (sheet && sheet.placements && selectedSheetPlacementIndex >= 0) {
+            sheet.placements.splice(selectedSheetPlacementIndex, 1);
+            selectedSheetPlacementIndex = -1;
+            hasCollision = false;
+            const collisionBadge = document.getElementById('canvasCollisionWarning');
+            if (collisionBadge) collisionBadge.style.display = 'none';
+            renderInspector();
+            updateDevis();
+            draw();
+        }
+    }
+
+    if (toolbarDeleteBtn) toolbarDeleteBtn.addEventListener('click', deleteSelectedPlacement);
+    if (deletePartFromSheetBtn) deletePartFromSheetBtn.addEventListener('click', deleteSelectedPlacement);
+
+    // Edit Selected Part Name & Coordinates
+    if (selectedPartName) {
+        selectedPartName.addEventListener('input', (e) => {
+            const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+            const p = (sheet && sheet.placements && selectedSheetPlacementIndex >= 0) ? sheet.placements[selectedSheetPlacementIndex] : null;
+            if (p) {
+                p.name = e.target.value;
+                draw();
+            }
+        });
+    }
+
+    if (selectedPartX) {
+        selectedPartX.addEventListener('change', (e) => {
+            const newX = parseFloat(e.target.value) || 0;
+            const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+            const p = (sheet && sheet.placements && selectedSheetPlacementIndex >= 0) ? sheet.placements[selectedSheetPlacementIndex] : null;
+            if (p) {
+                const dx = newX - p.x;
+                p.x += dx;
+                p.polygon.forEach(pt => pt.x += dx);
+                if (p.polygon.holes) p.polygon.holes.forEach(h => h.forEach(pt => pt.x += dx));
+                if (p.bounds) { p.bounds.minX += dx; p.bounds.maxX += dx; }
+                checkPlacementCollision(p, currentSheet);
+                draw();
+            }
+        });
+    }
+
+    if (selectedPartY) {
+        selectedPartY.addEventListener('change', (e) => {
+            const newY = parseFloat(e.target.value) || 0;
+            const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+            const p = (sheet && sheet.placements && selectedSheetPlacementIndex >= 0) ? sheet.placements[selectedSheetPlacementIndex] : null;
+            if (p) {
+                const dy = newY - p.y;
+                p.y += dy;
+                p.polygon.forEach(pt => pt.y += dy);
+                if (p.polygon.holes) p.polygon.holes.forEach(h => h.forEach(pt => pt.y += dy));
+                if (p.bounds) { p.bounds.minY += dy; p.bounds.maxY += dy; }
+                checkPlacementCollision(p, currentSheet);
+                draw();
+            }
+        });
+    }
+
+    if (selectedPartLockToggle) {
+        selectedPartLockToggle.addEventListener('change', (e) => {
+            const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+            const p = (sheet && sheet.placements && selectedSheetPlacementIndex >= 0) ? sheet.placements[selectedSheetPlacementIndex] : null;
+            if (p) {
+                p.locked = e.target.checked;
+                draw();
+            }
+        });
+    }
+
+    // Collision & Boundary Checker
+    function checkPlacementCollision(p, sheet) {
+        const margin = nester.config.margin || 8;
+        const sw = nester.config.sheetWidth || 1000;
+        const sh = nester.config.sheetHeight || 600;
+
+        let outOfBounds = false;
+        if (p.bounds) {
+            if (p.bounds.minX < margin || p.bounds.minY < margin || p.bounds.maxX > sw - margin || p.bounds.maxY > sh - margin) {
+                outOfBounds = true;
+            }
+        }
+
+        let overlaps = false;
+        if (sheet && sheet.placements) {
+            for (let i = 0; i < sheet.placements.length; i++) {
+                if (i === selectedSheetPlacementIndex) continue;
+                const other = sheet.placements[i];
+                if (p.bounds && other.bounds) {
+                    if (p.bounds.maxX < other.bounds.minX || p.bounds.minX > other.bounds.maxX ||
+                        p.bounds.maxY < other.bounds.minY || p.bounds.minY > other.bounds.maxY) {
+                        continue;
+                    }
+                }
+                if (GeometryUtil.intersectPolygons && GeometryUtil.intersectPolygons(p.polygon, other.polygon)) {
+                    overlaps = true;
+                    break;
+                }
+            }
+        }
+
+        hasCollision = outOfBounds || overlaps;
+        const collisionBadge = document.getElementById('canvasCollisionWarning');
+        const collisionText = document.getElementById('canvasCollisionText');
+        if (collisionBadge && collisionText) {
+            if (hasCollision) {
+                collisionBadge.style.display = 'flex';
+                collisionText.textContent = outOfBounds && overlaps ? '⚠️ Overlap & Outside Sheet Margin' :
+                                            outOfBounds ? '⚠️ Part Outside Sheet Margin' : '⚠️ Parts Colliding / Overlapping';
+            } else {
+                collisionBadge.style.display = 'none';
+            }
+        }
+    }
+
+    // Tool Buttons: Select vs Pan
+    if (toolSelectBtn) {
+        toolSelectBtn.addEventListener('click', () => {
+            activeTool = 'select';
+            toolSelectBtn.classList.add('active');
+            if (toolPanBtn) toolPanBtn.classList.remove('active');
+            container.classList.remove('tool-pan');
+        });
+    }
+
+    if (toolPanBtn) {
+        toolPanBtn.addEventListener('click', () => {
+            activeTool = 'pan';
+            toolPanBtn.classList.add('active');
+            if (toolSelectBtn) toolSelectBtn.classList.remove('active');
+            container.classList.add('tool-pan');
+        });
+    }
+
+    // View Action Buttons: Fit Sheet, Zoom In, Zoom Out
+    if (fitSheetBtn) {
+        fitSheetBtn.addEventListener('click', () => fitToView());
+    }
+
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            const newZoom = Math.min(3.0, zoom * 1.25);
+            panX = canvas.width / 2 - (canvas.width / 2 - panX) * (newZoom / zoom);
+            panY = canvas.height / 2 - (canvas.height / 2 - panY) * (newZoom / zoom);
+            zoom = newZoom;
+            draw();
+        });
+    }
+
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            const newZoom = Math.max(0.2, zoom * 0.8);
+            panX = canvas.width / 2 - (canvas.width / 2 - panX) * (newZoom / zoom);
+            panY = canvas.height / 2 - (canvas.height / 2 - panY) * (newZoom / zoom);
+            zoom = newZoom;
+            draw();
+        });
+    }
+
+    // Sheet Preset Size Buttons
+    document.querySelectorAll('.preset-size-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const w = parseInt(btn.dataset.w);
+            const h = parseInt(btn.dataset.h);
+            if (w && h) {
+                if (sheetWidthInput) sheetWidthInput.value = w;
+                if (sheetHeightInput) sheetHeightInput.value = h;
+                nester.setConfig({ sheetWidth: w, sheetHeight: h });
+                document.querySelectorAll('.preset-size-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                fitToView();
+                updateDevis();
+            }
+        });
+    });
+
+    // Left Sidebar: Add Design Button
+    if (addDesignBtn) {
+        addDesignBtn.addEventListener('click', () => {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput) fileInput.click();
+        });
+    }
+
+    // Left Sidebar: Search Filter
+    if (partSearchInput) {
+        partSearchInput.addEventListener('input', (e) => {
+            partSearchQuery = e.target.value.toLowerCase().trim();
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = partSearchQuery ? 'block' : 'none';
+            }
+            renderPartsList();
+        });
+    }
+
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', () => {
+            if (partSearchInput) partSearchInput.value = '';
+            partSearchQuery = '';
+            clearSearchBtn.style.display = 'none';
+            renderPartsList();
+        });
+    }
+
+    // Workflow Stepper Interactive Guidance
+    const step1 = document.getElementById('step1Indicator');
+    const step2 = document.getElementById('step2Indicator');
+    const step3 = document.getElementById('step3Indicator');
+    const step4 = document.getElementById('step4Indicator');
+    const step5 = document.getElementById('step5Indicator');
+
+    function setWorkflowStep(stepNum) {
+        [step1, step2, step3, step4, step5].forEach((st, idx) => {
+            if (st) st.classList.toggle('active', idx + 1 === stepNum);
+        });
+    }
+
+    if (step1) step1.addEventListener('click', () => {
+        setWorkflowStep(1);
+        if (addDesignBtn) addDesignBtn.click();
+    });
+    if (step2) step2.addEventListener('click', () => {
+        setWorkflowStep(2);
+        deselectCurrentPart();
+        if (sheetWidthInput) sheetWidthInput.focus();
+    });
+    if (step3) step3.addEventListener('click', () => {
+        setWorkflowStep(3);
+        if (startBtn && !startBtn.disabled) startBtn.click();
+    });
+    if (step4) step4.addEventListener('click', () => {
+        setWorkflowStep(4);
+        deselectCurrentPart();
+        const card = document.querySelector('.efficiency-summary-card');
+        if (card) card.scrollIntoView({ behavior: 'smooth' });
+    });
+    if (step5) step5.addEventListener('click', () => {
+        setWorkflowStep(5);
+        if (exportBtn) exportBtn.click();
+    });
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+        // Prevent shortcuts when typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (selectedSheetPlacementIndex >= 0) {
+                e.preventDefault();
+                deleteSelectedPlacement();
+            }
+        } else if (e.key === 'r' || e.key === 'R') {
+            if (selectedSheetPlacementIndex >= 0) {
+                e.preventDefault();
+                rotateSelectedPart(90);
+            }
+        } else if (e.key === 'Escape') {
+            deselectCurrentPart();
+        } else if (e.key === 'f' || e.key === 'F') {
+            fitToView();
+        } else if (e.key === '1') {
+            if (toolSelectBtn) toolSelectBtn.click();
+        } else if (e.key === '2') {
+            if (toolPanBtn) toolPanBtn.click();
+        }
+    });
 
     // Parse URL Search Parameters from 0machine App Nesting Yield launcher
     try {
@@ -258,10 +709,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pan & Zoom handlers
     container.addEventListener('wheel', (e) => {
         e.preventDefault();
-        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-        const newZoom = Math.max(0.2, Math.min(3.0, zoom * zoomFactor));
+        const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
+        const newZoom = Math.max(0.15, Math.min(3.5, zoom * zoomFactor));
 
-        // Zoom relative to mouse
+        // Zoom relative to mouse position
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
@@ -272,63 +723,188 @@ document.addEventListener('DOMContentLoaded', () => {
         draw();
     }, { passive: false });
 
+    // Interactive Mouse Handlers on Canvas (Select & Drag vs Pan)
     container.addEventListener('mousedown', (e) => {
-        isDragging = true;
+        const isMiddleClick = (e.button === 1);
+        const isSpaceDown = e.spaceKey;
+
+        if (activeTool === 'pan' || isMiddleClick || isSpaceDown) {
+            isPanning = true;
+            startX = e.clientX - panX;
+            startY = e.clientY - panY;
+            return;
+        }
+
+        // Tool is 'select': perform Hit-testing on sheet placements
+        const sheetPt = screenToSheet(e.clientX, e.clientY);
+        const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+
+        if (sheet && sheet.placements && sheet.placements.length > 0) {
+            // Test from top to bottom (reverse order)
+            let hitIdx = -1;
+            for (let i = sheet.placements.length - 1; i >= 0; i--) {
+                const p = sheet.placements[i];
+                if (GeometryUtil.pointInPolygon(sheetPt, p.polygon)) {
+                    hitIdx = i;
+                    break;
+                }
+            }
+
+            if (hitIdx >= 0) {
+                selectedSheetPlacementIndex = hitIdx;
+                isDraggingPart = true;
+                dragStartSheetPt = { x: sheetPt.x, y: sheetPt.y };
+                hasCollision = false;
+                renderInspector();
+                renderPartsList();
+                draw();
+                return;
+            }
+        }
+
+        // Clicked outside any part: deselect and fallback to canvas pan
+        selectedSheetPlacementIndex = -1;
+        hasCollision = false;
+        const collisionBadge = document.getElementById('canvasCollisionWarning');
+        if (collisionBadge) collisionBadge.style.display = 'none';
+        renderInspector();
+        renderPartsList();
+
+        isPanning = true;
         startX = e.clientX - panX;
         startY = e.clientY - panY;
-    });
-
-    window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        panX = e.clientX - startX;
-        panY = e.clientY - startY;
         draw();
     });
 
+    window.addEventListener('mousemove', (e) => {
+        if (isDraggingPart && selectedSheetPlacementIndex >= 0) {
+            const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+            const p = sheet ? sheet.placements[selectedSheetPlacementIndex] : null;
+            if (p) {
+                const currentSheetPt = screenToSheet(e.clientX, e.clientY);
+                const dx = currentSheetPt.x - dragStartSheetPt.x;
+                const dy = currentSheetPt.y - dragStartSheetPt.y;
+                dragStartSheetPt = currentSheetPt;
+
+                p.x += dx;
+                p.y += dy;
+                p.polygon.forEach(pt => { pt.x += dx; pt.y += dy; });
+                if (p.polygon.holes) {
+                    p.polygon.holes.forEach(hole => hole.forEach(pt => { pt.x += dx; pt.y += dy; }));
+                }
+                if (p.bounds) {
+                    p.bounds.minX += dx; p.bounds.maxX += dx;
+                    p.bounds.minY += dy; p.bounds.maxY += dy;
+                }
+
+                // Real-time Collision & Boundary Check
+                checkPlacementCollision(p, sheet);
+
+                // Update Inspector inputs live
+                if (selectedPartX) selectedPartX.value = Math.round(p.x);
+                if (selectedPartY) selectedPartY.value = Math.round(p.y);
+
+                draw();
+            }
+        } else if (isPanning) {
+            panX = e.clientX - startX;
+            panY = e.clientY - startY;
+            draw();
+        }
+    });
+
     window.addEventListener('mouseup', () => {
-        isDragging = false;
+        if (isDraggingPart) {
+            isDraggingPart = false;
+            if (nester.bestResult) {
+                updateDevis();
+            }
+            draw();
+        }
+        isPanning = false;
     });
 
     // Render Parts List in Left Sidebar
     function renderPartsList() {
+        if (!partsListEl) return;
         partsListEl.innerHTML = '';
+
+        let displayedCount = 0;
+        let totalItems = 0;
+
         nester.parts.forEach((part, index) => {
+            totalItems += (part.quantity || 1);
+
+            // Filter by search query if present
+            if (partSearchQuery && !part.name.toLowerCase().includes(partSearchQuery)) {
+                return;
+            }
+            displayedCount++;
+
             const itemEl = document.createElement('div');
             itemEl.className = 'part-item';
             const hasHoles = part.holes && part.holes.length > 0;
             const hollowBadge = hasHoles ? `<span style="color:var(--accent);font-size:10px;font-weight:700;margin-left:4px;">[Hollow]</span>` : '';
 
+            // Check if this part matches currently selected placement
+            const sheet = nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets[currentSheetIndex];
+            const selPl = (sheet && sheet.placements && selectedSheetPlacementIndex >= 0) ? sheet.placements[selectedSheetPlacementIndex] : null;
+            if (selPl && selPl.name === part.name) {
+                itemEl.classList.add('selected');
+            }
+
             itemEl.innerHTML = `
                 <div class="part-preview">
-                    <svg width="34" height="34" viewBox="0 0 ${part.bounds.width || 50} ${part.bounds.height || 50}">
+                    <svg width="32" height="32" viewBox="0 0 ${part.bounds.width || 50} ${part.bounds.height || 50}">
                         <polygon points="${part.polygon.map(p => `${p.x},${p.y}`).join(' ')}"
-                                 fill="${part.color}" fill-opacity="0.3" stroke="${part.color}" stroke-width="2" />
+                                 fill="${part.color}" fill-opacity="0.35" stroke="${part.color}" stroke-width="2" />
                     </svg>
                 </div>
                 <div class="part-info">
-                    <div class="part-name">${part.name} ${hollowBadge}</div>
+                    <div class="part-name" title="${part.name}">${part.name} ${hollowBadge}</div>
                     <div class="part-meta">${Math.round(part.bounds.width)} × ${Math.round(part.bounds.height)} mm</div>
                 </div>
                 <div class="quantity-control">
-                    <button class="qty-btn" data-action="dec" data-index="${index}">-</button>
+                    <button class="qty-btn" data-action="dec" data-index="${index}" title="Decrease quantity">-</button>
                     <span class="qty-val">${part.quantity}</span>
-                    <button class="qty-btn" data-action="inc" data-index="${index}">+</button>
+                    <button class="qty-btn" data-action="inc" data-index="${index}" title="Increase quantity">+</button>
                 </div>
                 <button class="part-delete-btn" data-index="${index}" title="Delete design layer" aria-label="Delete design layer">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                        <line x1="14" y1="11" x2="14" y2="17"></line>
                     </svg>
                 </button>
             `;
+
+            // Click part card to select its placed counterpart on canvas
+            itemEl.addEventListener('click', (e) => {
+                if (e.target.closest('.qty-btn') || e.target.closest('.part-delete-btn')) return;
+                if (sheet && sheet.placements) {
+                    const foundIdx = sheet.placements.findIndex(p => p.name === part.name);
+                    if (foundIdx >= 0) {
+                        selectedSheetPlacementIndex = foundIdx;
+                        renderInspector();
+                        renderPartsList();
+                        draw();
+                    }
+                }
+            });
+
             partsListEl.appendChild(itemEl);
         });
 
-        // Add event listeners to qty buttons
+        // Update badge and summary counters
+        if (designsCountBadge) designsCountBadge.textContent = nester.parts.length;
+        if (totalItemsSummary) totalItemsSummary.textContent = `${totalItems} total parts`;
+        if (emptyPartsState) {
+            emptyPartsState.style.display = (nester.parts.length === 0) ? 'flex' : 'none';
+        }
+
+        // Qty buttons
         partsListEl.querySelectorAll('.qty-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const idx = parseInt(btn.dataset.index);
                 const action = btn.dataset.action;
                 if (action === 'inc') {
@@ -340,7 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Add event listeners to delete buttons
+        // Delete buttons
         partsListEl.querySelectorAll('.part-delete-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -350,12 +926,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     nester.stopNesting();
                     nester.bestResult = null;
                     currentSheetIndex = 0;
+                    selectedSheetPlacementIndex = -1;
                     updateSheetPagination();
-                    hudEfficiency.innerHTML = `0<span>%</span>`;
-                    hudPlaced.textContent = '0 / 0';
-                    if (hudHoles) hudHoles.textContent = '0';
+                    if (hudEfficiency) hudEfficiency.innerHTML = `0<span>%</span>`;
+                    if (hudPlaced) hudPlaced.textContent = '0 / 0';
                     if (hudSharedCut) hudSharedCut.innerHTML = `0<span>mm</span>`;
                     updateDevis(null);
+                    renderInspector();
                     renderPartsList();
                     draw();
                 }
@@ -363,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Canvas Drawing Function — Clean White Workspace
+    // Canvas Drawing Function — Clean Industrial Workspace with Part Highlights & Handles
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.save();
@@ -375,9 +952,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const sw = nester.config.sheetWidth;
         const sh = nester.config.sheetHeight;
 
-        // Draw Sheet Drop Shadow & Background (Clean White Sheet)
+        // Draw Sheet Drop Shadow & Background (Crisp Industrial White Sheet)
         ctx.save();
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.14)';
         ctx.shadowBlur = 24;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 6;
@@ -401,33 +978,38 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.stroke();
         }
 
-        // Draw Margin boundary
+        // Draw Margin boundary (Dashed Orange Line)
         const m = nester.config.margin;
-        ctx.strokeStyle = 'rgba(254, 119, 51, 0.35)';
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(254, 119, 51, 0.4)';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([5, 5]);
         ctx.strokeRect(m, m, sw - 2 * m, sh - 2 * m);
         ctx.setLineDash([]);
 
-        // Draw Outer Sheet Boundary with 0machine Orange
+        // Draw Outer Sheet Boundary with 0machine Industrial Accent
         ctx.strokeStyle = '#FE7733';
         ctx.lineWidth = 2.5;
         ctx.strokeRect(0, 0, sw, sh);
 
         // Draw Dimensions Label (Dark Slate for crisp contrast on white)
         ctx.fillStyle = '#1F2937';
-        ctx.font = '600 12px Inter, sans-serif';
+        ctx.font = '600 13px Inter, sans-serif';
         ctx.fillText(`${sw} mm`, sw / 2 - 25, -12);
-        ctx.fillText(`${sh} mm`, -50, sh / 2);
+        ctx.fillText(`${sh} mm`, -55, sh / 2);
 
         // Draw Placed Parts if available
         if (nester.bestResult && nester.bestResult.sheets.length > 0) {
             const sheetIdx = Math.min(currentSheetIndex, nester.bestResult.sheets.length - 1);
             const sheet = nester.bestResult.sheets[sheetIdx]; // Active sheet
+
             sheet.placements.forEach((p, idx) => {
                 ctx.save();
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = 0.22;
+                const isSelected = (idx === selectedSheetPlacementIndex);
+
+                // Normal Part Fill
+                ctx.fillStyle = isSelected && hasCollision ? 'rgba(239, 68, 68, 0.35)' :
+                                isSelected ? 'rgba(0, 210, 255, 0.3)' : p.color;
+                ctx.globalAlpha = isSelected ? 0.9 : 0.22;
 
                 ctx.beginPath();
                 // Outer polygon
@@ -449,10 +1031,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 ctx.fill('evenodd');
 
-                // Glowing outer stroke
+                // Part Stroke
                 ctx.globalAlpha = 0.95;
-                ctx.strokeStyle = p.color;
-                ctx.lineWidth = 1.8;
+                ctx.strokeStyle = isSelected && hasCollision ? '#EF4444' :
+                                  isSelected ? '#00D2FF' : p.color;
+                ctx.lineWidth = isSelected ? 2.5 : 1.8;
                 ctx.beginPath();
                 ctx.moveTo(p.polygon[0].x, p.polygon[0].y);
                 for (let i = 1; i < p.polygon.length; i++) {
@@ -482,8 +1065,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Part label & index (Dark text for high contrast on white sheet)
                 ctx.fillStyle = '#0F172A';
                 ctx.font = 'bold 11px Inter, sans-serif';
-                const labelText = p.isInsideHole ? `#${idx + 1} ★` : `#${idx + 1}`;
+                const lockIcon = p.locked ? ' 🔒' : '';
+                const labelText = p.isInsideHole ? `#${idx + 1} ★${lockIcon}` : `#${idx + 1}${lockIcon}`;
                 ctx.fillText(labelText, p.x + 8, p.y + 14);
+
+                // If SELECTED: Draw Professional Bounding Contour, Sizing Corners & Rotation Handle
+                if (isSelected && p.bounds) {
+                    ctx.save();
+                    const b = p.bounds;
+
+                    // Bounding Box Rectangle
+                    ctx.strokeStyle = hasCollision ? '#EF4444' : '#00D2FF';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.strokeRect(b.minX, b.minY, b.width, b.height);
+                    ctx.setLineDash([]);
+
+                    // 4 Corner Square Handles
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.strokeStyle = hasCollision ? '#EF4444' : '#00D2FF';
+                    ctx.lineWidth = 2;
+                    const handleSize = 6;
+                    [
+                        { x: b.minX, y: b.minY },
+                        { x: b.maxX, y: b.minY },
+                        { x: b.maxX, y: b.maxY },
+                        { x: b.minX, y: b.maxY }
+                    ].forEach(pt => {
+                        ctx.fillRect(pt.x - handleSize / 2, pt.y - handleSize / 2, handleSize, handleSize);
+                        ctx.strokeRect(pt.x - handleSize / 2, pt.y - handleSize / 2, handleSize, handleSize);
+                    });
+
+                    // Top Rotation Stem & Circular Handle
+                    const topCenterX = (b.minX + b.maxX) / 2;
+                    const rotHandleY = b.minY - 18;
+                    ctx.beginPath();
+                    ctx.moveTo(topCenterX, b.minY);
+                    ctx.lineTo(topCenterX, rotHandleY);
+                    ctx.strokeStyle = hasCollision ? '#EF4444' : '#00D2FF';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(topCenterX, rotHandleY, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Dimension Tag on Bounding Box
+                    ctx.fillStyle = '#0F172A';
+                    ctx.font = '600 10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${Math.round(b.width)} mm`, topCenterX, b.maxY + 14);
+
+                    ctx.restore();
+                }
 
                 ctx.restore();
             });
@@ -536,59 +1172,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (devisSavingsPill) devisSavingsPill.textContent = `Saved: ${quote.savedMoneyMAD} MAD`;
-        if (devisWeight) devisWeight.textContent = `${quote.weightKg} kg`;
-        if (devisMaterialCost) devisMaterialCost.textContent = `${quote.totalMaterialCostMAD} MAD`;
-        if (devisTime) devisTime.textContent = `${quote.cuttingTimeMinutes} min`;
-        if (devisMachineCost) devisMachineCost.textContent = `${quote.machiningCostMAD} MAD`;
-        if (devisSharedCut) devisSharedCut.textContent = `-${quote.savedMoneyMAD} MAD (${quote.sharedCutMm} mm)`;
         if (devisTotalMAD) devisTotalMAD.innerHTML = `${quote.totalCostMAD} <span style="font-size: 12px; font-weight: 500;">DH</span>`;
         if (devisUnitPart) devisUnitPart.textContent = `${quote.unitPricePerPart} MAD / part`;
     }
 
     // Real-time Progress Callback
     nester.onProgress = (result, generation) => {
-        hudEfficiency.innerHTML = `${result.compactEfficiency}<span>%</span>`;
-        hudPlaced.textContent = `${result.totalPlaced} / ${result.totalItems}`;
-        if (hudHoles) {
-            hudHoles.textContent = result.partsInHoles || 0;
-        }
-        if (hudSharedCut) {
-            hudSharedCut.innerHTML = `${result.sharedCutMm || 0}<span>mm</span>`;
-        }
+        if (hudEfficiency) hudEfficiency.innerHTML = `${result.compactEfficiency}<span>%</span>`;
+        if (hudPlaced) hudPlaced.textContent = `${result.totalPlaced} / ${result.totalItems}`;
+        if (hudSharedCut) hudSharedCut.innerHTML = `${result.sharedCutMm || 0} mm`;
         updateSheetPagination();
         updateDevis(result);
         draw();
     };
 
     // Controls Event Listeners
-    spacingSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        spacingVal.textContent = `${val} mm`;
-        nester.setConfig({ spacing: val });
-    });
+    if (spacingSlider) {
+        spacingSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            if (spacingVal) spacingVal.textContent = `${val} mm`;
+            nester.setConfig({ spacing: val });
+        });
+    }
 
-    marginSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        marginVal.textContent = `${val} mm`;
-        nester.setConfig({ margin: val });
-        draw();
-    });
+    if (marginSlider) {
+        marginSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            if (marginVal) marginVal.textContent = `${val} mm`;
+            nester.setConfig({ margin: val });
+            draw();
+        });
+    }
 
-    sheetWidthInput.addEventListener('change', (e) => {
-        nester.setConfig({ sheetWidth: parseInt(e.target.value) || 1000 });
-        fitToView();
-        updateDevis();
-    });
+    if (sheetWidthInput) {
+        sheetWidthInput.addEventListener('change', (e) => {
+            nester.setConfig({ sheetWidth: parseInt(e.target.value) || 1000 });
+            fitToView();
+            updateDevis();
+        });
+    }
 
-    sheetHeightInput.addEventListener('change', (e) => {
-        nester.setConfig({ sheetHeight: parseInt(e.target.value) || 600 });
-        fitToView();
-        updateDevis();
-    });
+    if (sheetHeightInput) {
+        sheetHeightInput.addEventListener('change', (e) => {
+            nester.setConfig({ sheetHeight: parseInt(e.target.value) || 600 });
+            fitToView();
+            updateDevis();
+        });
+    }
 
-    rotationsSelect.addEventListener('change', (e) => {
-        nester.setConfig({ rotations: parseInt(e.target.value) || 4 });
-    });
+    if (rotationsSelect) {
+        rotationsSelect.addEventListener('change', (e) => {
+            nester.setConfig({ rotations: parseInt(e.target.value) || 4 });
+        });
+    }
 
     if (useHolesToggle) {
         useHolesToggle.addEventListener('change', (e) => {
@@ -603,23 +1239,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateDevis();
                 draw();
             }
-        });
-    }
-
-    // Tab Switching
-    if (tabTelemetryBtn && tabDevisBtn) {
-        tabTelemetryBtn.addEventListener('click', () => {
-            tabTelemetryBtn.classList.add('active');
-            tabDevisBtn.classList.remove('active');
-            telemetryTabContent.style.display = 'flex';
-            devisTabContent.style.display = 'none';
-        });
-        tabDevisBtn.addEventListener('click', () => {
-            tabDevisBtn.classList.add('active');
-            tabTelemetryBtn.classList.remove('active');
-            devisTabContent.style.display = 'flex';
-            telemetryTabContent.style.display = 'none';
-            updateDevis();
         });
     }
 
@@ -639,49 +1258,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Start / Stop Nesting
-    startBtn.addEventListener('click', async () => {
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-        statusPill.querySelector('.pulse-dot').classList.add('working');
-        statusText.textContent = 'Optimizing Nesting...';
+    if (startBtn) {
+        startBtn.addEventListener('click', async () => {
+            startBtn.disabled = true;
+            if (stopBtn) stopBtn.disabled = false;
+            if (statusPill) statusPill.querySelector('.pulse-dot').classList.add('working');
+            if (statusText) statusText.textContent = 'Optimizing Layout...';
+            setWorkflowStep(3);
 
-        await nester.startNesting();
+            await nester.startNesting();
 
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-        statusPill.querySelector('.pulse-dot').classList.remove('working');
-        statusText.textContent = 'Nesting Ready';
-        updateSheetPagination();
-        draw();
-    });
+            startBtn.disabled = false;
+            if (stopBtn) stopBtn.disabled = true;
+            if (statusPill) statusPill.querySelector('.pulse-dot').classList.remove('working');
+            if (statusText) statusText.textContent = 'Nesting Ready';
+            setWorkflowStep(4);
+            updateSheetPagination();
+            renderInspector();
+            draw();
+        });
+    }
 
-    stopBtn.addEventListener('click', () => {
-        nester.stopNesting();
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-        statusPill.querySelector('.pulse-dot').classList.remove('working');
-        statusText.textContent = 'Paused';
-    });
+    if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+            nester.stopNesting();
+            if (startBtn) startBtn.disabled = false;
+            stopBtn.disabled = true;
+            if (statusPill) statusPill.querySelector('.pulse-dot').classList.remove('working');
+            if (statusText) statusText.textContent = 'Paused';
+        });
+    }
 
-    resetBtn.addEventListener('click', () => {
-        nester.stopNesting();
-        nester.bestResult = null;
-        currentSheetIndex = 0;
-        updateSheetPagination();
-        hudEfficiency.innerHTML = `0<span>%</span>`;
-        hudPlaced.textContent = '0 / 0';
-        if (hudHoles) hudHoles.textContent = '0';
-        if (hudSharedCut) hudSharedCut.innerHTML = `0<span>mm</span>`;
-        updateDevis(null);
-        fitToView();
-    });
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            nester.stopNesting();
+            nester.bestResult = null;
+            currentSheetIndex = 0;
+            selectedSheetPlacementIndex = -1;
+            hasCollision = false;
+            const collisionBadge = document.getElementById('canvasCollisionWarning');
+            if (collisionBadge) collisionBadge.style.display = 'none';
+            updateSheetPagination();
+            if (hudEfficiency) hudEfficiency.innerHTML = `0<span>%</span>`;
+            if (hudPlaced) hudPlaced.textContent = '0 / 0';
+            if (hudSharedCut) hudSharedCut.innerHTML = `0<span>mm</span>`;
+            updateDevis(null);
+            renderInspector();
+            renderPartsList();
+            fitToView();
+        });
+    }
 
     // Sheet Pagination Buttons
     if (prevSheetBtn) {
         prevSheetBtn.addEventListener('click', () => {
             if (currentSheetIndex > 0) {
                 currentSheetIndex--;
+                selectedSheetPlacementIndex = -1;
                 updateSheetPagination();
+                renderInspector();
                 draw();
             }
         });
@@ -692,7 +1327,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalSheets = (nester.bestResult && nester.bestResult.sheets && nester.bestResult.sheets.length) || 1;
             if (currentSheetIndex < totalSheets - 1) {
                 currentSheetIndex++;
+                selectedSheetPlacementIndex = -1;
                 updateSheetPagination();
+                renderInspector();
                 draw();
             }
         });
@@ -1448,6 +2085,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial render
     renderPartsList();
+    renderInspector();
     draw();
 });
 

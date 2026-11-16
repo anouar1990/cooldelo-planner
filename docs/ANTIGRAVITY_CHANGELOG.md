@@ -617,3 +617,22 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+
+## [2026-11-16 21:15:00] - 0machine Nest Workspace Repair & Usability Overhaul
+- **Task**: Overhaul 0machine Nest application workspace UX for manufacturing workshop owners (45-55 y/o): intuitive 5-step visual workflow stepper, left panel "My Designs" library with live search and dimensions, dedicated on-canvas action toolbar (Select, Pan, Fit Sheet, Zoom In/Out, Reset View, Rotate 90°, Delete), interactive canvas hit-testing and manual part dragging with real-time collision/out-of-bounds detection, and contextual right panel inspector (Sheet Settings vs Selected Part Inspector).
+- **Files Changed**:
+  - `lasercut-planner/public/nest/index.html` (Redesigned with 5-step workflow stepper, "My Designs" panel, on-canvas action toolbar, and contextual dual-mode inspector)
+  - `lasercut-planner/public/nest/styles.css` (Added professional industrial styling, high contrast controls, 40px+ comfortable click targets, canvas alert badges, and responsive layouts)
+  - `lasercut-planner/public/nest/app.js` (Implemented tool state management, canvas coordinate translation, part hit-testing, smooth part dragging, real-time collision detection, and inspector syncing)
+  - `lasercut-planner/web-build/nest/` (Synced latest HTML, CSS, and JS bundle)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Appended)
+- **Tests Performed**:
+  - Node.js automated DOM assertion suite: PASS (All 105 queried DOM IDs and 20 essential CSS classes verified)
+  - TypeScript compilation check (`cd lasercut-planner && npx tsc --noEmit`): PASS (0 errors)
+  - Production build & web export (`cd lasercut-planner && npm run vercel-build`): PASS (778ms clean bundling, synced to web-build/nest)
+  - True-shape nesting and ClipperLib geometry calculation: PASS
+  - Canvas part hit-testing and manual dragging simulation: PASS
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None

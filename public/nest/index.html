@@ -16,7 +16,7 @@
         <!-- Top Navigation / Header -->
         <header class="app-header">
             <div class="brand-section">
-                <div class="brand-logo">
+                <div class="brand-logo" title="0machine Nesting">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
                         <polyline points="2 17 12 22 22 17"></polyline>
@@ -25,196 +25,354 @@
                 </div>
                 <div>
                     <h1 class="brand-title">0machine <span>Nest</span></h1>
+                    <div class="brand-subtitle">CAD/CAM Material Optimizer</div>
                 </div>
-                <div class="brand-badge">Auto-Nesting v2.0</div>
             </div>
 
-            <div class="header-actions">
-                <div class="status-pill" id="statusPill">
-                    <span class="pulse-dot"></span>
-                    <span id="statusText">Engine Ready</span>
+            <!-- 5-Step Visual Workflow Guidance Bar -->
+            <nav class="workflow-stepper" aria-label="Workflow Steps">
+                <div class="step-item active" id="step1Indicator" title="Step 1: Add your SVG or DXF CAD designs">
+                    <span class="step-num">1</span>
+                    <span class="step-text">Add Designs</span>
                 </div>
-                <button class="glow-ai-btn" id="openLaserAiBtn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <div class="step-sep">›</div>
+                <div class="step-item" id="step2Indicator" title="Step 2: Set your sheet dimensions and material">
+                    <span class="step-num">2</span>
+                    <span class="step-text">Sheet Size</span>
+                </div>
+                <div class="step-sep">›</div>
+                <div class="step-item" id="step3Indicator" title="Step 3: Arrange parts or run Auto-Nest">
+                    <span class="step-num">3</span>
+                    <span class="step-text">Auto-Nest</span>
+                </div>
+                <div class="step-sep">›</div>
+                <div class="step-item" id="step4Indicator" title="Step 4: Check spacing, collisions & yield">
+                    <span class="step-num">4</span>
+                    <span class="step-text">Review</span>
+                </div>
+                <div class="step-sep">›</div>
+                <div class="step-item" id="step5Indicator" title="Step 5: Download production SVG or DXF">
+                    <span class="step-num">5</span>
+                    <span class="step-text">Export</span>
+                </div>
+            </nav>
+
+            <div class="header-actions">
+                <div class="status-pill" id="statusPill" title="Engine Status">
+                    <span class="pulse-dot"></span>
+                    <span id="statusText">Ready</span>
+                </div>
+                <button class="glow-ai-btn" id="openLaserAiBtn" title="Create vector cutouts from photos or prompts">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                     </svg>
-                    ✨ LaserAI Studio
+                    <span>AI Vectorizer</span>
                 </button>
-                <button class="glow-btn" id="startBtn">
+                <button class="glow-btn" id="startBtn" title="Automatically arrange all parts for maximum material efficiency">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
-                    Start Auto-Nesting
+                    <span>Auto-Nest Parts</span>
                 </button>
-                <button class="btn-secondary" id="stopBtn" disabled>
+                <button class="btn-secondary" id="stopBtn" disabled title="Pause optimization">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="6" y="4" width="4" height="16"></rect>
                         <rect x="14" y="4" width="4" height="16"></rect>
                     </svg>
-                    Pause
+                    <span>Pause</span>
                 </button>
-                <button class="btn-secondary" id="exportBtn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="btn-export" id="exportBtn" title="Export ready-to-cut SVG file">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    Export SVG
+                    <span>Export</span>
                 </button>
             </div>
         </header>
 
         <!-- Main 3-Column Layout -->
         <main class="main-layout">
-            <!-- Left Sidebar: Part Library & Import -->
-            <aside class="glass-panel">
+            <!-- Left Sidebar: My Designs -->
+            <aside class="glass-panel sidebar-panel" id="designsPanel">
                 <div class="panel-header">
-                    <div class="panel-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="3" y1="9" x2="21" y2="9"></line>
-                            <line x1="9" y1="21" x2="9" y2="9"></line>
-                        </svg>
-                        Part Inventory
+                    <div class="panel-title-row">
+                        <div class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="9" y1="21" x2="9" y2="9"></line>
+                            </svg>
+                            <span>My Designs</span>
+                            <span class="count-badge" id="designsCountBadge">0</span>
+                        </div>
                     </div>
+                    <button class="btn-primary-add" id="addDesignBtn" title="Import an SVG or DXF file">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>Add Design</span>
+                    </button>
                 </div>
 
                 <div class="panel-body">
-                    <!-- Drag & Drop SVG / DXF Zone -->
-                    <div class="dropzone" id="dropzone">
+                    <!-- Live Search for Parts -->
+                    <div class="search-box">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="partSearchInput" placeholder="Filter designs by name..." />
+                        <button class="clear-search-btn" id="clearSearchBtn" title="Clear filter" style="display:none;">&times;</button>
+                    </div>
+
+                    <!-- Compact Drag & Drop Zone -->
+                    <div class="dropzone compact-dropzone" id="dropzone" title="Drag & drop SVG or DXF CAD file">
                         <input type="file" id="fileInput" accept=".svg,.dxf" style="display:none">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="17 8 12 3 7 8"></polyline>
                             <line x1="12" y1="3" x2="12" y2="15"></line>
                         </svg>
-                        <div class="dropzone-text">Upload CAD File (SVG / DXF)</div>
-                        <div class="dropzone-sub">Drag & drop AutoCAD, SolidWorks or Fusion DXF</div>
+                        <div class="dropzone-text">Drop SVG / DXF files here</div>
+                        <div class="dropzone-sub">or click to browse your computer</div>
                     </div>
 
-                    <!-- Quick Sample DXF / SVG Loader & LaserAI Studio -->
-                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: -6px;">
-                        <button class="ai-banner-btn" id="openLaserAiSidebarBtn">
-                            <span class="ai-sparkle">✨</span>
-                            <span>Generate CAD from Text or Photo (AI)</span>
+                    <!-- Quick Sample Loader -->
+                    <div class="quick-samples-row">
+                        <button class="sample-btn" id="loadSampleDxfBtn" title="Load sample CNC bracket DXF">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            </svg>
+                            <span>Sample DXF</span>
                         </button>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <button class="btn-secondary" id="loadSampleDxfBtn" style="padding: 8px 10px; font-size: 11px; border-radius: 8px; justify-content: center;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                <span>Sample DXF</span>
-                            </button>
-                            <button class="btn-secondary" id="loadSampleSvgBtn" style="padding: 8px 10px; font-size: 11px; border-radius: 8px; justify-content: center;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                <span>Sample SVG</span>
-                            </button>
-                        </div>
+                        <button class="sample-btn" id="loadSampleSvgBtn" title="Load sample laser cut gears SVG">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            <span>Sample SVG</span>
+                        </button>
+                        <button class="sample-btn ai-hint" id="openLaserAiSidebarBtn" title="Generate vector using AI">
+                            <span>✨ AI Creator</span>
+                        </button>
                     </div>
 
                     <!-- Parts List -->
-                    <div class="control-label">
-                        <span>Loaded Parts</span>
+                    <div class="section-subheading">
+                        <span>Designs in Project</span>
+                        <span id="totalItemsSummary" style="font-size:11px;color:var(--text-muted);"></span>
                     </div>
-                    <div id="partsList" style="display: flex; flex-direction: column; gap: 10px;">
+
+                    <div id="partsList" class="parts-list-container">
                         <!-- Dynamically populated -->
+                    </div>
+
+                    <!-- Empty state -->
+                    <div id="emptyPartsState" class="empty-state" style="display:none;">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        <p>No designs added yet</p>
+                        <span>Click "+ Add Design" or load a sample</span>
                     </div>
                 </div>
             </aside>
 
             <!-- Center Panel: Interactive Sheet Canvas -->
             <section class="glass-panel canvas-panel">
-                <div class="canvas-toolbar">
-                    <div class="viewport-info">
-                        <div class="viewport-tag">
-                            <span>Sheet:</span>
-                            <button class="sheet-nav-btn" id="prevSheetBtn" title="Previous Sheet" disabled>◀</button>
-                            <strong id="hudSheetDisplay">1 / 1</strong>
-                            <button class="sheet-nav-btn" id="nextSheetBtn" title="Next Sheet" disabled>▶</button>
-                            <span style="opacity: 0.6; font-size: 11px;">(<strong id="hudSheetCount">1</strong> total)</span>
-                        </div>
-                        <div class="viewport-tag">
-                            <span>Scroll to Zoom</span>
-                        </div>
-                        <div class="viewport-tag">
-                            <span>Drag to Pan</span>
-                        </div>
+                <!-- Dedicated On-Canvas Action Toolbar -->
+                <div class="canvas-action-toolbar" role="toolbar" aria-label="Canvas Actions">
+                    <!-- Tools Group: Select vs Pan -->
+                    <div class="toolbar-group">
+                        <button class="tool-btn active" id="toolSelectBtn" title="Select Tool (Click part to inspect, drag to reposition)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+                                <path d="M13 13l6 6"></path>
+                            </svg>
+                            <span>Select</span>
+                        </button>
+                        <button class="tool-btn" id="toolPanBtn" title="Pan Tool (Click and drag anywhere to pan the sheet)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path>
+                                <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path>
+                                <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path>
+                                <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path>
+                            </svg>
+                            <span>Pan</span>
+                        </button>
                     </div>
-                    <button class="btn-icon" id="resetBtn" title="Reset View & Nesting">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
-                            <path d="M21 3v5h-5"></path>
-                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
-                            <path d="M8 16H3v5"></path>
-                        </svg>
-                    </button>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- View Control Group: Fit, Zoom In, Zoom Out, Reset -->
+                    <div class="toolbar-group">
+                        <button class="tool-btn" id="fitSheetBtn" title="Fit Sheet to View (Center and scale sheet perfectly)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                            </svg>
+                            <span>Fit Sheet</span>
+                        </button>
+                        <button class="tool-btn icon-only" id="zoomInBtn" title="Zoom In (+)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <line x1="11" y1="8" x2="11" y2="14"></line>
+                                <line x1="8" y1="11" x2="14" y2="11"></line>
+                            </svg>
+                        </button>
+                        <button class="tool-btn icon-only" id="zoomOutBtn" title="Zoom Out (-)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <line x1="8" y1="11" x2="14" y2="11"></line>
+                            </svg>
+                        </button>
+                        <button class="tool-btn icon-only" id="resetBtn" title="Reset View & Nesting Layout">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                                <path d="M21 3v5h-5"></path>
+                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                                <path d="M8 16H3v5"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- Part Contextual Quick Action Group (Enabled when part selected) -->
+                    <div class="toolbar-group" id="toolbarPartActions" style="opacity:0.5;pointer-events:none;">
+                        <button class="tool-btn" id="toolbarRotateBtn" title="Rotate selected part 90° clockwise">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                            </svg>
+                            <span>Rotate 90°</span>
+                        </button>
+                        <button class="tool-btn danger" id="toolbarDeleteBtn" title="Delete selected part from sheet">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span>Delete</span>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-spacer"></div>
+
+                    <!-- Multi-Sheet Navigation -->
+                    <div class="toolbar-group sheet-nav-group">
+                        <button class="sheet-nav-arrow" id="prevSheetBtn" title="Previous Sheet" disabled>◀</button>
+                        <span class="sheet-label">Sheet <strong id="hudSheetDisplay">1 / 1</strong></span>
+                        <button class="sheet-nav-arrow" id="nextSheetBtn" title="Next Sheet" disabled>▶</button>
+                    </div>
                 </div>
 
                 <div class="canvas-container" id="canvasContainer">
                     <canvas id="nestCanvas"></canvas>
+                    
+                    <!-- Floating Collision / Warning Badge -->
+                    <div class="canvas-alert-badge" id="canvasCollisionWarning" style="display:none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L1 21h22L12 2zm0 3.5L20.2 19H3.8L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/>
+                        </svg>
+                        <span id="canvasCollisionText">Overlap / Margin Collision Detected</span>
+                    </div>
+
+                    <!-- Floating Canvas Instructions Pill -->
+                    <div class="canvas-guide-pill" id="canvasGuidePill">
+                        <span>Click part to inspect • Drag to place • Mouse wheel to zoom</span>
+                    </div>
                 </div>
             </section>
 
-            <!-- Right Sidebar: Operations & Telemetry & Devis -->
-            <aside class="glass-panel">
+            <!-- Right Sidebar: Contextual Inspector (Sheet Settings OR Selected Design) -->
+            <aside class="glass-panel sidebar-panel" id="inspectorPanel">
                 <div class="panel-header">
-                    <div class="panel-title">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="18" y1="20" x2="18" y2="10"></line>
-                            <line x1="12" y1="20" x2="12" y2="4"></line>
-                            <line x1="6" y1="20" x2="6" y2="14"></line>
-                        </svg>
-                        0machine Operations
+                    <div class="panel-title-row">
+                        <div class="panel-title" id="inspectorHeaderTitle">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="inspectorHeaderIcon">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            <span id="inspectorTitleText">Sheet & Material</span>
+                        </div>
                     </div>
+                    <button class="btn-deselect" id="deselectPartBtn" style="display:none;" title="Deselect design and show sheet settings">
+                        ✕ Close
+                    </button>
                 </div>
 
                 <div class="panel-body">
-                    <!-- Tab Switcher -->
-                    <div class="tab-nav">
-                        <button class="tab-btn active" id="tabTelemetryBtn">Telemetry</button>
-                        <button class="tab-btn" id="tabDevisBtn">Devis & Quotation</button>
-                    </div>
-
-                    <!-- TAB 1: TELEMETRY & CONTROLS -->
-                    <div id="telemetryTabContent" style="display: flex; flex-direction: column; gap: 14px;">
-                        <!-- HUD Metrics Grid -->
-                        <div class="hud-grid">
-                            <div class="hud-card">
-                                <div class="hud-label">Sheet Yield</div>
-                                <div class="hud-value" id="hudEfficiency">0<span>%</span></div>
-                            </div>
-                            <div class="hud-card">
-                                <div class="hud-label">Placed Parts</div>
-                                <div class="hud-value" id="hudPlaced">0 / 0</div>
-                            </div>
-                            <div class="hud-card">
-                                <div class="hud-label">Parts in Holes</div>
-                                <div class="hud-value" id="hudHoles">0</div>
-                            </div>
-                            <div class="hud-card">
-                                <div class="hud-label">Shared Cut</div>
-                                <div class="hud-value" id="hudSharedCut">0<span>mm</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Sheet Dimensions -->
+                    <!-- ============================================== -->
+                    <!-- MODE A: SHEET & MATERIAL SETTINGS (Default)     -->
+                    <!-- ============================================== -->
+                    <div id="sheetInspectorMode" style="display:flex; flex-direction:column; gap:14px;">
+                        <!-- Quick Sheet Preset Sizes for Workshops -->
                         <div class="control-group">
                             <div class="control-label">
-                                <span>Sheet Size (mm)</span>
+                                <span>Sheet Preset Sizes</span>
                             </div>
-                            <div class="input-row">
-                                <input type="number" class="input-field" id="sheetWidth" value="1000" placeholder="Width">
-                                <input type="number" class="input-field" id="sheetHeight" value="600" placeholder="Height">
+                            <div class="presets-grid">
+                                <button class="preset-size-btn active" data-w="1000" data-h="600">1000 × 600 mm</button>
+                                <button class="preset-size-btn" data-w="1200" data-h="600">1200 × 600 mm</button>
+                                <button class="preset-size-btn" data-w="1500" data-h="1000">1500 × 1000 mm</button>
+                                <button class="preset-size-btn" data-w="2440" data-h="1220">2440 × 1220 (8×4 ft)</button>
                             </div>
                         </div>
 
-                        <!-- Spacing / Kerf -->
+                        <!-- Custom Sheet Dimensions -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Custom Dimensions (mm)</span>
+                            </div>
+                            <div class="input-row">
+                                <div class="dimension-input-wrapper">
+                                    <label for="sheetWidth">Width</label>
+                                    <input type="number" class="input-field" id="sheetWidth" value="1000" min="50" max="10000" step="10">
+                                </div>
+                                <div class="dimension-input-wrapper">
+                                    <label for="sheetHeight">Height</label>
+                                    <input type="number" class="input-field" id="sheetHeight" value="600" min="50" max="10000" step="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Material & Thickness -->
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Material</span>
+                            </div>
+                            <select class="input-field" id="materialSelect">
+                                <option value="mdf">Wood / MDF / Plywood</option>
+                                <option value="acrylic">Acrylic / Plexiglass</option>
+                                <option value="steel" selected>Mild Steel (Acier doux S235)</option>
+                                <option value="inox">Stainless Steel (Inox 304)</option>
+                                <option value="aluminum">Aluminum (Alu 5083)</option>
+                                <option value="brass">Brass / Copper</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Sheet Thickness</span>
+                            </div>
+                            <select class="input-field" id="thicknessSelect">
+                                <option value="1.0">1.0 mm</option>
+                                <option value="1.5">1.5 mm</option>
+                                <option value="2.0" selected>2.0 mm</option>
+                                <option value="3.0">3.0 mm</option>
+                                <option value="4.0">4.0 mm</option>
+                                <option value="5.0">5.0 mm</option>
+                                <option value="6.0">6.0 mm</option>
+                                <option value="8.0">8.0 mm</option>
+                                <option value="10.0">10.0 mm</option>
+                            </select>
+                        </div>
+
+                        <!-- Spacing & Margins -->
                         <div class="control-group">
                             <div class="control-label">
                                 <span>Part Spacing (Kerf)</span>
@@ -223,120 +381,160 @@
                             <input type="range" class="range-slider" id="spacingSlider" min="0" max="25" step="1" value="4">
                         </div>
 
-                        <!-- Sheet Edge Margin -->
                         <div class="control-group">
                             <div class="control-label">
-                                <span>Sheet Margin</span>
+                                <span>Sheet Edge Margin</span>
                                 <span class="control-value" id="marginVal">8 mm</span>
                             </div>
                             <input type="range" class="range-slider" id="marginSlider" min="0" max="30" step="1" value="8">
                         </div>
 
-                        <!-- Allowed Rotations -->
+                        <!-- Allowed Part Rotations -->
                         <div class="control-group">
                             <div class="control-label">
-                                <span>Allowed Rotations</span>
+                                <span>Allowed Rotation</span>
                             </div>
                             <select class="input-field" id="rotationsSelect">
-                                <option value="1">1 (0° Fixed)</option>
-                                <option value="2">2 (0°, 180°)</option>
-                                <option value="4" selected>4 (0°, 90°, 180°, 270°)</option>
-                                <option value="8">8 (Every 45° Steps)</option>
+                                <option value="4" selected>90° Steps (0°, 90°, 180°, 270°)</option>
+                                <option value="1">No Rotation (0° Fixed - Grain Direction)</option>
+                                <option value="2">2 Rotations (0° and 180°)</option>
+                                <option value="8">Free Angle (45° Steps)</option>
                             </select>
                         </div>
 
-                        <!-- Toggles -->
-                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; color: var(--text-primary);">
-                                <input type="checkbox" id="useHolesToggle" checked style="accent-color: var(--accent); width: 16px; height: 16px;">
-                                <span>Nest Inside Holes (Parts-in-Parts)</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; color: var(--text-primary);">
-                                <input type="checkbox" id="commonLineToggle" checked style="accent-color: var(--accent); width: 16px; height: 16px;">
-                                <span>Common-Line Cutting (Shared Edge)</span>
-                            </label>
+                        <!-- Advanced Manufacturing Options (Clean Accordion) -->
+                        <details class="advanced-accordion">
+                            <summary class="advanced-summary">
+                                <span>Advanced Nesting Options</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </summary>
+                            <div class="advanced-content">
+                                <label class="checkbox-row">
+                                    <input type="checkbox" id="useHolesToggle" checked>
+                                    <span>Nest smaller parts inside cutouts (Holes)</span>
+                                </label>
+                                <label class="checkbox-row">
+                                    <input type="checkbox" id="commonLineToggle" checked>
+                                    <span>Common-line cutting (Shared edges to save laser time)</span>
+                                </label>
+                            </div>
+                        </details>
+
+                        <!-- Material Efficiency HUD Summary -->
+                        <div class="efficiency-summary-card">
+                            <div class="efficiency-row-main">
+                                <div class="yield-circle-box">
+                                    <div class="yield-percentage" id="hudEfficiency">0<span>%</span></div>
+                                    <div class="yield-label">Material Used</div>
+                                </div>
+                                <div class="efficiency-stats">
+                                    <div class="stat-line">
+                                        <span>Placed:</span>
+                                        <strong id="hudPlaced">0 / 0</strong>
+                                    </div>
+                                    <div class="stat-line">
+                                        <span>Sheets Required:</span>
+                                        <strong id="hudSheetCount">1</strong>
+                                    </div>
+                                    <div class="stat-line">
+                                        <span>Shared Cut Length:</span>
+                                        <strong id="hudSharedCut" style="color:var(--accent);">0 mm</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cost & Devis Quick Bar -->
+                        <div class="devis-preview-box">
+                            <div class="devis-preview-title">
+                                <span>Est. Job Cost</span>
+                                <span class="savings-pill" id="devisSavingsPill">Saved: 0 MAD</span>
+                            </div>
+                            <div class="devis-preview-val" id="devisTotalMAD">0 <span style="font-size:12px;font-weight:500;">DH</span></div>
+                            <div class="devis-preview-sub" id="devisUnitPart">0 MAD / part</div>
+                            <button class="btn-secondary" id="printDevisBtn" style="width: 100%; margin-top: 10px; font-size: 12px; padding: 8px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                    <rect x="6" y="14" width="12" height="8"></rect>
+                                </svg>
+                                Print Official Devis (PDF)
+                            </button>
                         </div>
                     </div>
 
-                    <!-- TAB 2: DEVIS & QUOTATION -->
-                    <div id="devisTabContent" style="display: none; flex-direction: column; gap: 14px;">
+                    <!-- ============================================== -->
+                    <!-- MODE B: SELECTED PART INSPECTOR                -->
+                    <!-- ============================================== -->
+                    <div id="partInspectorMode" style="display:none; flex-direction:column; gap:14px;">
+                        <div class="selected-part-preview-card">
+                            <div class="part-preview-large" id="inspectorPartPreview">
+                                <!-- Rendered dynamically -->
+                            </div>
+                            <div class="part-main-meta">
+                                <input type="text" class="input-field part-name-input" id="selectedPartName" placeholder="Design Name" />
+                                <div class="part-dim-pill" id="selectedPartDims">0 × 0 mm</div>
+                            </div>
+                        </div>
+
+                        <!-- Part Position Coordinates -->
                         <div class="control-group">
                             <div class="control-label">
-                                <span>Material Type</span>
+                                <span>Position on Sheet (mm)</span>
                             </div>
-                            <select class="input-field" id="materialSelect">
-                                <option value="steel" selected>Mild Steel (Acier doux S235)</option>
-                                <option value="inox">Stainless Steel (Inox 304)</option>
-                                <option value="aluminum">Aluminum (Alu 5083)</option>
-                                <option value="brass">Brass (Laiton CuZn37)</option>
-                                <option value="mdf">Wood / MDF</option>
-                            </select>
+                            <div class="input-row">
+                                <div class="dimension-input-wrapper">
+                                    <label for="selectedPartX">X</label>
+                                    <input type="number" class="input-field" id="selectedPartX" value="0" step="1">
+                                </div>
+                                <div class="dimension-input-wrapper">
+                                    <label for="selectedPartY">Y</label>
+                                    <input type="number" class="input-field" id="selectedPartY" value="0" step="1">
+                                </div>
+                            </div>
                         </div>
 
+                        <!-- Part Rotation -->
                         <div class="control-group">
                             <div class="control-label">
-                                <span>Sheet Thickness (mm)</span>
+                                <span>Rotation Angle</span>
+                                <span class="control-value" id="selectedPartRotationVal">0°</span>
                             </div>
-                            <select class="input-field" id="thicknessSelect">
-                                <option value="1.5">1.5 mm</option>
-                                <option value="2.0" selected>2.0 mm</option>
-                                <option value="3.0">3.0 mm</option>
-                                <option value="5.0">5.0 mm</option>
-                                <option value="8.0">8.0 mm</option>
-                                <option value="10.0">10.0 mm</option>
-                            </select>
-                        </div>
-
-                        <!-- Live Quotation Card -->
-                        <div class="devis-card">
-                            <div class="devis-header">
-                                <div class="devis-title">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="12" y1="1" x2="12" y2="23"></line>
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                                    </svg>
-                                    Devis Estimation (MAD)
-                                </div>
-                                <div class="savings-pill" id="devisSavingsPill">Saved: 0 MAD</div>
-                            </div>
-
-                            <div class="devis-row">
-                                <span>Total Weight:</span>
-                                <strong id="devisWeight">0.0 kg</strong>
-                            </div>
-                            <div class="devis-row">
-                                <span>Material Cost:</span>
-                                <strong id="devisMaterialCost">0 MAD</strong>
-                            </div>
-                            <div class="devis-row">
-                                <span>Cutting Time (Laser):</span>
-                                <strong id="devisTime">0.0 min</strong>
-                            </div>
-                            <div class="devis-row">
-                                <span>Machining Cost:</span>
-                                <strong id="devisMachineCost">0 MAD</strong>
-                            </div>
-                            <div class="devis-row">
-                                <span>Shared Line Saving:</span>
-                                <strong id="devisSharedCut" style="color: var(--success);">-0 MAD</strong>
-                            </div>
-
-                            <div class="devis-total-box">
-                                <div>
-                                    <div class="devis-total-label">Total Job Quotation</div>
-                                    <div style="font-size: 11px; color: var(--text-muted);" id="devisUnitPart">0 MAD / part</div>
-                                </div>
-                                <div class="devis-total-val" id="devisTotalMAD">0 <span style="font-size: 12px; font-weight: 500;">DH</span></div>
+                            <div class="rotation-btn-group">
+                                <button class="rot-quick-btn active" data-deg="0">0°</button>
+                                <button class="rot-quick-btn" data-deg="90">90°</button>
+                                <button class="rot-quick-btn" data-deg="180">180°</button>
+                                <button class="rot-quick-btn" data-deg="270">270°</button>
                             </div>
                         </div>
 
-                        <button class="btn-secondary" id="printDevisBtn" style="width: 100%;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                                <rect x="6" y="14" width="12" height="8"></rect>
-                            </svg>
-                            Print Official Devis (PDF)
+                        <!-- Part Status & Locking -->
+                        <div class="control-group">
+                            <label class="checkbox-row">
+                                <input type="checkbox" id="selectedPartLockToggle">
+                                <span>Lock design in place (Prevent Auto-Nest from moving it)</span>
+                            </label>
+                        </div>
+
+                        <!-- Quick Actions for Selected Part -->
+                        <div class="part-action-buttons">
+                            <button class="btn-secondary" id="rotatePartBtn" style="flex:1;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                                </svg>
+                                <span>Rotate 90°</span>
+                            </button>
+                            <button class="btn-danger-outline" id="deletePartFromSheetBtn" style="flex:1;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+
+                        <button class="btn-secondary" id="deselectPartBottomBtn" style="width:100%; margin-top:8px;">
+                            ✓ Done with this part
                         </button>
                     </div>
                 </div>
