@@ -1787,7 +1787,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 aiPromptInput.value = 'Three peaks mountain layered scene';
                 setMode('layered-scene');
             }
-            triggerAiGeneration();
+            triggerAiGeneration({ preset: preset });
         });
     });
 
@@ -1864,25 +1864,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const studioErrorOverlay = document.getElementById('studioErrorOverlay');
+    const studioErrorText = document.getElementById('studioErrorText');
+    const retryAiBtn = document.getElementById('retryAiBtn');
+
+    function showStudioError(text) {
+        if (studioErrorText) studioErrorText.textContent = text || "Unable to synthesize vector design.";
+        if (studioErrorOverlay) studioErrorOverlay.style.display = 'flex';
+    }
+
+    function hideStudioError() {
+        if (studioErrorOverlay) studioErrorOverlay.style.display = 'none';
+    }
+
+    if (retryAiBtn) {
+        retryAiBtn.addEventListener('click', () => {
+            hideStudioError();
+            triggerAiGeneration();
+        });
+    }
+
     // AI Generation Runner
-    async function triggerAiGeneration() {
-        showStudioLoading("Generating Laser CAD vectors...");
+    async function triggerAiGeneration(opts = {}) {
+        hideStudioError();
+        showStudioLoading(opts.preset ? "Loading CAD template..." : "Synthesizing CAD vectors with 0Machine AI...");
         const prompt = aiPromptInput.value || "Imperial eagle woodcut emblem";
         const targetWidth = parseFloat(targetSizeSlider.value) || 120;
-        const apiKey = localStorage.getItem('0machine_gemini_api_key') || (geminiApiKeyInput ? geminiApiKeyInput.value.trim() : null);
 
         try {
             const result = await laserAiEngine.generateFromPrompt(prompt, activeAiMode, {
-                apiKey: apiKey,
                 targetWidthMm: targetWidth,
                 smoothing: parseFloat(smoothingSlider.value) || 1.5,
-                speckleFilter: parseInt(speckleSlider.value) || 12
+                speckleFilter: parseInt(speckleSlider.value) || 12,
+                preset: opts.preset || null
             });
             currentLaserPart = result;
             renderStudioPreview(result);
         } catch (err) {
             console.error("AI Generation failed:", err);
-            alert("Generation failed: " + err.message);
+            showStudioError(err.message);
         } finally {
             hideStudioLoading();
         }
@@ -1891,6 +1911,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Image Trace Runner
     async function triggerImageTrace() {
         if (!currentUploadedImage) return;
+        hideStudioError();
         showStudioLoading("Extracting vector contours & holes...");
         try {
             const result = await laserAiEngine.traceImage(currentUploadedImage, {
@@ -1906,14 +1927,14 @@ document.addEventListener('DOMContentLoaded', () => {
             renderStudioPreview(result);
         } catch (err) {
             console.error("Trace failed:", err);
-            alert("Trace failed: " + err.message);
+            showStudioError(err.message);
         } finally {
             hideStudioLoading();
         }
     }
 
     if (generateLaserBtn) {
-        generateLaserBtn.addEventListener('click', triggerAiGeneration);
+        generateLaserBtn.addEventListener('click', () => triggerAiGeneration());
     }
 
     function showStudioLoading(text) {
@@ -2135,6 +2156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: partName,
                 polygon: currentLaserPart.polygon,
                 holes: currentLaserPart.holes || [],
+                scoreLines: currentLaserPart.scoreLines || [],
                 quantity: 2,
                 color: color
             });

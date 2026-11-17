@@ -699,3 +699,22 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None
+
+
+## [2026-11-17 00:08:00] - 0Machine LaserAI Studio Phase 0 Execution
+- **Task**: Remove deceptive Imperial Eagle fallback, add error overlay with retry action, and update `svg-importer.js` to preserve open score and engraving lines.
+- **Files Changed**:
+  - `public/nest/engine/laser-ai.js`: Eliminated deceptive Imperial Eagle fallback; added honest error handling; restricted template drawing strictly to intentional preset selections (`options.preset`).
+  - `public/nest/engine/svg-importer.js`: Added support for `<line>` tags and open `<path>` / `<polyline>` strokes; preserved open scoring lines on Layer `SCORE_01` without area-based discard.
+  - `public/nest/index.html`: Added `#studioErrorOverlay` with failure description and a "↻ Retry Generation" button.
+  - `public/nest/app.js`: Connected error handling, retry listener, and preset options; attached `scoreLines` to parts added to nesting inventory.
+  - `web-build/nest/`: Synchronized updated engine, HTML, and app scripts.
+  - `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md`: Appended entry.
+- **Tests Performed**:
+  - Multi-part chunk assembly test: PASS
+  - SVG Importer Open Path Preservation test: PASS
+  - Deceptive Fallback Elimination test: PASS
+  - TypeScript compilation check (`npx tsc --noEmit`): PASS (0 errors)
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None

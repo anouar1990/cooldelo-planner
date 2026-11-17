@@ -612,7 +612,7 @@
                 }
             }
         }
-        if (currentPolyline.length > 2) subPaths.push(currentPolyline);
+        if (currentPolyline.length > 1) subPaths.push(currentPolyline);
         return subPaths;
     }
 
@@ -680,10 +680,43 @@
             }
 
             const polylines = [];
-            this.extractElementGeometry(svgEl, identityMatrix(), [], polylines, scaleToMm);
+            const openPaths = [];
+            this.extractElementGeometry(svgEl, identityMatrix(), [], polylines, scaleToMm, openPaths);
 
-            if (polylines.length === 0) {
-                return { fileName, parts: [], errors: ['No closed cutting paths found in SVG.'] };
+            if (polylines.length === 0 && openPaths.length === 0) {
+                return { fileName, parts: [], errors: ['No valid cutting or scoring paths found in SVG.'] };
+            }
+
+            // If only open score paths exist (e.g. single-stroke markings without outer cut border)
+            if (polylines.length === 0 && openPaths.length > 0) {
+                const allPts = openPaths.flatMap(p => p.points);
+                const b = computeBounds(allPts);
+                const baseName = fileName.replace(/\.[^/.]+$/, '');
+                const normScores = openPaths.map(op =>
+                    op.points.map(pt => ({ x: +(pt.x - b.minX).toFixed(2), y: +(pt.y - b.minY).toFixed(2) }))
+                );
+                // Frame boundary contour around the open markings
+                const pad = 2;
+                const frameOuter = [
+                    { x: 0, y: 0 },
+                    { x: b.width + pad * 2, y: 0 },
+                    { x: b.width + pad * 2, y: b.height + pad * 2 },
+                    { x: 0, y: b.height + pad * 2 }
+                ];
+                return {
+                    fileName,
+                    parts: [{
+                        name: `${baseName}_ScorePart`,
+                        polygon: frameOuter,
+                        holes: [],
+                        contours: [frameOuter],
+                        scoreLines: normScores,
+                        width: b.width + pad * 2,
+                        height: b.height + pad * 2,
+                        area: (b.width + pad * 2) * (b.height + pad * 2),
+                        bounds: { minX: 0, minY: 0, maxX: b.width + pad * 2, maxY: b.height + pad * 2, width: b.width + pad * 2, height: b.height + pad * 2 }
+                    }]
+                };
             }
 
             const components = this.classifyTopologicalComponents(polylines);
@@ -691,14 +724,14 @@
                 return { fileName, parts: [], errors: ['No outer cutting boundaries found in geometry.'] };
             }
 
-            const candidateParts = this.groupComponentsIntoParts(components, fileName);
+            const candidateParts = this.groupComponentsIntoParts(components, fileName, openPaths);
             return {
                 fileName,
                 parts: candidateParts
             };
         },
 
-        extractElementGeometry: function (element, parentMatrix, groupStack, polylines, scaleToMm) {
+        extractElementGeometry: function (element, parentMatrix, groupStack, polylines, scaleToMm, openPaths = []) {
             if (!element || !element.tagName) return;
             const transformAttr = element.getAttribute ? element.getAttribute('transform') : null;
             const localMatrix = parseTransformAttribute(transformAttr);
@@ -712,6 +745,7 @@
                 currentGroupStack.push({ id, label });
             }
 
+            // Closed contour processor (for through cuts & cutouts)
             const processPoints = (ptsInSvgSpace, elemId) => {
                 const mmPoints = ptsInSvgSpace.map(p => {
                     const transformed = applyMatrixToPoint(p, currentMatrix);
@@ -728,7 +762,29 @@
                             groupAncestors: [...currentGroupStack],
                             elementId: elemId
                         });
+                        return;
                     }
+                }
+                // If area is 0 or endpoints do not enclose area, preserve as open path
+                if (simplified.length >= 2) {
+                    processOpenPoints(ptsInSvgSpace, elemId);
+                }
+            };
+
+            // Open stroke processor (for vector scoring, line engravings, single strokes)
+            const processOpenPoints = (ptsInSvgSpace, elemId) => {
+                const mmPoints = ptsInSvgSpace.map(p => {
+                    const transformed = applyMatrixToPoint(p, currentMatrix);
+                    return { x: transformed.x * scaleToMm, y: transformed.y * scaleToMm };
+                });
+                const simplified = simplifyContour(mmPoints, 0.01);
+                if (simplified.length >= 2) {
+                    openPaths.push({
+                        points: simplified,
+                        bounds: computeBounds(simplified),
+                        groupAncestors: [...currentGroupStack],
+                        elementId: elemId
+                    });
                 }
             };
 
@@ -737,7 +793,28 @@
                     const d = element.getAttribute('d');
                     if (d) {
                         const subPaths = parseSvgPathToContours(d);
-                        subPaths.forEach(sp => { if (sp.length >= 3) processPoints(sp, element.getAttribute('id')); });
+                        subPaths.forEach(sp => {
+                            if (sp.length >= 2) {
+                                const first = sp[0];
+                                const last = sp[sp.length - 1];
+                                const isClosed = sp.length >= 3 && Math.hypot(first.x - last.x, first.y - last.y) < 0.05;
+                                if (isClosed) {
+                                    processPoints(sp, element.getAttribute('id'));
+                                } else {
+                                    processOpenPoints(sp, element.getAttribute('id'));
+                                }
+                            }
+                        });
+                    }
+                    break;
+                }
+                case 'line': {
+                    const x1 = parseFloat(element.getAttribute('x1') || '0');
+                    const y1 = parseFloat(element.getAttribute('y1') || '0');
+                    const x2 = parseFloat(element.getAttribute('x2') || '0');
+                    const y2 = parseFloat(element.getAttribute('y2') || '0');
+                    if (x1 !== x2 || y1 !== y2) {
+                        processOpenPoints([{ x: x1, y: y1 }, { x: x2, y: y2 }], element.getAttribute('id'));
                     }
                     break;
                 }
@@ -768,8 +845,7 @@
                     if (rx > 0 && ry > 0) processPoints(sampleEllipse(cx, cy, rx, ry), element.getAttribute('id'));
                     break;
                 }
-                case 'polygon':
-                case 'polyline': {
+                case 'polygon': {
                     const pointsStr = element.getAttribute('points');
                     if (pointsStr) {
                         const nums = pointsStr.trim().split(/[\s,]+/).map(parseFloat).filter(v => !isNaN(v));
@@ -778,10 +854,29 @@
                             pts.push({ x: nums[i], y: nums[i + 1] });
                         }
                         if (pts.length >= 3) {
-                            if (tagName === 'polygon' && (pts[0].x !== pts[pts.length - 1].x || pts[0].y !== pts[pts.length - 1].y)) {
+                            if (pts[0].x !== pts[pts.length - 1].x || pts[0].y !== pts[pts.length - 1].y) {
                                 pts.push({ ...pts[0] });
                             }
                             processPoints(pts, element.getAttribute('id'));
+                        }
+                    }
+                    break;
+                }
+                case 'polyline': {
+                    const pointsStr = element.getAttribute('points');
+                    if (pointsStr) {
+                        const nums = pointsStr.trim().split(/[\s,]+/).map(parseFloat).filter(v => !isNaN(v));
+                        const pts = [];
+                        for (let i = 0; i < nums.length - 1; i += 2) {
+                            pts.push({ x: nums[i], y: nums[i + 1] });
+                        }
+                        if (pts.length >= 2) {
+                            const isClosed = pts.length >= 3 && pts[0].x === pts[pts.length - 1].x && pts[0].y === pts[pts.length - 1].y;
+                            if (isClosed) {
+                                processPoints(pts, element.getAttribute('id'));
+                            } else {
+                                processOpenPoints(pts, element.getAttribute('id'));
+                            }
                         }
                     }
                     break;
@@ -790,7 +885,7 @@
 
             const childNodes = element.children ? Array.from(element.children) : Array.from(element.childNodes || []).filter(n => n.nodeType === 1);
             for (const child of childNodes) {
-                this.extractElementGeometry(child, currentMatrix, currentGroupStack, polylines, scaleToMm);
+                this.extractElementGeometry(child, currentMatrix, currentGroupStack, polylines, scaleToMm, openPaths);
             }
         },
 
@@ -862,7 +957,7 @@
             return components.filter(c => c.outerContours.length > 0 && c.area > 0.001);
         },
 
-        groupComponentsIntoParts: function (components, fileName) {
+        groupComponentsIntoParts: function (components, fileName, openPaths = []) {
             const k = components.length;
             if (k === 0) return [];
             const parent = Array.from({ length: k }, (_, i) => i);
@@ -934,6 +1029,16 @@
                     h.map(p => ({ x: p.x - bounds.minX, y: p.y - bounds.minY }))
                 );
 
+                // Map open scoring/engraving paths that overlap this part's bounds
+                const partOpenPaths = (openPaths || []).filter(op => {
+                    const ob = op.bounds;
+                    return !(ob.maxX < bounds.minX - 0.5 || ob.minX > bounds.maxX + 0.5 ||
+                             ob.maxY < bounds.minY - 0.5 || ob.minY > bounds.maxY + 0.5);
+                });
+                const normalizedScoreLines = partOpenPaths.map(op =>
+                    op.points.map(p => ({ x: +(p.x - bounds.minX).toFixed(2), y: +(p.y - bounds.minY).toFixed(2) }))
+                );
+
                 const totalArea = computeGeometryArea(normalizedContours, normalizedHoles);
                 if (totalArea <= 0.001) continue;
 
@@ -947,6 +1052,7 @@
                     polygon: normalizedContours[0] || [],
                     holes: normalizedHoles,
                     contours: normalizedContours,
+                    scoreLines: normalizedScoreLines,
                     width: bounds.width,
                     height: bounds.height,
                     area: totalArea,

@@ -164,6 +164,7 @@
             } catch (e) {}
 
             let directSvg = null;
+            let apiErrorMsg = null;
 
             // Step 1: Call 0Machine Cloud CAM Vector API
             try {
@@ -178,7 +179,7 @@
                                    mode === 'layered-scene' ? 'layered' : 'cut-engrave';
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 20000);
+                const timeoutId = setTimeout(() => controller.abort(), 25000);
 
                 const res = await fetch(apiUrl, {
                     method: 'POST',
@@ -197,11 +198,16 @@
                     if (data && data.success && data.svg) {
                         directSvg = data.svg;
                         console.log("[LaserAI] Successfully generated vector SVG from 0Machine Cloud CAM Engine!");
+                    } else {
+                        apiErrorMsg = data.error || "Invalid response format from CAM Vector API.";
                     }
                 } else {
-                    console.warn("[LaserAI] Cloud CAM API returned status:", res.status);
+                    const errData = await res.json().catch(() => ({}));
+                    apiErrorMsg = errData.error || `CAM API returned HTTP ${res.status}`;
+                    console.warn("[LaserAI] Cloud CAM API returned status:", res.status, apiErrorMsg);
                 }
             } catch (apiErr) {
+                apiErrorMsg = apiErr.name === 'AbortError' ? "Request timed out after 25s." : apiErr.message;
                 console.warn("[LaserAI] Cloud CAM API skipped or unavailable:", apiErr.message);
             }
 
@@ -220,45 +226,58 @@
                         if (contours.length > 0) {
                             const rawOuter = contours[0];
                             const rawHoles = p.holes || (p.geometry && p.geometry.holes) || [];
+                            const rawScores = p.scoreLines || [];
                             
                             // Scale to target width
                             const scaleFactor = this._computeMmScale(rawOuter, targetWidth);
                             const scaledOuter = rawOuter.map(pt => ({ x: +(pt.x * scaleFactor).toFixed(2), y: +(pt.y * scaleFactor).toFixed(2) }));
                             const scaledHoles = rawHoles.map(h => h.map(pt => ({ x: +(pt.x * scaleFactor).toFixed(2), y: +(pt.y * scaleFactor).toFixed(2) })));
-                            const scores = [];
+                            const scaledScores = rawScores.map(s => s.map(pt => ({ x: +(pt.x * scaleFactor).toFixed(2), y: +(pt.y * scaleFactor).toFixed(2) })));
 
                             // Clean and normalize
-                            const normalized = this._normalizePart(scaledOuter, scaledHoles, scores);
+                            const normalized = this._normalizePart(scaledOuter, scaledHoles, scaledScores);
                             const stats = this._computePartStats(normalized.outer, normalized.holes, normalized.scores);
-                            const svgString = this._generateLaserSvg(normalized.outer, normalized.holes, normalized.scores, stats.width, stats.height, mode);
                             const dxfString = this._generateLaserDxf(normalized.outer, normalized.holes, normalized.scores, stats.width, stats.height, mode);
 
                             result = {
                                 name: cleanPrompt.slice(0, 24).replace(/[^a-zA-Z0-9_-]/g, '_') || 'AI_Laser_Part',
                                 polygon: normalized.outer,
                                 holes: normalized.holes,
-                                scores: normalized.scores,
+                                scoreLines: normalized.scores,
                                 stats,
-                                svgString,
+                                svgString: directSvg,
                                 dxfString,
+                                isAiGenerated: true,
                                 previewDataUrl: null
                             };
                         }
+                    } else if (parsed && parsed.errors && parsed.errors.length > 0) {
+                        apiErrorMsg = parsed.errors.join("; ");
                     }
                 } catch (parseErr) {
                     console.warn("[LaserAI] SVG parsing fallback error:", parseErr);
+                    apiErrorMsg = parseErr.message;
                 }
             }
 
-            // Step 3: Offline procedural synthesis fallback if no direct SVG
+            // Step 3: Handle Fallback (NO SILENT IMPERIAL EAGLE FOR UNRELATED PROMPTS!)
             if (!result) {
-                console.log("[LaserAI] Using high-precision procedural synthesis engine...");
-                const synthesizedImage = this._synthesizeLaserArtwork(cleanPrompt.toLowerCase(), mode, options);
-                result = await this.traceImage(synthesizedImage, {
-                    ...options,
-                    mode: mode === 'keychain-medallion' ? 'keychain' : (mode === 'connected-stencil' ? 'stencil' : 'cut-engrave'),
-                    name: cleanPrompt ? cleanPrompt.slice(0, 24).replace(/[^a-zA-Z0-9_-]/g, '_') : 'AI_Design'
-                });
+                // Only load deterministic template if the user explicitly clicked an offline curated preset
+                if (options.preset) {
+                    console.log("[LaserAI] Loading explicitly chosen curated template:", options.preset);
+                    const synthesizedImage = this._synthesizeLaserArtwork(options.preset.toLowerCase(), mode, options);
+                    result = await this.traceImage(synthesizedImage, {
+                        ...options,
+                        mode: mode === 'keychain-medallion' ? 'keychain' : (mode === 'connected-stencil' ? 'stencil' : 'cut-engrave'),
+                        name: cleanPrompt ? cleanPrompt.slice(0, 24).replace(/[^a-zA-Z0-9_-]/g, '_') : 'Preset_Design'
+                    });
+                    result.isAiGenerated = false;
+                    result.isTemplate = true;
+                } else {
+                    // Fail honestly: do not substitute an unrelated animal or emblem
+                    const failureReason = apiErrorMsg || "Model output did not produce valid laser cutting contours.";
+                    throw new Error(`Generation failed: ${failureReason}. Please refine your prompt or retry.`);
+                }
             }
 
             // Save to local cache
