@@ -13,6 +13,7 @@ import { calculateNestingScore, Sheet as NestSheet, Part as NestPart } from '../
 const C = {
     bg: '#111317', surface: '#1A1D21', surface2: '#23262C',
     border: 'rgba(255,255,255,0.07)', primary: '#FE7733',
+    neon: '#B1FA63',
     green: '#10B981', amber: '#F59E0B', red: '#EF4444', blue: '#3B82F6',
     text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
@@ -279,7 +280,7 @@ export default function NestingEstimatorScreen() {
                         <View style={styles.metricsGrid}>
                             <MetricBox label="Parts per Sheet" value={`${result.perSheet}`} color={C.primary} />
                             <MetricBox label="Sheets Needed" value={`${result.sheetsNeeded}`} color={C.blue} />
-                            <MetricBox label="Material Usage %" value={`${result.usagePct.toFixed(1)}%`} color={C.green} />
+                            <MetricBox label="Material Usage %" value={`${result.usagePct.toFixed(1)}%`} color={C.neon} bold />
                             <MetricBox label="Material Waste %" value={`${result.wastePct.toFixed(1)}%`} color={C.amber} />
                             <MetricBox label="Cost / Part" value={`$${result.costPerPart.toFixed(2)}`} color={C.text} />
                             <MetricBox label="Total Material Cost" value={`$${result.totalSheetCost.toFixed(2)}`} color={C.text} />
@@ -373,8 +374,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     camTitle: { fontSize: 13, fontWeight: '800', color: '#FFF' },
-    camBadge: { backgroundColor: 'rgba(254, 119, 51, 0.25)', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
-    camBadgeText: { fontSize: 9, fontWeight: '800', color: '#FE7733' },
+    camBadge: { backgroundColor: 'rgba(177, 250, 99, 0.15)', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
+    camBadgeText: { fontSize: 9, fontWeight: '800', color: '#B1FA63' },
     camSubtitle: { fontSize: 11, color: C.sub, marginTop: 2 },
     camActionBtn: {
         backgroundColor: '#FE7733',

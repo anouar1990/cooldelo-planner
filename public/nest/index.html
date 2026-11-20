@@ -573,18 +573,34 @@
 
                     <!-- TAB 1: TEXT-TO-LASER AI GENERATOR -->
                     <div id="aiPromptSection" style="display: flex; flex-direction: column; gap: 14px;">
-                        <!-- 0Machine Cloud CAM Engine Status -->
+                        <!-- 0Machine LaserAI CAM Engine Status -->
                         <div class="cam-engine-bar" style="background: rgba(254, 119, 51, 0.06); border: 1px solid rgba(254, 119, 51, 0.25); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <span style="font-size: 11px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
                                     <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; box-shadow: 0 0 6px #10B981; display: inline-block;"></span>
-                                    0Machine Cloud CAM Vectorizer
+                                    0machine LaserAI Engine (CAD/CAM v2.0)
                                 </span>
-                                <span class="api-status-badge connected" id="apiKeyStatus" style="font-size: 9px; padding: 2px 7px; background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px;">Cloud Active</span>
+                                <span class="api-status-badge connected" id="apiKeyStatus" style="font-size: 9px; padding: 2px 7px; background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px;">0machine Cloud Active</span>
                             </div>
                             <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">
                                 Direct Bézier vector synthesis · 3-Layer CAM separation · LightBurn &amp; xTool Ready.
                             </div>
+                        </div>
+
+                        <!-- AI Credit Wallet Status Pill -->
+                        <div id="aiWalletStatusPill" style="display: flex; align-items: center; justify-content: space-between; background: rgba(177, 250, 99, 0.08); border: 1px solid rgba(177, 250, 99, 0.25); border-radius: 8px; padding: 8px 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 14px;">⚡</span>
+                                <div>
+                                    <div style="font-size: 11px; font-weight: 700; color: #fff;">
+                                        <span id="aiWalletBalanceText" style="color: #B1FA63; font-weight: 800; font-family: monospace;">--</span> Credits Available
+                                    </div>
+                                    <div style="font-size: 9px; color: var(--text-muted);">1 credit per generation · Never expire</div>
+                                </div>
+                            </div>
+                            <button id="rechargeAiWalletBtn" style="background: #B1FA63; color: #0B0D13; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                                + Recharge
+                            </button>
                         </div>
 
                         <div>
@@ -790,6 +806,59 @@
                         Add to Nest Inventory & Pack
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 0machine AI Recharge Wallet Modal -->
+    <!-- ============================================== -->
+    <div class="laser-ai-modal-overlay" id="aiRechargeModal" style="display: none; z-index: 10000;">
+        <div class="laser-ai-modal" style="max-width: 520px; border-color: rgba(177, 250, 99, 0.4);">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <div class="modal-title" style="color: #B1FA63;">
+                        ⚡ Recharge AI Credits
+                    </div>
+                    <div class="modal-badge">One-Time Payment · No Subscription</div>
+                </div>
+                <button class="modal-close-btn" id="closeRechargeModalBtn" title="Close">&times;</button>
+            </div>
+            <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+                    AI vector credits power text-to-CAD generation and raster vectorization. Unused credits never expire.
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- 100 credits -->
+                    <div class="recharge-pack-card" data-pack="pack_100" style="display: flex; align-items: center; justify-content: space-between; padding: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; cursor: pointer; transition: all 0.2s;">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 800; color: #fff;">Starter Pack</div>
+                            <div style="font-size: 11px; color: #B1FA63; font-weight: 700; font-family: monospace;">100 Credits ($0.10 / gen)</div>
+                        </div>
+                        <div style="font-size: 18px; font-weight: 900; color: #fff;">$10</div>
+                    </div>
+                    <!-- 300 credits -->
+                    <div class="recharge-pack-card active" data-pack="pack_300" style="display: flex; align-items: center; justify-content: space-between; padding: 14px; background: rgba(177, 250, 99, 0.08); border: 1px solid #B1FA63; border-radius: 10px; cursor: pointer; position: relative; transition: all 0.2s;">
+                        <span style="position: absolute; top: -8px; right: 12px; background: #FE7733; color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 10px;">POPULAR · 20% BONUS</span>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 800; color: #fff;">Maker Pack</div>
+                            <div style="font-size: 11px; color: #B1FA63; font-weight: 700; font-family: monospace;">300 Credits ($0.083 / gen)</div>
+                        </div>
+                        <div style="font-size: 18px; font-weight: 900; color: #fff;">$25</div>
+                    </div>
+                    <!-- 700 credits -->
+                    <div class="recharge-pack-card" data-pack="pack_700" style="display: flex; align-items: center; justify-content: space-between; padding: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; cursor: pointer; position: relative; transition: all 0.2s;">
+                        <span style="position: absolute; top: -8px; right: 12px; background: #B1FA63; color: #000; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 10px;">BEST VALUE · 40% BONUS</span>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 800; color: #fff;">Studio Pro Pack</div>
+                            <div style="font-size: 11px; color: #B1FA63; font-weight: 700; font-family: monospace;">700 Credits ($0.071 / gen)</div>
+                        </div>
+                        <div style="font-size: 18px; font-weight: 900; color: #fff;">$50</div>
+                    </div>
+                </div>
+                <button id="confirmRechargeBtn" style="background: #FE7733; color: #fff; border: none; border-radius: 8px; padding: 12px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px;">
+                    Proceed to Secure Stripe Checkout ↗
+                </button>
             </div>
         </div>
     </div>

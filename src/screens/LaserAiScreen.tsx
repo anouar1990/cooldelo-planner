@@ -3,8 +3,9 @@ import {
     View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
     Platform, Linking, useWindowDimensions
 } from 'react-native';
-import { Sparkles, Lock, ExternalLink, Zap, ArrowRight, ShieldCheck } from 'lucide-react-native';
+import { Sparkles, Lock, ExternalLink, Zap, ArrowRight, ShieldCheck, Coins } from 'lucide-react-native';
 import { useSubscription } from '../hooks/useSubscription';
+import { useAiWallet } from '../hooks/useAiWallet';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
@@ -13,13 +14,17 @@ const STUDIO_URL = '/nest?tool=laserai';
 
 export default function LaserAiScreen() {
     const { isPro, isStarter } = useSubscription();
+    const { balance, startRecharge, rechargeLoading } = useAiWallet();
     const { colors } = useTheme();
     const { t } = useLanguage();
     const { width } = useWindowDimensions();
     const [showProModal, setShowProModal] = useState(false);
 
-    // Free / Starter User Access Control Guard
-    if (!isPro) {
+    // Access granted if user is Pro OR user has prepaid AI credits (> 0)
+    const hasAccess = isPro || balance > 0;
+
+    // Free User with 0 Credits Access Guard
+    if (!hasAccess) {
         return (
             <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
                 <View style={styles.lockedContainer}>
@@ -29,7 +34,7 @@ export default function LaserAiScreen() {
                         </View>
                         <View style={styles.proBadge}>
                             <Zap size={11} color="#111317" fill="#111317" />
-                            <Text style={styles.proBadgeText}>PRO FEATURE</Text>
+                            <Text style={styles.proBadgeText}>PRO OR AI CREDITS</Text>
                         </View>
                         <Text style={[styles.lockedTitle, { color: colors.text }]}>
                             LaserAI Studio & Vectorizer
@@ -57,15 +62,30 @@ export default function LaserAiScreen() {
                             </View>
                         </View>
 
-                        <TouchableOpacity 
-                            style={styles.upgradeBtn} 
-                            onPress={() => setShowProModal(true)}
-                            activeOpacity={0.85}
-                        >
-                            <Zap size={16} color="#111317" fill="#111317" />
-                            <Text style={styles.upgradeBtnText}>Upgrade to Pro to Unlock</Text>
-                            <ArrowRight size={16} color="#111317" />
-                        </TouchableOpacity>
+                        <View style={{ width: '100%', gap: 10, marginTop: 4 }}>
+                            <TouchableOpacity 
+                                style={styles.upgradeBtn} 
+                                onPress={() => setShowProModal(true)}
+                                activeOpacity={0.85}
+                            >
+                                <Zap size={16} color="#111317" fill="#111317" />
+                                <Text style={styles.upgradeBtnText}>Upgrade to Pro ($19/mo)</Text>
+                                <ArrowRight size={16} color="#111317" />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={[styles.upgradeBtn, { backgroundColor: '#B1FA63' }]} 
+                                onPress={() => startRecharge('pack_100')}
+                                activeOpacity={0.85}
+                                disabled={rechargeLoading}
+                            >
+                                <Coins size={16} color="#0B0D13" />
+                                <Text style={[styles.upgradeBtnText, { color: '#0B0D13' }]}>
+                                    {rechargeLoading ? 'Opening Checkout...' : 'Or Recharge Credits (from $10)'}
+                                </Text>
+                                <ArrowRight size={16} color="#0B0D13" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
                 <ProUpgradeModal visible={showProModal} onClose={() => setShowProModal(false)} />
@@ -84,9 +104,32 @@ export default function LaserAiScreen() {
                         <Text style={[styles.topBarTitle, { color: colors.text }]}>
                             LaserAI Studio & Vectorizer
                         </Text>
-                        <View style={styles.activeProBadge}>
-                            <Text style={styles.activeProBadgeText}>PRO ACTIVE</Text>
-                        </View>
+                        {isPro && (
+                            <View style={styles.activeProBadge}>
+                                <Text style={styles.activeProBadgeText}>PRO ACTIVE</Text>
+                            </View>
+                        )}
+                        <TouchableOpacity
+                            onPress={() => startRecharge('pack_300')}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 5,
+                                backgroundColor: 'rgba(177, 250, 99, 0.12)',
+                                borderColor: 'rgba(177, 250, 99, 0.3)',
+                                borderWidth: 1,
+                                paddingHorizontal: 8,
+                                paddingVertical: 4,
+                                borderRadius: 12,
+                            }}
+                            activeOpacity={0.8}
+                        >
+                            <Coins size={12} color="#B1FA63" />
+                            <Text style={{ color: '#B1FA63', fontSize: 11, fontWeight: '700', fontFamily: 'monospace' }}>
+                                {balance} Credits
+                            </Text>
+                            <Text style={{ color: '#FE7733', fontSize: 10, fontWeight: '800' }}>+ Add</Text>
+                        </TouchableOpacity>
                     </View>
                     <TouchableOpacity
                         style={styles.openTabBtn}

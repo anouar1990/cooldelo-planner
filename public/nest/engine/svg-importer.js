@@ -233,10 +233,27 @@
     }
 
     function doSegmentsIntersect(p1, p2, p3, p4) {
-        function ccw(a, b, c) {
-            return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
-        }
-        return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
+        // 1. Fast 1D Bounding Box Rejection
+        const min1x = p1.x < p2.x ? p1.x : p2.x;
+        const max1x = p1.x > p2.x ? p1.x : p2.x;
+        const min3x = p3.x < p4.x ? p3.x : p4.x;
+        const max3x = p3.x > p4.x ? p3.x : p4.x;
+        if (max1x < min3x || min1x > max3x) return false;
+
+        const min1y = p1.y < p2.y ? p1.y : p2.y;
+        const max1y = p1.y > p2.y ? p1.y : p2.y;
+        const min3y = p3.y < p4.y ? p3.y : p4.y;
+        const max3y = p3.y > p4.y ? p3.y : p4.y;
+        if (max1y < min3y || min1y > max3y) return false;
+
+        // 2. Inlined CCW with zero allocations
+        const c1 = (p4.y - p1.y) * (p3.x - p1.x) > (p3.y - p1.y) * (p4.x - p1.x);
+        const c2 = (p4.y - p2.y) * (p3.x - p2.x) > (p3.y - p2.y) * (p4.x - p2.x);
+        if (c1 === c2) return false;
+
+        const c3 = (p3.y - p1.y) * (p2.x - p1.x) > (p2.y - p1.y) * (p3.x - p1.x);
+        const c4 = (p4.y - p1.y) * (p2.x - p1.x) > (p4.y - p1.y) * (p2.x - p1.x);
+        return c3 !== c4;
     }
 
     function doPolygonsIntersect(polyA, polyB) {
@@ -618,12 +635,28 @@
 
     const SvgImporter = {
         parseSvgString: function (rawSvg, fileName = 'design.svg') {
-            const sanitizedSvg = sanitizeSvgText(rawSvg);
+            let sanitizedSvg = sanitizeSvgText(rawSvg);
             if (!sanitizedSvg.trim()) {
                 return { fileName, parts: [], errors: ['Invalid or empty cutting geometry.'] };
             }
 
-            let doc;
+            // Extract <svg>...</svg> block if wrapped in markdown, text, or xml prolog
+            const svgMatch = sanitizedSvg.match(/<svg\b[\s\S]*<\/svg>/i);
+            if (svgMatch) {
+                sanitizedSvg = svgMatch[0];
+            }
+
+            // Auto-heal missing namespaces if namespace prefixes like inkscape: or xlink: are used
+            if (sanitizedSvg.includes('inkscape:') && !sanitizedSvg.includes('xmlns:inkscape=')) {
+                sanitizedSvg = sanitizedSvg.replace(/<svg\b/i, '<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"');
+            }
+            if (sanitizedSvg.includes('xlink:') && !sanitizedSvg.includes('xmlns:xlink=')) {
+                sanitizedSvg = sanitizedSvg.replace(/<svg\b/i, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+            }
+
+            let doc = null;
+            let svgEl = null;
+
             try {
                 let ParserClass;
                 if (typeof DOMParser !== 'undefined') {
@@ -637,13 +670,44 @@
                     ParserClass = require('@xmldom/xmldom').DOMParser;
                 }
                 const parser = new ParserClass();
-                doc = parser.parseFromString(sanitizedSvg, 'image/svg+xml');
+
+                // 1. Try standard XML parse
+                try {
+                    doc = parser.parseFromString(sanitizedSvg, 'image/svg+xml');
+                    if (doc && doc.documentElement && doc.documentElement.tagName.toLowerCase() === 'svg') {
+                        svgEl = doc.documentElement;
+                    } else if (doc && typeof doc.querySelector === 'function') {
+                        svgEl = doc.querySelector('svg');
+                    }
+                } catch (_) {}
+
+                // 2. If XML parse produced parsererror or missing <svg>, try HTML5 forgiving parser
+                if (!svgEl && typeof parser.parseFromString === 'function') {
+                    try {
+                        const htmlDoc = parser.parseFromString(sanitizedSvg, 'text/html');
+                        if (htmlDoc && typeof htmlDoc.querySelector === 'function') {
+                            svgEl = htmlDoc.querySelector('svg');
+                        }
+                    } catch (_) {}
+                }
+
+                // 3. If still missing, strip unknown XML namespace prefixes and retry
+                if (!svgEl) {
+                    try {
+                        const strippedSvg = sanitizedSvg.replace(/\b[a-zA-Z0-9_-]+:([a-zA-Z0-9_-]+)=/g, '$1=');
+                        const retryDoc = parser.parseFromString(strippedSvg, 'image/svg+xml');
+                        if (retryDoc && retryDoc.documentElement && retryDoc.documentElement.tagName.toLowerCase() === 'svg') {
+                            svgEl = retryDoc.documentElement;
+                        } else if (retryDoc && typeof retryDoc.querySelector === 'function') {
+                            svgEl = retryDoc.querySelector('svg');
+                        }
+                    } catch (_) {}
+                }
             } catch (e) {
                 return { fileName, parts: [], errors: ['Failed to parse SVG: ' + (e.message || 'Syntax error')] };
             }
 
-            const svgEl = doc.documentElement;
-            if (!svgEl || svgEl.tagName.toLowerCase() !== 'svg') {
+            if (!svgEl) {
                 return { fileName, parts: [], errors: ['Invalid SVG file: root <svg> element missing.'] };
             }
 

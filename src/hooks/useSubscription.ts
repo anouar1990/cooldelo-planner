@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Linking, Alert } from 'react-native';
+import { Linking, Alert, Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { trackEvent } from '../lib/analytics';
@@ -10,7 +10,7 @@ export type BillingCycle = 'monthly' | 'annual';
 export const STRIPE_PRICES = {
   STARTER_MONTHLY: process.env.EXPO_PUBLIC_STRIPE_STARTER_MONTHLY_PRICE_ID ?? 'price_1TAtn4GNkz6GTxuMwTn9DjU3',
   STARTER_ANNUAL: process.env.EXPO_PUBLIC_STRIPE_STARTER_ANNUAL_PRICE_ID ?? 'price_1U0sHpGNkz6GTxuMMsaB6NUp',
-  PRO_MONTHLY: process.env.EXPO_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID ?? 'price_1U0sHtGNkz6GTxuMtY8nj81a',
+  PRO_MONTHLY: process.env.EXPO_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID ?? 'price_1TuaQPGNkz6GTxuMEEjO6kny', // 0Machine Pro Workshop $19/mo
   PRO_ANNUAL: process.env.EXPO_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID ?? 'price_1U0sHkGNkz6GTxuMW2LnYzpW',
 };
 
@@ -171,17 +171,42 @@ export function useSubscription() {
       }
 
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('create-checkout-session', {
+        let checkoutApiUrl = '/api/checkout-session';
+        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.port === '8081') {
+          checkoutApiUrl = 'http://localhost:3000/api/checkout-session';
+        }
+
+        const res = await fetch(checkoutApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            priceId,
+            userId: user.id,
+            userEmail: user.email,
+            plan: targetPlan,
+            cycle,
+            redirectOrigin: Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data?.url) {
+          openUrlSafe(data.url);
+          return;
+        }
+
+        // Fallback to Supabase edge function if local route unreached
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('create-checkout-session', {
           body: { priceId, userId: user.id, userEmail: user.email, plan: targetPlan, cycle, trialPeriodDays: 3 },
         });
 
-        if (!fnError && data?.url) {
-          openUrlSafe(data.url);
+        if (!fnError && fnData?.url) {
+          openUrlSafe(fnData.url);
         } else {
           openUrlSafe(directFallbackUrl);
         }
       } catch (invokeErr) {
-        console.warn('Edge function invoke fallback to direct Stripe link:', invokeErr);
+        console.warn('Checkout API fallback to direct Stripe link:', invokeErr);
         openUrlSafe(directFallbackUrl);
       }
     } catch (err: any) {
@@ -199,15 +224,36 @@ export function useSubscription() {
     if (!user) return;
     try {
       setCheckoutLoading(true);
-      const { data, error: fnError } = await supabase.functions.invoke('create-portal-session', {
-        body: { customerId: subscription.stripeCustomerId, userId: user.id },
+
+      let portalApiUrl = '/api/customer-portal';
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.port === '8081') {
+        portalApiUrl = 'http://localhost:3000/api/customer-portal';
+      }
+
+      const res = await fetch(portalApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          userEmail: user.email,
+          returnUrl: Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined,
+        }),
       });
 
-      if (fnError) throw fnError;
-      if (data?.url) {
-        Linking.openURL(data.url);
+      const data = await res.json();
+      if (res.ok && data?.url) {
+        openUrlSafe(data.url);
       } else {
-        Alert.alert('Billing Portal', 'Please contact support to update your billing preferences.');
+        // Fallback to edge function if route unavailable
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('create-portal-session', {
+          body: { customerId: subscription.stripeCustomerId, userId: user.id },
+        });
+
+        if (!fnError && fnData?.url) {
+          openUrlSafe(fnData.url);
+        } else {
+          Alert.alert('Billing Portal', data?.error || 'Please contact support to update your billing preferences.');
+        }
       }
     } catch (err: any) {
       Alert.alert('Portal Error', err.message || 'Unable to load Stripe Customer Portal.');

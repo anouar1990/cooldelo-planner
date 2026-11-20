@@ -233,21 +233,42 @@
         },
 
         doSegmentsIntersect: function (p1, p2, p3, p4) {
-            function ccw(a, b, c) {
-                return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
-            }
-            return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
+            // 1. Fast 1D Bounding Box Rejection (filters out ~90% of segment pairs with zero vector math)
+            const min1x = p1.x < p2.x ? p1.x : p2.x;
+            const max1x = p1.x > p2.x ? p1.x : p2.x;
+            const min3x = p3.x < p4.x ? p3.x : p4.x;
+            const max3x = p3.x > p4.x ? p3.x : p4.x;
+            if (max1x < min3x || min1x > max3x) return false;
+
+            const min1y = p1.y < p2.y ? p1.y : p2.y;
+            const max1y = p1.y > p2.y ? p1.y : p2.y;
+            const min3y = p3.y < p4.y ? p3.y : p4.y;
+            const max3y = p3.y > p4.y ? p3.y : p4.y;
+            if (max1y < min3y || min1y > max3y) return false;
+
+            // 2. Inlined CCW arithmetic with zero allocations (no closures or GC pressure)
+            const c1 = (p4.y - p1.y) * (p3.x - p1.x) > (p3.y - p1.y) * (p4.x - p1.x);
+            const c2 = (p4.y - p2.y) * (p3.x - p2.x) > (p3.y - p2.y) * (p4.x - p2.x);
+            if (c1 === c2) return false;
+
+            const c3 = (p3.y - p1.y) * (p2.x - p1.x) > (p2.y - p1.y) * (p3.x - p1.x);
+            const c4 = (p4.y - p1.y) * (p2.x - p1.x) > (p4.y - p1.y) * (p2.x - p1.x);
+            return c3 !== c4;
         },
 
         // True 2D polygon intersection supporting concave & convex shapes
         doPolygonsIntersect: function (polyA, polyB) {
             if (!polyA || !polyB || polyA.length < 3 || polyB.length < 3) return false;
-            // 1. Edge-edge segment intersection
-            for (let i = 0; i < polyA.length; i++) {
-                const nextI = (i + 1) % polyA.length;
-                for (let j = 0; j < polyB.length; j++) {
-                    const nextJ = (j + 1) % polyB.length;
-                    if (this.doSegmentsIntersect(polyA[i], polyA[nextI], polyB[j], polyB[nextJ])) {
+            // 1. Edge-edge segment intersection with hoisted local variables
+            const lenA = polyA.length;
+            const lenB = polyB.length;
+            for (let i = 0; i < lenA; i++) {
+                const nextI = (i + 1) % lenA;
+                const pAi = polyA[i];
+                const pAnext = polyA[nextI];
+                for (let j = 0; j < lenB; j++) {
+                    const nextJ = (j + 1) % lenB;
+                    if (this.doSegmentsIntersect(pAi, pAnext, polyB[j], polyB[nextJ])) {
                         return true;
                     }
                 }
@@ -372,25 +393,64 @@
             return this.simplifyPolygon(points, 0.5);
         },
 
-        simplifyPolygon: function (points, tolerance = 0.5) {
-            if (points.length <= 3) return points;
-            const res = [points[0]];
-            for (let i = 1; i < points.length; i++) {
-                const prev = res[res.length - 1];
-                const curr = points[i];
-                const d = Math.hypot(curr.x - prev.x, curr.y - prev.y);
-                if (d >= tolerance) {
-                    res.push(curr);
+        simplifyPolygon: function (points, tolerance = 0.4) {
+            if (!points || points.length <= 3) return points || [];
+
+            function getSqDist(p1, p2) {
+                const dx = p1.x - p2.x, dy = p1.y - p2.y;
+                return dx * dx + dy * dy;
+            }
+
+            function getSqSegDist(p, p1, p2) {
+                let x = p1.x, y = p1.y, dx = p2.x - x, dy = p2.y - y;
+                if (dx !== 0 || dy !== 0) {
+                    const t = ((p.x - x) * dx + (p.y - y) * dy) / (dx * dx + dy * dy);
+                    if (t > 1) {
+                        x = p2.x;
+                        y = p2.y;
+                    } else if (t > 0) {
+                        x += dx * t;
+                        y += dy * t;
+                    }
+                }
+                dx = p.x - x;
+                dy = p.y - y;
+                return dx * dx + dy * dy;
+            }
+
+            function simplifyDPStep(pts, first, last, sqTolerance, simplified) {
+                let maxSqDist = sqTolerance;
+                let index = -1;
+
+                for (let i = first + 1; i < last; i++) {
+                    const sqDist = getSqSegDist(pts[i], pts[first], pts[last]);
+                    if (sqDist > maxSqDist) {
+                        index = i;
+                        maxSqDist = sqDist;
+                    }
+                }
+
+                if (maxSqDist > sqTolerance) {
+                    if (index - first > 1) simplifyDPStep(pts, first, index, sqTolerance, simplified);
+                    simplified.push(pts[index]);
+                    if (last - index > 1) simplifyDPStep(pts, index, last, sqTolerance, simplified);
                 }
             }
-            if (res.length > 3) {
-                const first = res[0];
-                const last = res[res.length - 1];
-                if (Math.hypot(last.x - first.x, last.y - first.y) < tolerance) {
-                    res.pop();
+
+            const sqTolerance = tolerance * tolerance;
+            const simplified = [points[0]];
+            simplifyDPStep(points, 0, points.length - 1, sqTolerance, simplified);
+            simplified.push(points[points.length - 1]);
+
+            if (simplified.length > 3) {
+                const first = simplified[0];
+                const last = simplified[simplified.length - 1];
+                if (getSqDist(first, last) < sqTolerance) {
+                    simplified.pop();
                 }
             }
-            return res;
+
+            return simplified.length >= 3 ? simplified : points;
         },
 
         polygonPerimeter: function (polygon) {

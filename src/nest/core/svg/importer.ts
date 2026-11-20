@@ -191,7 +191,7 @@ export class SvgImporter implements DesignImporter {
   parseSvgString(rawSvg: string, fileName: string = 'design.svg'): NormalizedDesign {
     const warnings: string[] = [];
 
-    const sanitizedSvg = sanitizeSvgText(rawSvg);
+    let sanitizedSvg = sanitizeSvgText(rawSvg);
     if (!sanitizedSvg.trim()) {
       return {
         fileName,
@@ -202,12 +202,58 @@ export class SvgImporter implements DesignImporter {
       };
     }
 
-    let doc: Document;
+    // Extract <svg>...</svg> block if wrapped in markdown, text, or xml prolog
+    const svgMatch = sanitizedSvg.match(/<svg\b[\s\S]*<\/svg>/i);
+    if (svgMatch) {
+      sanitizedSvg = svgMatch[0];
+    }
+
+    // Auto-heal missing namespaces if namespace prefixes like inkscape: or xlink: are used
+    if (sanitizedSvg.includes('inkscape:') && !sanitizedSvg.includes('xmlns:inkscape=')) {
+      sanitizedSvg = sanitizedSvg.replace(/<svg\b/i, '<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"');
+    }
+    if (sanitizedSvg.includes('xlink:') && !sanitizedSvg.includes('xmlns:xlink=')) {
+      sanitizedSvg = sanitizedSvg.replace(/<svg\b/i, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+
+    let doc: Document | null = null;
+    let svgEl: Element | null = null;
+
     try {
-      if (typeof window !== 'undefined' && window.DOMParser) {
-        doc = new window.DOMParser().parseFromString(sanitizedSvg, 'image/svg+xml');
-      } else {
-        doc = new DOMParser().parseFromString(sanitizedSvg, 'image/svg+xml') as unknown as Document;
+      const parser = typeof window !== 'undefined' && window.DOMParser
+        ? new window.DOMParser()
+        : new DOMParser();
+
+      try {
+        doc = parser.parseFromString(sanitizedSvg, 'image/svg+xml') as unknown as Document;
+        if (doc && doc.documentElement && doc.documentElement.tagName.toLowerCase() === 'svg') {
+          svgEl = doc.documentElement as unknown as Element;
+        } else if (doc && typeof (doc as unknown as { querySelector?: (s: string) => Element }).querySelector === 'function') {
+          svgEl = (doc as unknown as { querySelector: (s: string) => Element }).querySelector('svg');
+        }
+      } catch (_) {}
+
+      // Fallback to text/html parsing if XML failed
+      if (!svgEl && typeof parser.parseFromString === 'function') {
+        try {
+          const htmlDoc = parser.parseFromString(sanitizedSvg, 'text/html' as unknown as DOMParserSupportedType) as unknown as Document;
+          if (htmlDoc && typeof (htmlDoc as unknown as { querySelector?: (s: string) => Element }).querySelector === 'function') {
+            svgEl = (htmlDoc as unknown as { querySelector: (s: string) => Element }).querySelector('svg');
+          }
+        } catch (_) {}
+      }
+
+      // Fallback: strip unknown prefixes
+      if (!svgEl) {
+        try {
+          const stripped = sanitizedSvg.replace(/\b[a-zA-Z0-9_-]+:([a-zA-Z0-9_-]+)=/g, '$1=');
+          const retryDoc = parser.parseFromString(stripped, 'image/svg+xml') as unknown as Document;
+          if (retryDoc && retryDoc.documentElement && retryDoc.documentElement.tagName.toLowerCase() === 'svg') {
+            svgEl = retryDoc.documentElement as unknown as Element;
+          } else if (retryDoc && typeof (retryDoc as unknown as { querySelector?: (s: string) => Element }).querySelector === 'function') {
+            svgEl = (retryDoc as unknown as { querySelector: (s: string) => Element }).querySelector('svg');
+          }
+        } catch (_) {}
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Syntax error';
@@ -218,7 +264,6 @@ export class SvgImporter implements DesignImporter {
       };
     }
 
-    const svgEl = doc.documentElement;
     if (!svgEl || svgEl.tagName.toLowerCase() !== 'svg') {
       return {
         fileName,

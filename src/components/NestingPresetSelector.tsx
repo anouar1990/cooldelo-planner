@@ -71,10 +71,10 @@ const THEME = {
     },
     desktop: {
       label: 'Desktop',
-      bg: 'rgba(99, 102, 241, 0.12)',
-      border: 'rgba(99, 102, 241, 0.30)',
-      text: '#818CF8',
-      indicator: '#818CF8',
+      bg: 'rgba(177, 250, 99, 0.12)',
+      border: 'rgba(177, 250, 99, 0.30)',
+      text: '#B1FA63',
+      indicator: '#B1FA63',
     },
     compact: {
       label: 'Compact',

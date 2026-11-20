@@ -290,11 +290,11 @@ export default function DashboardScreen({ navigation }: any) {
                             onPress={() => navigateTab('Invoice Generator')}
                         />
                         <QuickToolCard
-                            icon={<Layers color="#8B5CF6" size={20} />}
+                            icon={<Layers color="#B1FA63" size={20} />}
                             title="0machine Nest"
                             badge="PRO"
                             desc="Autonomous True-Shape sheet nesting & CAD/CAM engine"
-                            color="#8B5CF6"
+                            color="#B1FA63"
                             colors={colors}
                             onPress={() => {
                                 if (!isPro) {

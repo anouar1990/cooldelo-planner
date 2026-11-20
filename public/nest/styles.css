@@ -10,7 +10,9 @@
     --accent-glow: rgba(254, 119, 51, 0.4);
     --accent-light: #FF925C;
     --accent-dark: #E85F20;
-    --secondary-indigo: #6366F1;
+    --secondary-lime: #B1FA63;
+    --secondary-lime-glow: rgba(177, 250, 99, 0.35);
+    --secondary-lime-dark: #8ED638;
     --text-primary: #F3F4F6;
     --text-secondary: #9CA3AF;
     --text-muted: #6B7280;
@@ -33,7 +35,7 @@ body {
     position: relative;
     background-image:
         radial-gradient(80% 50% at 20% 20%, rgba(254, 119, 51, 0.08) 0%, transparent 70%),
-        radial-gradient(60% 40% at 80% 10%, rgba(99, 102, 241, 0.06) 0%, transparent 70%),
+        radial-gradient(60% 40% at 80% 10%, rgba(177, 250, 99, 0.05) 0%, transparent 70%),
         radial-gradient(50% 60% at 50% 90%, rgba(254, 119, 51, 0.05) 0%, transparent 70%);
 }
 
@@ -1081,13 +1083,14 @@ body {
     font-family: 'Outfit', sans-serif;
     font-size: 20px;
     font-weight: 800;
-    color: #fff;
+    color: var(--secondary-lime);
     line-height: 1;
 }
 
 .yield-percentage span {
     font-size: 12px;
-    color: var(--accent);
+    color: var(--secondary-lime);
+    opacity: 0.85;
 }
 
 .yield-label {
@@ -1374,7 +1377,7 @@ body {
 
 /* Quotation & Devis Panel */
 .devis-card {
-    background: linear-gradient(135deg, rgba(254, 119, 51, 0.05), rgba(99, 102, 241, 0.04));
+    background: linear-gradient(135deg, rgba(254, 119, 51, 0.05), rgba(177, 250, 99, 0.04));
     border: 1px solid rgba(254, 119, 51, 0.25);
     border-radius: 14px;
     padding: 14px;

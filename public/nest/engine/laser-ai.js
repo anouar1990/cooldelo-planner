@@ -174,6 +174,16 @@
                     apiUrl = 'http://localhost:3000/api/generate-svg';
                 }
 
+                // Extract authenticated user ID if present in storage
+                let userId = null;
+                try {
+                    const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+                    if (sbKey) {
+                        const parsed = JSON.parse(localStorage.getItem(sbKey) || '{}');
+                        userId = parsed?.user?.id || null;
+                    }
+                } catch (_) {}
+
                 const mappedMode = mode === 'connected-stencil' ? 'stencil' :
                                    mode === 'keychain-medallion' ? 'keychain' :
                                    mode === 'layered-scene' ? 'layered' : 'cut-engrave';
@@ -187,17 +197,26 @@
                     body: JSON.stringify({
                         prompt: cleanPrompt,
                         mode: mappedMode,
-                        targetWidthMm: targetWidth
+                        targetWidthMm: targetWidth,
+                        userId: userId || undefined
                     }),
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
 
+                let responseImageUrl = null;
+                let responseModel = null;
+
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.success && data.svg) {
                         directSvg = data.svg;
-                        console.log("[LaserAI] Successfully generated vector SVG from 0Machine Cloud CAM Engine!");
+                        responseImageUrl = data.imageUrl || null;
+                        responseModel = data.model || null;
+                        console.log("[LaserAI] Successfully generated vector SVG from 0Machine Cloud CAM Engine (" + (responseModel || "0machine LaserAI") + ")! Remaining credits:", data.remainingCredits);
+                        if (typeof window !== 'undefined' && data.remainingCredits !== undefined) {
+                            window.dispatchEvent(new CustomEvent('ai-credits-updated', { detail: { remainingCredits: data.remainingCredits } }));
+                        }
                     } else {
                         apiErrorMsg = data.error || "Invalid response format from CAM Vector API.";
                     }
@@ -205,6 +224,11 @@
                     const errData = await res.json().catch(() => ({}));
                     apiErrorMsg = errData.error || `CAM API returned HTTP ${res.status}`;
                     console.warn("[LaserAI] Cloud CAM API returned status:", res.status, apiErrorMsg);
+                    if (res.status === 402) {
+                        if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('ai-credits-insufficient', { detail: errData }));
+                        }
+                    }
                 }
             } catch (apiErr) {
                 apiErrorMsg = apiErr.name === 'AbortError' ? "Request timed out after 25s." : apiErr.message;
@@ -248,7 +272,8 @@
                                 svgString: directSvg,
                                 dxfString,
                                 isAiGenerated: true,
-                                previewDataUrl: null
+                                previewDataUrl: responseImageUrl || null,
+                                model: responseModel || '0machine-laserai-v2.0'
                             };
                         }
                     } else if (parsed && parsed.errors && parsed.errors.length > 0) {
@@ -257,6 +282,73 @@
                 } catch (parseErr) {
                     console.warn("[LaserAI] SVG parsing fallback error:", parseErr);
                     apiErrorMsg = parseErr.message;
+                }
+            }
+
+            // Step 2.5: Direct Path Geometry Parser Fallback (Extracts M x y L x y ... Z paths if DOMParser had quirks)
+            if (!result && directSvg) {
+                try {
+                    const pathMatches = directSvg.match(/<path\b[^>]*\bd=["']([^"']+)["']/gi);
+                    if (pathMatches && pathMatches.length > 0) {
+                        const rawLoops = [];
+                        for (const pMatch of pathMatches) {
+                            const dMatch = pMatch.match(/\bd=["']([^"']+)["']/i);
+                            if (!dMatch) continue;
+                            const dStr = dMatch[1];
+                            const subPaths = dStr.split(/(?=[Mm])/);
+                            for (const sub of subPaths) {
+                                const coords = [];
+                                const numRegex = /(-?\d+(?:\.\d+)?(?:e[-+]?\d+)?)/gi;
+                                const nums = [];
+                                let m;
+                                while ((m = numRegex.exec(sub)) !== null) {
+                                    nums.push(parseFloat(m[1]));
+                                }
+                                for (let i = 0; i < nums.length - 1; i += 2) {
+                                    coords.push({ x: nums[i], y: nums[i + 1] });
+                                }
+                                if (coords.length > 2) rawLoops.push(coords);
+                            }
+                        }
+
+                        if (rawLoops.length > 0) {
+                            const withArea = rawLoops.map(loop => ({
+                                loop,
+                                area: this._polygonArea(loop)
+                            })).sort((a, b) => b.area - a.area);
+
+                            const rawOuter = withArea[0].loop;
+                            const rawHoles = [];
+                            for (let k = 1; k < withArea.length; k++) {
+                                if (this._isLoopInside(withArea[k].loop, rawOuter)) {
+                                    rawHoles.push(withArea[k].loop);
+                                }
+                            }
+
+                            const scaleFactor = this._computeMmScale(rawOuter, targetWidth);
+                            const scaledOuter = rawOuter.map(pt => ({ x: +(pt.x * scaleFactor).toFixed(2), y: +(pt.y * scaleFactor).toFixed(2) }));
+                            const scaledHoles = rawHoles.map(h => h.map(pt => ({ x: +(pt.x * scaleFactor).toFixed(2), y: +(pt.y * scaleFactor).toFixed(2) })));
+                            const normalized = this._normalizePart(scaledOuter, scaledHoles, []);
+                            const stats = this._computePartStats(normalized.outer, normalized.holes, []);
+                            const dxfString = this._generateLaserDxf(normalized.outer, normalized.holes, [], stats.width, stats.height, mode);
+
+                            result = {
+                                name: cleanPrompt.slice(0, 24).replace(/[^a-zA-Z0-9_-]/g, '_') || 'AI_Laser_Part',
+                                polygon: normalized.outer,
+                                holes: normalized.holes,
+                                scoreLines: [],
+                                stats,
+                                svgString: directSvg,
+                                dxfString,
+                                isAiGenerated: true,
+                                previewDataUrl: responseImageUrl || null,
+                                model: responseModel || '0machine-laserai-v2.0'
+                            };
+                            console.log("[LaserAI] Successfully recovered CAD geometry via direct path parser fallback!");
+                        }
+                    }
+                } catch (fallbackErr) {
+                    console.warn("[LaserAI] Direct path fallback error:", fallbackErr);
                 }
             }
 

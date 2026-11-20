@@ -32,9 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     window.nester = nester;
 
-    // Color Palette based on 0machine & Neon Accents
+    // Color Palette based on 0machine Primary (#FE7733) & Neon Lime (#B1FA63) Accents
     const colorPalette = [
-        '#FE7733', '#FF925C', '#6366F1', '#38BDF8', 
+        '#FE7733', '#B1FA63', '#FF925C', '#38BDF8', 
         '#10B981', '#F59E0B', '#EC4899', '#A855F7'
     ];
 
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 { x: 100, y: 80 }, { x: 20, y: 80 }, { x: 0, y: 35 }
             ],
             quantity: 4,
-            color: '#6366F1'
+            color: '#B1FA63'
         },
         {
             name: 'Motor Mount',
@@ -2232,6 +2232,127 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.warn('Initial layout generation error:', e);
     }
+
+    // ==========================================
+    // 0machine AI Recharge Wallet Controller
+    // ==========================================
+    const aiWalletBalanceText = document.getElementById('aiWalletBalanceText');
+    const rechargeAiWalletBtn = document.getElementById('rechargeAiWalletBtn');
+    const aiRechargeModal = document.getElementById('aiRechargeModal');
+    const closeRechargeModalBtn = document.getElementById('closeRechargeModalBtn');
+    const confirmRechargeBtn = document.getElementById('confirmRechargeBtn');
+    let selectedRechargePack = 'pack_300';
+
+    function getLoggedUserId() {
+        try {
+            const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+            if (sbKey) {
+                const parsed = JSON.parse(localStorage.getItem(sbKey) || '{}');
+                return parsed?.user?.id || null;
+            }
+        } catch (_) {}
+        return null;
+    }
+
+    async function fetchAiWalletBalance() {
+        const userId = getLoggedUserId();
+        if (!userId) {
+            if (aiWalletBalanceText) aiWalletBalanceText.textContent = '1 (Trial)';
+            return;
+        }
+
+        try {
+            let apiUrl = '/api/ai-wallet?userId=' + encodeURIComponent(userId);
+            if (window.location.port === '8081') {
+                apiUrl = 'http://localhost:3000/api/ai-wallet?userId=' + encodeURIComponent(userId);
+            }
+            const res = await fetch(apiUrl);
+            if (res.ok) {
+                const data = await res.json();
+                const bal = data.wallet?.balance ?? 0;
+                if (aiWalletBalanceText) aiWalletBalanceText.textContent = String(bal);
+            }
+        } catch (err) {
+            console.warn('[AI Wallet] Could not fetch balance:', err);
+        }
+    }
+
+    if (rechargeAiWalletBtn && aiRechargeModal) {
+        rechargeAiWalletBtn.addEventListener('click', () => {
+            aiRechargeModal.style.display = 'flex';
+        });
+    }
+
+    if (closeRechargeModalBtn && aiRechargeModal) {
+        closeRechargeModalBtn.addEventListener('click', () => {
+            aiRechargeModal.style.display = 'none';
+        });
+    }
+
+    document.querySelectorAll('.recharge-pack-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.recharge-pack-card').forEach(c => {
+                c.classList.remove('active');
+                c.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                c.style.background = 'rgba(255, 255, 255, 0.04)';
+            });
+            card.classList.add('active');
+            card.style.borderColor = '#B1FA63';
+            card.style.background = 'rgba(177, 250, 99, 0.08)';
+            selectedRechargePack = card.getAttribute('data-pack') || 'pack_300';
+        });
+    });
+
+    if (confirmRechargeBtn) {
+        confirmRechargeBtn.addEventListener('click', async () => {
+            confirmRechargeBtn.disabled = true;
+            confirmRechargeBtn.textContent = 'Initializing Stripe Checkout...';
+            try {
+                const userId = getLoggedUserId();
+                let apiUrl = '/api/checkout-session';
+                if (window.location.port === '8081') {
+                    apiUrl = 'http://localhost:3000/api/checkout-session';
+                }
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'ai_recharge',
+                        mode: 'payment',
+                        packageId: selectedRechargePack,
+                        userId: userId || undefined,
+                        redirectOrigin: window.location.origin
+                    })
+                });
+
+                const data = await res.json();
+                if (data && data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert(data.error || 'Unable to open Stripe checkout session.');
+                    confirmRechargeBtn.disabled = false;
+                    confirmRechargeBtn.textContent = 'Proceed to Secure Stripe Checkout ↗';
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+                confirmRechargeBtn.disabled = false;
+                confirmRechargeBtn.textContent = 'Proceed to Secure Stripe Checkout ↗';
+            }
+        });
+    }
+
+    window.addEventListener('ai-credits-updated', (e) => {
+        if (e.detail && e.detail.remainingCredits !== undefined && aiWalletBalanceText) {
+            aiWalletBalanceText.textContent = String(e.detail.remainingCredits);
+        }
+    });
+
+    window.addEventListener('ai-credits-insufficient', () => {
+        if (aiRechargeModal) aiRechargeModal.style.display = 'flex';
+    });
+
+    // Initial wallet balance check
+    fetchAiWalletBalance();
 
     renderPartsList();
     renderInspector();
