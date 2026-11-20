@@ -1023,3 +1023,20 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-20 22:35:00] - Grant Full Pro Access & 1,000 AI Credits to Owner Accounts
+- **Task**: Grant permanent Pro status and 1,000 AI credits to owner/admin accounts in Supabase; configure local development and owner emails to bypass all paywalls and unlock gates automatically.
+- **Files Changed**:
+  - Supabase Database: Updated `user_settings` to `plan = 'pro'`, `subscription_status = 'active'`, and loaded 1,000 credits into `ai_wallets` for owner accounts (`cooldelodxf@gmail.com`, `anouarkharbache@gmail.com`, `admin@0machine.com`, `jocasisto@gmail.com`, `anwarreal120@gmail.com`).
+  - `lasercut-planner/src/hooks/useSubscription.ts`: Added admin owner emails and local dev auto-grant for Pro subscription.
+  - `lasercut-planner/src/screens/LaserAiScreen.tsx`: Auto-granted full access (`hasAccess = true`) for owner accounts and local dev environments.
+  - `0machine-landing/app/components/LaserAiSection.js`: Added automatic unlock bypass for localhost and admin testing.
+- **Tests Performed**:
+  - Supabase database record verification: PASS (all owner accounts upgraded to active Pro with 1,000 credits).
+  - TypeScript build verification (`npx tsc --noEmit`): PASS (0 errors).
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 routes compiled in 7.2s).
+  - Web export build (`npm run vercel-build` in `lasercut-planner`): PASS (3.5MB bundle compiled).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.

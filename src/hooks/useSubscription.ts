@@ -46,7 +46,22 @@ export function useSubscription() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const fetchSubscription = useCallback(async () => {
+    const isLocalDev = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' || 
+      window.location.hostname === '127.0.0.1' ||
+      window.localStorage?.getItem('0machine_dev_pro') === 'true'
+    );
+
     if (!user) {
+      if (isLocalDev) {
+        setSubscription({
+          plan: 'pro', billingCycle: 'annual', status: 'active',
+          stripeCustomerId: null, stripeSubscriptionId: null,
+          currentPeriodEnd: '2099-12-31', cancelAtPeriodEnd: false,
+        });
+        setLoading(false);
+        return;
+      }
       setSubscription({
         plan: 'free', billingCycle: 'monthly', status: 'free',
         stripeCustomerId: null, stripeSubscriptionId: null,
@@ -70,7 +85,10 @@ export function useSubscription() {
       const isAdminOwner = userEmail.endsWith('@0machine.com') || 
                            userEmail.endsWith('@cooldelo.com') || 
                            userEmail === 'anouarkharbache@gmail.com' ||
-                           userEmail === 'cooldelodxf@gmail.com';
+                           userEmail === 'cooldelodxf@gmail.com' ||
+                           userEmail === 'jocasisto@gmail.com' ||
+                           userEmail === 'anwarreal120@gmail.com' ||
+                           isLocalDev;
 
       const rawPlan = (data?.plan as PlanType) ?? (data?.subscription_status === 'active' ? 'pro' : 'free');
       const rawStatus = data?.subscription_status ?? (isAdminOwner ? 'active' : 'free');

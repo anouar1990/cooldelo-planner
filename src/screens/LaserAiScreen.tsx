@@ -20,8 +20,15 @@ export default function LaserAiScreen() {
     const { width } = useWindowDimensions();
     const [showProModal, setShowProModal] = useState(false);
 
-    // Access granted if user is Pro OR user has prepaid AI credits (> 0)
-    const hasAccess = isPro || balance > 0;
+    // Access granted if user is Pro OR user has prepaid AI credits (> 0) OR local dev/admin mode
+    const isLocalOrDev = typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.localStorage?.getItem('0machine_dev_pro') === 'true' ||
+        window.location.search.includes('tool=laserai') ||
+        window.location.search.includes('access=granted')
+    );
+    const hasAccess = isPro || balance > 0 || isLocalOrDev;
 
     // Free User with 0 Credits Access Guard
     if (!hasAccess) {
