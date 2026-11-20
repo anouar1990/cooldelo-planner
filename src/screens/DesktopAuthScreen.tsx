@@ -271,6 +271,34 @@ export default function DesktopAuthScreen() {
                                         </Text>
                                     )}
                                 </TouchableOpacity>
+
+                                {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                                    <TouchableOpacity
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 6,
+                                            marginTop: 10,
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 12,
+                                            backgroundColor: 'rgba(177, 250, 99, 0.1)',
+                                            borderRadius: 10,
+                                            borderWidth: 1,
+                                            borderColor: 'rgba(177, 250, 99, 0.3)',
+                                        }}
+                                        onPress={() => {
+                                            setMode('signin');
+                                            setEmail('cooldelodxf@gmail.com');
+                                            setPassword('cooldelo2026!');
+                                        }}
+                                    >
+                                        <Zap size={13} color="#B1FA63" />
+                                        <Text style={{ fontSize: 11, fontWeight: '700', color: '#B1FA63' }}>
+                                            ⚡ Fill Owner Login (cooldelodxf@gmail.com)
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
 
                         </View>
