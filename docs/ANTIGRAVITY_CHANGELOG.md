@@ -913,3 +913,36 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-20 21:23:00] - Production Deployment to Vercel via GitHub Integration
+- **Task**: Commit all latest features across both projects and push to remote GitHub repositories (`origin/main`) to trigger automatic production deployments on Vercel.
+- **Repositories Pushed**:
+  - `0machine-landing` (`https://github.com/anouar1990/0machine-landing.git`): Commit `9ded844` on `main`.
+  - `lasercut-planner` (`https://github.com/anouar1990/cooldelo-planner.git`): Commit `ca35967` on `main`.
+- **Tests Performed**:
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 routes compiled cleanly in 4.3s).
+  - Expo production build (`npm run vercel-build` in `lasercut-planner`): PASS (Bundled and synced to `web-build/nest`).
+  - TypeScript typecheck (`npx tsc --noEmit` in `lasercut-planner`): PASS (0 errors).
+  - Git push to `0machine-landing`: PASS (`67dd46b..9ded844 main -> main`).
+  - Git push to `cooldelo-planner`: PASS (`f325684..ca35967 main -> main`).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
+
+
+## [2026-11-20 21:35:00] - 1-Click Google OAuth Integration in LaserAI Prompt Chat Unlock Card
+- **Task**: Integrate 1-Click Google OAuth authentication directly into the frosted-glass Unlock Card on the landing page (`0machine-landing`) with automatic session restoration and instant vector unblur.
+- **Files Changed**:
+  - `0machine-landing/app/components/LaserAiSection.js`: Added "Continue with Google" button with official multi-colored SVG logo; implemented `handleGoogleSignIn` using `supabase.auth.signInWithOAuth`; added design caching in `sessionStorage` (`0machine_pending_laser_svg` & `0machine_pending_laser_prompt`) so returning users automatically restore their generated design; updated `useEffect` to detect OAuth redirects, mark `isUnlocked = true`, and display the unblurred vector with full download controls.
+- **Tests Performed**:
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 routes compiled in 4.1s).
+  - Headless Chrome CDP Live UI Test:
+    - Preset selected & vector synthesized: PASS
+    - Frosted Unlock Card mounted: PASS
+    - Google 1-Click button rendered with logo and text ("Continue with Google"): PASS
+    - "or with email" divider rendered: PASS
+    - Screenshot captured: `chat_v2_google_oauth_unlock.png`
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
