@@ -946,3 +946,19 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-20 22:10:00] - Official Direct Recraft API Integration with Multi-Tier Fallback Pipeline
+- **Task**: Integrate official direct Recraft API key (`RECRAFT_API_KEY`) into the vector generation pipeline; implement multi-tier synthesis architecture (Tier 1: Direct Recraft API `https://external.api.recraft.ai/v1/images/generations` $\to$ Tier 2: OpenRouter Recraft Free Tier $\to$ Tier 3: Gemini CAM Vectorizer).
+- **Files Changed**:
+  - `0machine-landing/.env.local`: Configured `RECRAFT_API_KEY` and `RECRAFT_MODEL=recraftv4_1` (git-ignored).
+  - `lasercut-planner/.env.local`: Configured `RECRAFT_API_KEY` and `RECRAFT_MODEL=recraftv4_1` (git-ignored).
+  - `0machine-landing/app/api/generate-svg/route.js`: Integrated direct Recraft API client with `Authorization: Bearer process.env.RECRAFT_API_KEY`; wired response image URL to Sharp Moore-Neighbor CAM contour vectorizer; added graceful autonomous fallback to Tier 2 OpenRouter if direct credits run out or upstream fails.
+- **Tests Performed**:
+  - Recraft API key authentication check (`/v1/users/me`): PASS (`name: "Anouar"`, `email: "cooldelodxf@gmail.com"`).
+  - Multi-tier vector synthesis test (`/api/generate-svg`): PASS (`success: true`, `engine: "laserai"`, valid `<svg>` 3068 bytes with `#EF4444` cut contour).
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 routes compiled cleanly in 10.3s).
+  - Git Push Protection secret scan: PASS (Zero secrets exposed).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
