@@ -962,3 +962,18 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-20 22:15:00] - Configure LaserAI to Recraft V4.1 Flash Model Tier
+- **Task**: Configure default Recraft model identifier to `recraftv4_1_flash` (Recraft V4.1 Flash, $0.007 / 7 units per generation) for maximum cost efficiency and CAM vector generation speed.
+- **Files Changed**:
+  - `0machine-landing/.env.local`: Updated `RECRAFT_MODEL=recraftv4_1_flash` (git-ignored).
+  - `lasercut-planner/.env.local`: Updated `RECRAFT_MODEL=recraftv4_1_flash` (git-ignored).
+  - `0machine-landing/app/api/generate-svg/route.js`: Updated default fallback model to `recraftv4_1_flash`.
+- **Tests Performed**:
+  - Model string validation against Recraft API: PASS (`recraftv4_1_flash` validated by Recraft API).
+  - Live vector synthesis test (`/api/generate-svg`): PASS (`success: true`, generated valid LightBurn-ready SVG with `#EF4444` cut contour).
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 routes compiled cleanly in 6.4s).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
