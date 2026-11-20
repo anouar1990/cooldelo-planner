@@ -977,3 +977,49 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-20 22:10:00] - Official Direct Recraft API Integration with Multi-Tier Fallback Pipeline
+- **Task**: Integrate official direct Recraft API key (`RECRAFT_API_KEY`) into the vector generation pipeline; implement multi-tier synthesis architecture (Tier 1: Direct Recraft API `https://external.api.recraft.ai/v1/images/generations` $\to$ Tier 2: OpenRouter Recraft Free Tier $\to$ Tier 3: Gemini CAM Vectorizer).
+- **Files Changed**:
+  - `0machine-landing/.env.local`: Configured `RECRAFT_API_KEY` and `RECRAFT_MODEL=recraftv4_1` (git-ignored).
+  - `lasercut-planner/.env.local`: Configured `RECRAFT_API_KEY` and `RECRAFT_MODEL=recraftv4_1` (git-ignored).
+  - `0machine-landing/app/api/generate-svg/route.js`: Integrated direct Recraft API client with `Authorization: Bearer process.env.RECRAFT_API_KEY`; wired response image URL to Sharp Moore-Neighbor CAM contour vectorizer; added graceful autonomous fallback to Tier 2 OpenRouter if direct credits run out or upstream fails.
+- **Tests Performed**:
+  - Recraft API key authentication check (`/v1/users/me`): PASS (`name: "Anouar"`, `email: "cooldelodxf@gmail.com"`).
+  - Multi-tier vector synthesis test (`/api/generate-svg`): PASS (`success: true`, `engine: "laserai"`, valid `<svg>` 3068 bytes with `#EF4444` cut contour).
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 routes compiled cleanly in 10.3s).
+  - Git Push Protection secret scan: PASS (Zero secrets exposed).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
+
+
+## [2026-11-20 22:15:00] - Configure LaserAI to Recraft V4.1 Flash Model Tier
+- **Task**: Configure default Recraft model identifier to `recraftv4_1_flash` (Recraft V4.1 Flash, $0.007 / 7 units per generation) for maximum cost efficiency and CAM vector generation speed.
+- **Files Changed**:
+  - `0machine-landing/.env.local`: Updated `RECRAFT_MODEL=recraftv4_1_flash` (git-ignored).
+  - `lasercut-planner/.env.local`: Updated `RECRAFT_MODEL=recraftv4_1_flash` (git-ignored).
+  - `0machine-landing/app/api/generate-svg/route.js`: Updated default fallback model to `recraftv4_1_flash`.
+- **Tests Performed**:
+  - Model string validation against Recraft API: PASS (`recraftv4_1_flash` validated by Recraft API).
+  - Live vector synthesis test (`/api/generate-svg`): PASS (`success: true`, generated valid LightBurn-ready SVG with `#EF4444` cut contour).
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 routes compiled cleanly in 6.4s).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
+
+
+## [2026-11-20 22:25:00] - Streamline LaserAI Studio UI & Eliminate Excessive Text Clutter
+- **Task**: Declutter and streamline LaserAI Studio interface across the app and embedded CAM tool.
+- **Files Changed**:
+  - `lasercut-planner/src/screens/LaserAiScreen.tsx`: Streamlined top bar (Title shortened to `LaserAI Studio`, badge changed from `PRO ACTIVE` to sleek `PRO`, action button shortened to `Open ↗`); condensed locked access card bullets.
+  - `lasercut-planner/public/nest/index.html` & `web-build/nest/index.html`: Removed descriptive text bloat (eliminated 3-line CAM marketing subtext, removed `1 credit per generation · Never expire` subtext, stripped sentence descriptions from all 4 laser mode cards, shortened preset names and telemetry labels, simplified action buttons to `Export SVG`, `Export DXF`, `Add to Nest Sheet`).
+  - `lasercut-planner/public/nest/styles.css` & `web-build/nest/styles.css`: Hidden duplicate modal header in `standalone-mode` iframe embedding; refactored mode cards into compact, centered CAD pills.
+- **Tests Performed**:
+  - TypeScript build verification (`npx tsc --noEmit`): PASS (0 errors).
+  - Web export build (`npm run vercel-build`): PASS (3.5MB bundle compiled with all static assets synced).
+  - Nest HTML verification on localhost:8081: PASS (all clean UI elements verified).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.

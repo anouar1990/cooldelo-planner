@@ -34,31 +34,31 @@ export default function LaserAiScreen() {
                         </View>
                         <View style={styles.proBadge}>
                             <Zap size={11} color="#111317" fill="#111317" />
-                            <Text style={styles.proBadgeText}>PRO OR AI CREDITS</Text>
+                            <Text style={styles.proBadgeText}>PRO</Text>
                         </View>
                         <Text style={[styles.lockedTitle, { color: colors.text }]}>
-                            LaserAI Studio & Vectorizer
+                            LaserAI Studio
                         </Text>
                         <Text style={[styles.lockedDesc, { color: colors.sub }]}>
-                            Turn text descriptions, photos, and sketches into laser-ready closed-contour DXF and SVG files with separate Cut, Score, and Engrave CAM layers.
+                            Instant text &amp; sketch to laser-ready closed vector DXF/SVG contours.
                         </Text>
 
                         <View style={styles.featureList}>
                             <View style={styles.featureItem}>
                                 <ShieldCheck size={14} color="#10B981" />
-                                <Text style={[styles.featureText, { color: colors.text }]}>Direct AI Text-to-CAD Vector Generator (Zero duplicate lines)</Text>
+                                <Text style={[styles.featureText, { color: colors.text }]}>Closed cut paths (Zero duplicate lines)</Text>
                             </View>
                             <View style={styles.featureItem}>
                                 <ShieldCheck size={14} color="#10B981" />
-                                <Text style={[styles.featureText, { color: colors.text }]}>Smart Raster-to-Vector Auto-Tracer (No mushy edges)</Text>
+                                <Text style={[styles.featureText, { color: colors.text }]}>Photo-to-CAD tracer with bridge tabs</Text>
                             </View>
                             <View style={styles.featureItem}>
                                 <ShieldCheck size={14} color="#10B981" />
-                                <Text style={[styles.featureText, { color: colors.text }]}>3-Layer CAM Separation: Cut (Red), Score (Blue), Engrave (Black)</Text>
+                                <Text style={[styles.featureText, { color: colors.text }]}>LightBurn layers: Cut (Red), Score (Blue), Engrave (Black)</Text>
                             </View>
                             <View style={styles.featureItem}>
                                 <ShieldCheck size={14} color="#10B981" />
-                                <Text style={[styles.featureText, { color: colors.text }]}>1-Click "+ Add to Nest Sheet" Instant CAM Packing</Text>
+                                <Text style={[styles.featureText, { color: colors.text }]}>1-Click Nesting Sheet export</Text>
                             </View>
                         </View>
 
@@ -102,11 +102,11 @@ export default function LaserAiScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                         <Sparkles size={18} color="#FE7733" />
                         <Text style={[styles.topBarTitle, { color: colors.text }]}>
-                            LaserAI Studio & Vectorizer
+                            LaserAI Studio
                         </Text>
                         {isPro && (
                             <View style={styles.activeProBadge}>
-                                <Text style={styles.activeProBadgeText}>PRO ACTIVE</Text>
+                                <Text style={styles.activeProBadgeText}>PRO</Text>
                             </View>
                         )}
                         <TouchableOpacity
@@ -137,7 +137,7 @@ export default function LaserAiScreen() {
                         activeOpacity={0.8}
                     >
                         <ExternalLink size={13} color="#FFF" />
-                        <Text style={styles.openTabText}>Open in New Tab ↗</Text>
+                        <Text style={styles.openTabText}>Open ↗</Text>
                     </TouchableOpacity>
                 </View>
 
