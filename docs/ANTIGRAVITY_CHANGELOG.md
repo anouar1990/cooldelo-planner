@@ -1084,3 +1084,18 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 01:15:00] - Intelligent Laser Cutting Typography & Text Stencil Transformer
+- **Task**: Upgrade LaserAI generation engine to support laser cut text and custom quotes (e.g. "I Love You Mom", signs, quotes on wood).
+- **Files Changed**:
+  - `0machine-landing/app/api/generate-svg/route.js`: Upgraded `transformPromptForLaserAi` with automatic quote and text detection (including Darija material phrases like "maktoba fkhechba", "b laser"). Converts text queries into dedicated laser cutting wooden plaque, stencil typography (with 2mm bridge tabs to prevent falling counter islands), and connected script signs; updated Gemini system prompt to strictly enforce vectorized path contours for letters rather than raw un-vectored `<text>` elements.
+  - `lasercut-planner/public/nest/index.html` & `web-build/nest/index.html`: Updated prompt placeholder to highlight text and quote capabilities (e.g. 'Describe shape or text (e.g. "I love you mom plaque", "Eagle crest", "Gear keychain")...'), added "❤️ Mom Plaque" quick preset pill.
+- **Tests Performed**:
+  - Darija phrase extraction test ("bghitha maktoba fkhechba i love you mom", "maktoba fkhechba b laser I love you mom"): PASS (extracted quote "I LOVE YOU MOM" and cleaned material prefix).
+  - Live API POST `/api/generate-svg` with "i love you mom": PASS (HTTP 200, valid 3-layer CAM SVG generated in 3.1s, 10,184 bytes).
+  - SVG to PNG rendering verification: PASS (`live_i_love_you_mom.png` verified with closed boundary and internal letter cutouts).
+  - TypeScript compilation check (`npx tsc --noEmit` in `lasercut-planner`): PASS (0 errors).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
