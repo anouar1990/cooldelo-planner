@@ -1157,3 +1157,18 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 14:56:00] - Fix React Hydration Mismatch via Dynamic Import (ssr: false)
+- **Task**: Fix Next.js hydration mismatch warning in `LaserAiSection` when client state/DOM differs from SSR pre-render.
+- **Root Cause**: `LaserAiSection` was previously imported in `HomeClient.js` and `VariantA.js` with `dynamic(..., { ssr: true })`. Because `LaserAiSection` uses browser-only APIs (`sessionStorage`, `supabase.auth`, `window.location.search`, `createPortal`), any in-flight HMR update or browser cache caused a temporary mismatch between the server-rendered HTML and client React fiber tree.
+- **Files Changed**:
+  - `0machine-landing/app/HomeClient.js`: Configured `LaserAiSection` dynamic import with `ssr: false` and custom loading skeleton, bypassing SSR and rendering strictly on the client.
+  - `0machine-landing/app/variants/VariantA.js`: Configured `LaserAiSection` dynamic import with `ssr: false` and custom loading skeleton.
+  - `0machine-landing/app/components/LaserAiSection.js`: Added `suppressHydrationWarning` on section root as secondary safeguard.
+- **Tests Performed**:
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 static/dynamic routes compiled in 8.0s with 0 errors).
+  - Dev server HTTP GET test (`GET / 200 in 110ms`): PASS (Compiled in 102ms, 0 hydration warnings).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
