@@ -170,10 +170,15 @@
 
             // Step 1: Call 0Machine Cloud CAM Vector API
             try {
-                // Determine API endpoint based on origin
+                // Determine API endpoint based on host
                 let apiUrl = '/api/generate-svg';
-                if (typeof window !== 'undefined' && window.location.port === '8081') {
-                    apiUrl = 'http://localhost:3000/api/generate-svg';
+                if (typeof window !== 'undefined') {
+                    const host = window.location.hostname;
+                    if (host === 'localhost' || host === '127.0.0.1') {
+                        apiUrl = 'http://localhost:3000/api/generate-svg';
+                    } else if (host.endsWith('0machine.com')) {
+                        apiUrl = 'https://0machine.com/api/generate-svg';
+                    }
                 }
 
                 // Extract authenticated user ID if present in storage
@@ -191,7 +196,7 @@
                                    mode === 'layered-scene' ? 'layered' : 'cut-engrave';
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 25000);
+                const timeoutId = setTimeout(() => controller.abort(), 40000); // 40s resilient timeout
 
                 const res = await fetch(apiUrl, {
                     method: 'POST',

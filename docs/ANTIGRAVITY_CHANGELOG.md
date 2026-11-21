@@ -1068,3 +1068,19 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 01:05:00] - Hardening LaserAI Generation Pipeline & CAD Vectorizer
+- **Task**: Deep audit and resolution of all failure modes that can cause errors in LaserAI vector output: fix HTTPS CDN image vectorization in Sharp, implement adaptive multi-threshold contour extraction, extend client-side generation timeout to 40s, correct keychain eyelet enclosed geometry, and ensure robust multi-port API routing.
+- **Files Changed**:
+  - `0machine-landing/lib/recraft-vectorizer.js`: Added support for direct HTTPS CDN URLs (fetch + buffer conversion with User-Agent header) alongside base64 data URIs; added adaptive multi-threshold contour extraction (thresholds [threshold, 150, 105, 185]) to eliminate "No solid shapes detected" on low-contrast diffusion outputs; repositioned keychain eyelet tab hole inside enclosed apex material; strengthened primary boundary loop validation.
+  - `lasercut-planner/public/nest/engine/laser-ai.js` & `lasercut-planner/web-build/nest/engine/laser-ai.js`: Increased client abort timeout from 25s to 40s to support multi-tier failover under peak inference traffic; made API endpoint resolution hostname-aware across all localhost development ports and production `https://0machine.com/api/generate-svg`.
+- **Tests Performed**:
+  - Synthetic SVG white-backdrop black shape vectorization test: PASS (33 outer vertices, 1 hole).
+  - Synthetic Keychain eyelet test: PASS (2 holes: 1 interior cutout + 1 enclosed eyelet mounting hole).
+  - Live HTTPS CDN image download and vectorization test: PASS (253 outer vertices, 46,762 bytes SVG).
+  - End-to-end live POST `/api/generate-svg` with "Simple geometric diamond silhouette": PASS (HTTP 200, valid 3-layer CAM SVG returned in 2.8s).
+  - TypeScript compilation check (`npx tsc --noEmit` in `lasercut-planner`): PASS (0 errors).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
