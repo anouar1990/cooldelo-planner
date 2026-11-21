@@ -1144,3 +1144,16 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 14:52:00] - Dedicated Full-Screen Pop-up Modal for Sign Up to Unlock
+- **Task**: Convert the cramped in-canvas unlock overlay into a spacious, full-screen React portal Pop-up Modal dialog (`fixed inset-0 z-[9999]`) ensuring zero cut-offs (`mamn9oss mn hta jiha`) across desktop and mobile; maintain blurred vector canvas ("flow") in background with a sleek teaser card; provide 1-click Google OAuth, email authentication, demo unlock, and seamless instant unblur.
+- **Files Changed**:
+  - `0machine-landing/app/components/LaserAiSection.js`: Upgraded unlock workflow using `createPortal(..., document.body)` with `z-[9999]` and `max-h-[92vh] overflow-y-auto`. Replaced crowded in-box card with a clean, compact teaser badge inside the blurred vector canvas that triggers the modal on click; wrapped modal in backdrop blur with dismissable background and close button (X); auto-opens modal upon synthesis completion if locked; instant unblur transitions vector cleanly to `filter: none` and closes modal.
+- **Tests Performed**:
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 static/dynamic routes compiled in 9.0s with 0 errors).
+  - Headless Chrome pop-up modal visual verification (`popup_modal_portal_verified.png` & `popup_modal_final.png`): PASS (modal centered, zero clipping, all controls and buttons completely clear).
+  - Instant demo unlock test: PASS (vector unblurs smoothly, download/copy controls active).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
