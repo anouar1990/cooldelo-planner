@@ -1055,3 +1055,16 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 00:20:00] - Fix ReferenceError: responseImageUrl Scope Bug in LaserAI Engine
+- **Task**: Fix JavaScript block-scoping bug causing `ReferenceError: Can't find variable: responseImageUrl` during vector generation in LaserAI Studio.
+- **Files Changed**:
+  - `lasercut-planner/public/nest/engine/laser-ai.js` & `web-build/nest/engine/laser-ai.js`: Hoisted `responseImageUrl` and `responseModel` from inner `try` block to outer function scope alongside `directSvg` and `apiErrorMsg`.
+- **Tests Performed**:
+  - Node.js syntax & compilation check (`node --check`): PASS (0 syntax errors).
+  - Web export build (`npm run vercel-build` in `lasercut-planner`): PASS (3.5MB bundle compiled).
+  - Web server serving verification via curl (`http://localhost:8081/nest/engine/laser-ai.js`): PASS (`responseImageUrl` verified in outer scope).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.

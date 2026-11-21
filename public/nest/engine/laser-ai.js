@@ -165,6 +165,8 @@
 
             let directSvg = null;
             let apiErrorMsg = null;
+            let responseImageUrl = null;
+            let responseModel = null;
 
             // Step 1: Call 0Machine Cloud CAM Vector API
             try {
@@ -203,9 +205,6 @@
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-
-                let responseImageUrl = null;
-                let responseModel = null;
 
                 if (res.ok) {
                     const data = await res.json();
