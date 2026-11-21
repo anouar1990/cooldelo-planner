@@ -1184,3 +1184,15 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 15:06:00] - Remove Bulky Beige Wood Canvas Box from LaserAI Landing Page
+- **Task**: Completely remove the bulky beige wood canvas container (`#F6EEDC` wood viewport with black/red circular cutlines) from the landing page LaserAI section as requested by the user.
+- **Files Changed**:
+  - `0machine-landing/app/components/LaserAiSection.js`: Removed the wood canvas viewport (`currentSvg && ...`) from the landing page container; removed `DEFAULT_PREVIEW_SVG` constant; initialized `currentSvg` to `null`. The landing page section now exclusively displays the sleek dark prompt creator HUD (pills, segmented toggle, style dropdown, textarea, golden-orange Generate button) and live CAD charging progress bar, preserving a 100% clean dark aesthetic matching the reference screenshot.
+- **Tests Performed**:
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 static/dynamic routes compiled cleanly in 5.5s with 0 errors).
+  - Headless Chrome layout verification (`clean_container_cropped.png`): PASS (bulky beige box completely removed, sleek compact dark card verified).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
