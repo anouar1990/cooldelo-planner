@@ -1172,3 +1172,15 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 15:02:00] - Remove Disclaimer, Layer Badges, and Bottom Controls from Landing Page
+- **Task**: Remove the footer disclaimer note ("First drafts, not finished cut files..."), the floating LightBurn layer badges ("Layer 00: CUT (Hairline)", "Layer 01: ENGRAVE (Burnt Wood)"), and the bottom controls bar ("Download SVG (Free)", "Copy Code", "[Open in Studio]") from the landing page LaserAI container.
+- **Files Changed**:
+  - `0machine-landing/app/components/LaserAiSection.js`: Removed footer disclaimer text below the textarea; removed floating layer badges from the SVG preview canvas; removed bottom action controls bar; cleaned up unused imports (`Download`, `Code2`, `ExternalLink`) and unused helper functions (`handleDownloadSvg`, `handleCopySvg`, `copied`).
+- **Tests Performed**:
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 static/dynamic routes compiled cleanly in 5.3s with 0 errors).
+  - Headless Chrome layout verification: PASS (disclaimer, layer badges, and bottom controls verified absent).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
