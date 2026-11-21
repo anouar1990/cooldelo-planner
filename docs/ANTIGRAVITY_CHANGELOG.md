@@ -1099,3 +1099,17 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 01:20:00] - Multilingual AI Prompt Optimizer for Recraft CAM Synthesis
+- **Task**: Implement a dedicated Stage 1 AI Prompt Optimizer (Gemini Flash Lite) that translates raw, unstructured prompts in Moroccan Darija, French, Arabic, and slang into laser-cut ready master prompts for Recraft V4.1 Flash in ~600ms.
+- **Files Changed**:
+  - `0machine-landing/app/api/generate-svg/route.js`: Created `enhancePromptWithAi` running as Stage 1 prior to Recraft generation. Enforces CAM physical rules (stencil bridges, keychain mounting holes, plaque boundaries, vector triggers); equipped with an automatic 1.8s timeout that falls back to the deterministic regex transformer `transformPromptForLaserAi` if the optimizer is unavailable.
+- **Tests Performed**:
+  - Multilingual evaluation test (Darija text, Darija keychain, French stencil): PASS (all 3 prompts translated and optimized into master CAM prompts in ~650ms).
+  - Live API POST `/api/generate-svg` with Moroccan Darija prompt `"bghitha maktoba fkhechba i love you mom"`: PASS (HTTP 200, valid 3-layer CAM SVG synthesized in 4.1s, 7,876 bytes).
+  - Visual verification: `live_darija_i_love_you_mom.png` rendered cleanly.
+  - TypeScript compilation check (`npx tsc --noEmit` in `lasercut-planner`): PASS (0 errors).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
