@@ -1196,3 +1196,19 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 15:08:00] - Install UI/UX Pro Max Skill and Assign to UI/UX Engineering Agent
+- **Task**: Install `ui-ux-pro-max` skill from `https://github.com/nextlevelbuilder/ui-ux-pro-max-skill` via `npx skills add` and configure Casisto to delegate UI/UX tasks to the specialized UI/UX Engineering subagent (`ui-ux-engineer` / `frontend-worker`).
+- **Files Created/Modified**:
+  - `.agents/skills/ui-ux-pro-max/`: Installed full skill repository (including `SKILL.md`, `data/`, `references/`, and standalone search intelligence `scripts/search.py` covering 80 styles, 194 product palettes, 74 font pairings, and 141 UX rules).
+  - `skills-lock.json`: Locked `ui-ux-pro-max` at commit `f76d1653d7467fc11fb9d9d79295a421c92ab958`.
+  - `.agents/TEAM.md`: Updated Section 2 (Active Curated Skills Matrix) to include `ui-ux-pro-max` under Frontend & UI/UX.
+  - Subagent Definition: Defined persistent `ui-ux-engineer` agent armed with the UI/UX Pro Max system prompt, WCAG 4.5:1 contrast standards, 44px touch targets, typographic hierarchy, and dark mode palette rules.
+- **Tests Performed**:
+  - `npx skills add` installation: PASS (installed non-interactively with 0 alerts).
+  - Search intelligence script test (`python3 .agents/skills/ui-ux-pro-max/scripts/search.py "dark mode" --domain style`): PASS (returned exact dark-mode-oled design variables, CSS tokens, and checklist).
+  - Subagent registration check: PASS (`ui-ux-engineer` defined and ready for invocation).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
