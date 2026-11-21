@@ -1130,3 +1130,17 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 01:48:00] - Standalone LaserAI Prompt Chat v2.0 Container with Live Charging Bar & Blurred Unlock Overlay
+- **Task**: Refactor the landing page AI vector section into a standalone, dedicated LaserAI Prompt Chat v2.0 container ("bohdha") matching the user reference screenshot pixel-for-pixel; integrate live CAD charging progress bar ("samta katcharja") 0% -> 100%, blurred vector canvas ("flow") when unauthenticated, centered "Sign Up Free to Unlock" card with 1-click Google OAuth and demo unlock, and seamless instant unblur with SVG download and copy code controls upon registration/unlock.
+- **Files Changed**:
+  - `0machine-landing/app/components/LaserAiSection.js`: Refactored into a standalone card container (`bg-[#18181B] rounded-3xl border border-white/10 shadow-2xl`) matching user reference screenshot with "Start with a shape, a theme, or a full brief.", 4 quick reference pills (`rounded-full`), segmented `SVG cut file FREE` / `Image preview LIMITED` toggle, `Style` dropdown, clean textarea with placeholder, large golden-orange `Generate` button (`#FDB237`), and safety disclaimer note; added live charging bar ("samta katcharja") animating 0% to 100% with real-time CAD synthesis status messages; integrated blurred vector canvas (`filter: blur(14px)`) with centered glassmorphic "Sign Up Free to Unlock" card (1-click Google OAuth, email form, and instant demo unlock); upon unlock, vector smoothly transitions to `filter: none` and activates direct `Download SVG (Free)` and `Copy Code` controls.
+- **Tests Performed**:
+  - Next.js production build (`npm run build` in `0machine-landing`): PASS (65/65 static/dynamic pages compiled in 4.9s with 0 errors).
+  - Headless Chrome full-page render and visual verification: PASS (`laser_ai_section_verified.png` cropped and verified).
+  - Headless Chrome unlocked state verification: PASS (`laser_ai_unlocked_verified.png` cropped and verified, `filter: none`, active download/copy controls).
+  - Dynamic CAD stage progress interval test: PASS (8% -> 92% -> 100% CAD stages).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
