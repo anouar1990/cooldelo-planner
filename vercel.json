@@ -1,6 +1,6 @@
 {
-  "installCommand": "npm install",
-  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm_config_cache=\"${npm_config_cache_dir:-$HOME/.npm}\" env -u npm_config_cache_dir npm install",
+  "buildCommand": "npm_config_cache=\"${npm_config_cache_dir:-$HOME/.npm}\" env -u npm_config_cache_dir npm run vercel-build",
   "outputDirectory": "web-build",
   "cleanUrls": true,
   "trailingSlash": false,

@@ -1113,3 +1113,20 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-21 01:30:00] - Fix npm warn Unknown env config cache-dir for Vercel Builds
+- **Task**: Audit and eliminate `npm warn Unknown env config "cache-dir"` warning caused by Vercel build environment injecting `npm_config_cache_dir` against Node 24 / npm 11 strict env validation.
+- **Root Cause**: Vercel's build runner container automatically injects `npm_config_cache_dir` for caching across builds. In npm v11+ (running with Node 24.x), npm strictly parses all `npm_config_*` environment variables on startup and maps `npm_config_cache_dir` to `cache-dir`. Because npm's official config parameter is `cache` (not `cache-dir`), npm emits an `Unknown env config` warning. No `.npmrc` file or local `.env` was at fault.
+- **Files Changed**:
+  - `0machine-landing/vercel.json`: Added `installCommand` and `buildCommand` remapping `npm_config_cache="${npm_config_cache_dir:-$HOME/.npm}" env -u npm_config_cache_dir` so npm receives the official `cache` configuration and `npm_config_cache_dir` is safely removed from the subshell process.
+  - `lasercut-planner/vercel.json`: Updated `installCommand` and `buildCommand` with identical cache remapping.
+- **Tests Performed**:
+  - Audit check: Confirmed zero `.npmrc` files in workspace, home, or global config; confirmed zero `npm_config_` variables in `.env` files.
+  - CLI stderr reproduction check (`npm_config_cache_dir=/tmp npm -v`): Reproduced warning on npm 11.6.2.
+  - Remapping verification check (`npm_config_cache="${npm_config_cache_dir:-$HOME/.npm}" env -u npm_config_cache_dir npm -v`): PASS (0 warnings, clean exit code 0).
+  - Dry-run install check (`npm install --dry-run` in both projects): PASS (0 warnings).
+  - Production build verification (`npm run build` in `0machine-landing` & `npm run vercel-build` in `lasercut-planner`): PASS (0 warnings, exit code 0).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
