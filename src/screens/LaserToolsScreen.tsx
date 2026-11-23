@@ -556,7 +556,7 @@ export default function LaserToolsScreen() {
                 >
                     <Grid size={16} color={activeTab === 'matrix' ? C.primary : C.sub} />
                     <Text style={[styles.tabBtnText, activeTab === 'matrix' && styles.tabBtnTextActive]}>
-                        🎯 Kerf & Test Matrix
+                        Kerf & Test Matrix
                     </Text>
                 </TouchableOpacity>
 
@@ -566,7 +566,7 @@ export default function LaserToolsScreen() {
                 >
                     <Box size={16} color={activeTab === 'box' ? C.primary : C.sub} />
                     <Text style={[styles.tabBtnText, activeTab === 'box' && styles.tabBtnTextActive]}>
-                        📦 Finger Joint Box Maker
+                        Finger Joint Box Maker
                     </Text>
                 </TouchableOpacity>
 
@@ -576,7 +576,7 @@ export default function LaserToolsScreen() {
                 >
                     <Layers size={16} color={activeTab === 'hinge' ? C.primary : C.sub} />
                     <Text style={[styles.tabBtnText, activeTab === 'hinge' && styles.tabBtnTextActive]}>
-                        〰️ Living Hinge Pattern
+                        Living Hinge Pattern
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -589,7 +589,7 @@ export default function LaserToolsScreen() {
                     <View style={[styles.controlsCard, { backgroundColor: colors.surface, borderColor: colors.border }, isMobile && { width: '100%' }]}>
                         {activeTab === 'matrix' && (
                             <View style={styles.controlGroup}>
-                                <Text style={[styles.cardTitle, { color: colors.text }]}>🎯 Test Matrix Setup</Text>
+                                <Text style={[styles.cardTitle, { color: colors.text }]}>Test Matrix Setup</Text>
                                 <Text style={styles.fieldDesc}>
                                     Burn a grid of varying speed & power to calibrate laser power or find exact kerf on scrap material.
                                 </Text>
@@ -713,7 +713,7 @@ export default function LaserToolsScreen() {
 
                         {activeTab === 'box' && (
                             <View style={styles.controlGroup}>
-                                <Text style={[styles.cardTitle, { color: colors.text }]}>📦 Parametric Box Dimensions</Text>
+                                <Text style={[styles.cardTitle, { color: colors.text }]}>Parametric Box Dimensions</Text>
                                 <Text style={styles.fieldDesc}>
                                     Generates 6 interlocking panels with automatic kerf offset for tight, glue-free press fitting.
                                 </Text>
@@ -803,7 +803,7 @@ export default function LaserToolsScreen() {
 
                         {activeTab === 'hinge' && (
                             <View style={styles.controlGroup}>
-                                <Text style={[styles.cardTitle, { color: colors.text }]}>〰️ Living Hinge Lattice</Text>
+                                <Text style={[styles.cardTitle, { color: colors.text }]}>Living Hinge Lattice</Text>
                                 <Text style={styles.fieldDesc}>
                                     Lattice spring cuts that enable rigid plywood and acrylic to bend smoothly into 3D curves.
                                 </Text>

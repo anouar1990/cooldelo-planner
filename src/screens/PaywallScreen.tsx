@@ -136,7 +136,7 @@ export default function PaywallScreen() {
                         </Text>
                         <View style={styles.impactPill}>
                             <Text style={styles.impactPillText}>
-                                💰 Just $0.49/day — Pays for itself on your first single order
+                                Just $0.49/day — Pays for itself on your first single order
                             </Text>
                         </View>
                     </View>
@@ -149,15 +149,15 @@ export default function PaywallScreen() {
                         </View>
                         <View style={styles.roiBody}>
                             <View style={styles.roiRow}>
-                                <Text style={styles.roiWithoutText}>❌ Manual layout: 3–4 sheets scrap waste/mo (-$120)</Text>
+                                <Text style={styles.roiWithoutText}>Manual layout: 3–4 sheets scrap waste/mo (-$120)</Text>
                             </View>
                             <View style={styles.roiRow}>
-                                <Text style={styles.roiWithText}>✅ 0machine Pro: True-Shape nesting + instant WhatsApp quotes</Text>
+                                <Text style={styles.roiWithText}>0machine Pro: True-Shape nesting + instant WhatsApp quotes</Text>
                             </View>
                         </View>
                         <View style={styles.roiFooter}>
                             <Text style={styles.roiFooterText}>
-                                💰 <Text style={{ color: '#B1FA63', fontWeight: '900' }}>$0.49/day</Text> recovers ~$105+ net workshop profit every month!
+                                <Text style={{ color: '#B1FA63', fontWeight: '900' }}>$0.49/day</Text> recovers ~$105+ net workshop profit every month!
                             </Text>
                         </View>
                     </View>
@@ -222,12 +222,12 @@ export default function PaywallScreen() {
                             </View>
 
                             <View style={styles.benefitList}>
-                                <BenefitRow text="⚡ 300 LaserAI CAD Generations / mo (Prompt-to-SVG)" bold />
-                                <BenefitRow text="🧩 Unlimited True-Shape Nesting (Save ~30% scrap)" bold />
-                                <BenefitRow text="💎 Unlimited Commercial Vault (5,000+ Ready DXFs)" bold />
-                                <BenefitRow text="📲 1-Click WhatsApp Direct PDF Quotes & Invoices" bold />
-                                <BenefitRow text="🚀 LightBurn, Ruida & xTool 1-Click CAD Export" bold />
-                                <BenefitRow text="⏱️ Automatic Kerf Math & Pierce/Speed Optimization" bold />
+                                <BenefitRow text="300 LaserAI CAD Generations / mo (Prompt-to-SVG)" bold />
+                                <BenefitRow text="Unlimited True-Shape Nesting (Save ~30% scrap)" bold />
+                                <BenefitRow text="Unlimited Commercial Vault (5,000+ Ready DXFs)" bold />
+                                <BenefitRow text="1-Click WhatsApp Direct PDF Quotes & Invoices" bold />
+                                <BenefitRow text="LightBurn, Ruida & xTool 1-Click CAD Export" bold />
+                                <BenefitRow text="Automatic Kerf Math & Pierce/Speed Optimization" bold />
                             </View>
                         </TouchableOpacity>
 
@@ -257,9 +257,9 @@ export default function PaywallScreen() {
                             </View>
 
                             <View style={styles.benefitList}>
-                                <BenefitRow text="⚡ 50 LaserAI Generations / mo" />
-                                <BenefitRow text="💎 50 Commercial Packs / mo" />
-                                <BenefitRow text="🧩 True-Shape Nesting (25 parts)" />
+                                <BenefitRow text="50 LaserAI Generations / mo" />
+                                <BenefitRow text="50 Commercial Packs / mo" />
+                                <BenefitRow text="True-Shape Nesting (25 parts)" />
                                 <BenefitRow text="Material Inventory & Laser Presets" />
                                 <BenefitRow text="PDF Quotes & WhatsApp Dispatch" />
                             </View>

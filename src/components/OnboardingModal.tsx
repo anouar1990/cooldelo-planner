@@ -151,7 +151,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ visible, onCom
                             }}
                         >
                             <Text style={styles.nextButtonText}>
-                                {step < 3 ? 'Continue' : '⚡ Run First Calculation'}
+                                {step < 3 ? 'Continue' : 'Run First Calculation'}
                             </Text>
                             {step < 3 && <ChevronRight size={16} color="#FFFFFF" />}
                         </TouchableOpacity>

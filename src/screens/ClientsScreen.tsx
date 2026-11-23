@@ -106,7 +106,9 @@ export default function ClientsScreen({ navigation }: any) {
 
                 {clients.length === 0 && !loading ? (
                     <View style={s.empty}>
-                        <Text style={s.emptyIcon}>👤</Text>
+                        <View style={{ marginBottom: 8, opacity: 0.7 }}>
+                            <User size={28} color={C.sub} />
+                        </View>
                         <Text style={s.emptyTitle}>No clients yet</Text>
                         <Text style={s.emptySub}>Add clients to assign them to projects and track client revenue.</Text>
                         <TouchableOpacity style={s.emptyBtn} onPress={openAdd}>

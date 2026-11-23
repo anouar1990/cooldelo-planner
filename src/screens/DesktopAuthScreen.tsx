@@ -161,7 +161,7 @@ export default function DesktopAuthScreen() {
                         <View style={[styles.formWrapper, isSmallDesktop && { paddingHorizontal: 40 }]}>
                             {isSmallDesktop && (
                                 <View style={styles.mobileBrand}>
-                                    <Text style={styles.mobileBrandIcon}>⚡</Text>
+                                    <Zap size={22} color={C.primary} />
                                     <Text style={styles.mobileBrandText}>0machine <Text style={styles.mobileBrandAccent}>Planner</Text></Text>
                                 </View>
                             )}
@@ -181,7 +181,7 @@ export default function DesktopAuthScreen() {
 
                             {successMessage ? (
                                 <View style={styles.successBanner}>
-                                    <Text style={styles.successBannerText}>✅ {successMessage}</Text>
+                                    <Text style={styles.successBannerText}>{successMessage}</Text>
                                 </View>
                             ) : null}
 
@@ -295,7 +295,7 @@ export default function DesktopAuthScreen() {
                                     >
                                         <Zap size={13} color="#B1FA63" />
                                         <Text style={{ fontSize: 11, fontWeight: '700', color: '#B1FA63' }}>
-                                            ⚡ Fill Owner Login (cooldelodxf@gmail.com)
+                                            Fill Owner Login (cooldelodxf@gmail.com)
                                         </Text>
                                     </TouchableOpacity>
                                 )}

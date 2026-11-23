@@ -196,7 +196,7 @@ export default function DashboardScreen({ navigation }: any) {
                             icon={<Package color="#10B981" size={20} />} 
                             value={stats.totalMaterials} 
                             label="Materials Logged" 
-                            subtext={`$${stats.inventoryValue.toFixed(0)} Value · ${stats.lowStockCount} Low Stock ⚠`} 
+                            subtext={`$${stats.inventoryValue.toFixed(0)} Value · ${stats.lowStockCount} Low Stock`} 
                             color="#10B981" 
                             colors={colors}
                             onPress={() => navigateTab('Materials')}
@@ -344,7 +344,9 @@ export default function DashboardScreen({ navigation }: any) {
 
                     {orders.length === 0 ? (
                         <View style={[styles.emptyState, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                            <Text style={styles.emptyIcon}>🔦</Text>
+                            <View style={{ marginBottom: 8, opacity: 0.7 }}>
+                                <Folder color={colors.sub} size={28} />
+                            </View>
                             <Text style={[styles.emptyTitle, { color: colors.text }]}>No active orders yet</Text>
                             <Text style={[styles.emptySub, { color: colors.sub }]}>
                                 Head over to Orders Tracker to log your first client order.

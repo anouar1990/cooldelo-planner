@@ -24,10 +24,10 @@ const COLORS = {
 };
 
 const QUICK_PROMPTS = [
-    '🔥 6mm Plywood cutting settings',
-    '⚡ Why is my engraving burning?',
-    '💰 How to price laser projects?',
-    '🎯 Acrylic engraving speed & power',
+    '6mm Plywood cutting settings',
+    'Why is my engraving burning?',
+    'How to price laser projects?',
+    'Acrylic engraving speed & power',
 ];
 
 interface LaserExpertBubbleProps {

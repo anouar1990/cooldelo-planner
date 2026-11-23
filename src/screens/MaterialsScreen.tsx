@@ -223,7 +223,7 @@ function MaterialCard({ material: m, onEdit, onDelete }: { material: Material; o
             <View style={styles.cardBottom}>
                 <Text style={styles.stockLabel}>Stock</Text>
                 <View style={[styles.stockBadge, { backgroundColor: lowStock ? C.red + '15' : C.green + '15', borderColor: lowStock ? C.red : C.green }]}>
-                    <Text style={[styles.stockValue, { color: lowStock ? C.red : C.green }]}>{m.stock} sheets{lowStock ? ' ⚠' : ''}</Text>
+                    <Text style={[styles.stockValue, { color: lowStock ? C.red : C.green }]}>{m.stock} sheets{lowStock ? ' (Low)' : ''}</Text>
                 </View>
             </View>
         </View>

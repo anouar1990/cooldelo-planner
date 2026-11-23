@@ -51,8 +51,8 @@ export const DICTIONARY: Translations = {
 
   billing_monthly: { en: 'Monthly', fr: 'Mensuel', es: 'Mensual' },
   billing_annual: { en: 'Annual (Save up to 25%)', fr: 'Annuel (Économisez jusqu\'à 25%)', es: 'Anual (Ahorra hasta 25%)' },
-  most_popular: { en: '⭐ Most Popular', fr: '⭐ Le Plus Populaire', es: '⭐ Más Popular' },
-  best_value: { en: '🔥 Best Value', fr: '🔥 Meilleure Valeur', es: '🔥 Mejor Valor' },
+  most_popular: { en: 'Most Popular', fr: 'Le Plus Populaire', es: 'Más Popular' },
+  best_value: { en: 'Best Value', fr: 'Meilleure Valeur', es: 'Mejor Valor' },
   cta_start_free: { en: 'Start Free', fr: 'Commencer Gratuitement', es: 'Empezar Gratis' },
   cta_upgrade_starter: { en: 'Subscribe to 0machine Starter', fr: 'S\'abonner à 0machine Starter', es: 'Suscribirse a 0machine Starter' },
   cta_upgrade_pro: { en: 'Subscribe to 0machine Pro', fr: 'S\'abonner à 0machine Pro', es: 'Suscribirse a 0machine Pro' },
@@ -126,7 +126,7 @@ export const DICTIONARY: Translations = {
   btn_save: { en: 'Save', fr: 'Enregistrer', es: 'Guardar' },
   btn_export: { en: 'Export CSV', fr: 'Exporter CSV', es: 'Exportar CSV' },
   btn_whatsapp: { en: 'Send via WhatsApp', fr: 'Envoyer via WhatsApp', es: 'Enviar por WhatsApp' },
-  locked_feature: { en: 'Pro Feature 🔒', fr: 'Fonctionnalité Pro 🔒', es: 'Función Pro 🔒' },
+  locked_feature: { en: 'Pro Feature', fr: 'Fonctionnalité Pro', es: 'Función Pro' },
   upgrade_modal_title: { en: 'Unlock Pro Workshop Features', fr: 'Débloquez les fonctionnalités Pro', es: 'Desbloquea las Funciones Pro' },
 };
 

@@ -19,12 +19,12 @@ import { trackEvent } from '../lib/analytics';
 // ═══════════════════════════════════════════════════════════════════
 
 const SUGGESTED_PROMPTS = [
-    { icon: '🔥', text: 'How do I cut 6mm plywood on a CO2 laser?' },
-    { icon: '⚡', text: 'Why is my engraving too dark?' },
-    { icon: '💰', text: 'Help me calculate my project cost' },
-    { icon: '🎯', text: 'Best settings for acrylic engraving?' },
-    { icon: '📐', text: 'How can I reduce material waste?' },
-    { icon: '🔧', text: 'My laser is not cutting through — troubleshoot' },
+    'How do I cut 6mm plywood on a CO2 laser?',
+    'Why is my engraving too dark?',
+    'Help me calculate my project cost',
+    'Best settings for acrylic engraving?',
+    'How can I reduce material waste?',
+    'My laser is not cutting through — troubleshoot',
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -372,16 +372,15 @@ function EmptyState({ colors, primaryColor, onPromptSelect }: {
 
             <View style={emptyStyles.capabilities}>
                 {[
-                    { icon: '⚡', label: 'Machine Settings' },
-                    { icon: '🧪', label: 'Materials' },
-                    { icon: '🔧', label: 'Troubleshooting' },
-                    { icon: '📐', label: 'SVG / DXF' },
-                    { icon: '💰', label: 'Cost Calculation' },
-                    { icon: '📦', label: 'Production' },
+                    'Machine Settings',
+                    'Materials',
+                    'Troubleshooting',
+                    'SVG / DXF',
+                    'Cost Calculation',
+                    'Production',
                 ].map((cap, i) => (
                     <View key={i} style={[emptyStyles.capBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                        <Text style={emptyStyles.capIcon}>{cap.icon}</Text>
-                        <Text style={[emptyStyles.capLabel, { color: colors.sub }]}>{cap.label}</Text>
+                        <Text style={[emptyStyles.capLabel, { color: colors.sub }]}>{cap}</Text>
                     </View>
                 ))}
             </View>
@@ -391,15 +390,14 @@ function EmptyState({ colors, primaryColor, onPromptSelect }: {
             </Text>
 
             <View style={emptyStyles.prompts}>
-                {SUGGESTED_PROMPTS.map((prompt, i) => (
+                {SUGGESTED_PROMPTS.map((promptText, i) => (
                     <TouchableOpacity
                         key={i}
-                        onPress={() => onPromptSelect(prompt.text)}
+                        onPress={() => onPromptSelect(promptText)}
                         style={[emptyStyles.promptCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
                         activeOpacity={0.7}
                     >
-                        <Text style={emptyStyles.promptIcon}>{prompt.icon}</Text>
-                        <Text style={[emptyStyles.promptText, { color: colors.text }]}>{prompt.text}</Text>
+                        <Text style={[emptyStyles.promptText, { color: colors.text }]}>{promptText}</Text>
                     </TouchableOpacity>
                 ))}
             </View>

@@ -131,7 +131,7 @@ export default function AuthScreen() {
 
                         {successMessage ? (
                             <View style={styles.successBanner}>
-                                <Text style={styles.successBannerText}>✅ {successMessage}</Text>
+                                <Text style={styles.successBannerText}>{successMessage}</Text>
                             </View>
                         ) : null}
 
@@ -248,7 +248,7 @@ export default function AuthScreen() {
                                     }}
                                 >
                                     <Text style={{ fontSize: 11, fontWeight: '700', color: '#B1FA63' }}>
-                                        ⚡ Fill Owner Login (cooldelodxf@gmail.com)
+                                        Fill Owner Login (cooldelodxf@gmail.com)
                                     </Text>
                                 </TouchableOpacity>
                             )}

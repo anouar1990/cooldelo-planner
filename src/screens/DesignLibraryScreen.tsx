@@ -166,7 +166,7 @@ export default function DesignLibraryScreen() {
                         </View>
                         <View style={{ flex: 1 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                <Text style={styles.laserAiTitle}>✨ LaserAI Studio & Vector Generator</Text>
+                                <Text style={styles.laserAiTitle}>LaserAI Studio & Vector Generator</Text>
                                 <View style={styles.laserAiBadge}><Text style={styles.laserAiBadgeText}>NEW</Text></View>
                             </View>
                             <Text style={styles.laserAiSub}>

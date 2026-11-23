@@ -33,65 +33,65 @@ function getPaywallContext(featureName?: string, defaultAction?: string, default
 
   if (f.includes('nest')) {
     return {
-      badge: '🧩 0MACHINE AUTONOMOUS NESTING',
+      badge: '0MACHINE AUTONOMOUS NESTING',
       headline: 'Stop Throwing 30% of Your Material in the Trash',
       subheadline: 'Autonomous True-Shape algorithms pack irregular CAD parts tightly across full sheets & off-cuts. Save up to $84 on every single sheet.',
-      impactPill: '🔥 Recovers ~$120–$350/mo in scrap plywood & acrylic',
+      impactPill: 'Recovers ~$120–$350/mo in scrap plywood & acrylic',
       roiTitle: 'HOW 0MACHINE NESTING PAYS FOR ITSELF',
-      roiWithout: '❌ Manual layout: 3–4 sheets scrap waste/mo (-$120)',
-      roiWith: '✅ 0machine Nest: 0% waste + 1-click LightBurn/DXF export',
+      roiWithout: 'Manual layout: 3–4 sheets scrap waste/mo (-$120)',
+      roiWith: '0machine Nest: 0% waste + 1-click LightBurn/DXF export',
       ctaText: 'Unlock 0machine Nesting Now — Risk Free',
     };
   }
 
   if (f.includes('ai') || f.includes('studio') || f.includes('vector') || f.includes('prompt')) {
     return {
-      badge: '⚡ LASERAI CAD VECTOR STUDIO',
+      badge: 'LASERAI CAD VECTOR STUDIO',
       headline: 'Turn Any Text Prompt into Cut-Ready Vectors in 5s',
       subheadline: 'Zero CAD or Illustrator skills needed. Generate clean hairline cut vectors and engrave fills ready for LightBurn, Ruida & xTool.',
-      impactPill: '🚀 Cut CAD prep time from 3 hours to 30 seconds',
+      impactPill: 'Cut CAD prep time from 3 hours to 30 seconds',
       roiTitle: 'HOW LASERAI STUDIO PAYS FOR ITSELF',
-      roiWithout: '❌ Paying designers $30–$50 per vector or hours in Inkscape',
-      roiWith: '✅ Instant text-to-CAD vectors + full commercial rights',
+      roiWithout: 'Paying designers $30–$50 per vector or hours in Inkscape',
+      roiWith: 'Instant text-to-CAD vectors + full commercial rights',
       ctaText: 'Unlock LaserAI Studio Now — Risk Free',
     };
   }
 
   if (f.includes('design') || f.includes('vault') || f.includes('library') || f.includes('pack')) {
     return {
-      badge: '💎 5,000+ COMMERCIAL VECTOR PACKS',
+      badge: '5,000+ COMMERCIAL VECTOR PACKS',
       headline: 'Instant Catalog of 5,000+ Tested Laser Designs',
       subheadline: 'Living hinge boxes, layered mandalas, home decor, signage & holiday gifts. Ready to cut and sell immediately with zero drawing work.',
-      impactPill: '💰 Sell high-margin physical products on Etsy & WhatsApp',
+      impactPill: 'Sell high-margin physical products on Etsy & WhatsApp',
       roiTitle: 'HOW THE DESIGN VAULT PAYS FOR ITSELF',
-      roiWithout: '❌ Buying single design packs for $15–$30 on Etsy',
-      roiWith: '✅ Unlimited instant access to 5,000+ commercial DXF/SVGs',
+      roiWithout: 'Buying single design packs for $15–$30 on Etsy',
+      roiWith: 'Unlimited instant access to 5,000+ commercial DXF/SVGs',
       ctaText: 'Unlock 5,000+ Laser Designs Now — Risk Free',
     };
   }
 
   if (f.includes('quote') || f.includes('invoice') || f.includes('whatsapp')) {
     return {
-      badge: '📲 1-CLICK WHATSAPP DISPATCH',
+      badge: '1-CLICK WHATSAPP DISPATCH',
       headline: 'Close 3x More Client Jobs Before Competitors Reply',
       subheadline: 'Generate itemized PDF quotes and payment invoices with real kerf math and dispatch them straight to WhatsApp in under 30 seconds.',
-      impactPill: '⚡ Fast WhatsApp estimates win 68% more fabrication jobs',
+      impactPill: 'Fast WhatsApp estimates win 68% more fabrication jobs',
       roiTitle: 'HOW WHATSAPP ESTIMATES PAY FOR ITSELF',
-      roiWithout: '❌ Slow manual quoting: lost clients to faster workshops',
-      roiWith: '✅ Professional instant PDF quotes dispatched via WhatsApp',
+      roiWithout: 'Slow manual quoting: lost clients to faster workshops',
+      roiWith: 'Professional instant PDF quotes dispatched via WhatsApp',
       ctaText: 'Unlock WhatsApp Quotes Now — Risk Free',
     };
   }
 
   // Default / Full Workshop Pro
   return {
-    badge: '⚡ 0MACHINE WORKSHOP PRO OS',
+    badge: '0MACHINE WORKSHOP PRO OS',
     headline: 'Run Your Entire Laser Fabrication Business in One Place',
     subheadline: 'The complete shop system: True-Shape nesting, LaserAI vector generator, 5,000+ commercial DXFs, job costing & WhatsApp invoicing.',
-    impactPill: '💰 Just $0.49/day — Pays for itself on 1 single customer order',
+    impactPill: 'Just $0.49/day — Pays for itself on 1 single customer order',
     roiTitle: 'HOW 0MACHINE PRO PAYS FOR ITSELF',
-    roiWithout: '❌ Juggling 5 tools, scrap waste & losing billable hours',
-    roiWith: '✅ 10x ROI: Save $120+ material & win 3x more jobs',
+    roiWithout: 'Juggling 5 tools, scrap waste & losing billable hours',
+    roiWith: '10x ROI: Save $120+ material & win 3x more jobs',
     ctaText: 'Unlock All Pro Features Now — Risk Free',
   };
 }
@@ -227,7 +227,7 @@ export function ProUpgradeModal({
               </View>
               <View style={styles.roiFooter}>
                 <Text style={styles.roiFooterText}>
-                  💰 <Text style={{ color: '#B1FA63', fontWeight: '900' }}>$0.49/day</Text> pays for itself on your first single order!
+                  <Text style={{ color: '#B1FA63', fontWeight: '900' }}>$0.49/day</Text> pays for itself on your first single order!
                 </Text>
               </View>
             </View>
@@ -292,12 +292,12 @@ export function ProUpgradeModal({
                 </View>
 
                 <View style={styles.benefitList}>
-                  <BenefitRow text="⚡ 300 LaserAI CAD Generations / mo (Prompt-to-SVG)" bold />
-                  <BenefitRow text="🧩 Unlimited True-Shape Nesting (Save ~30% scrap)" bold />
-                  <BenefitRow text="💎 Unlimited Commercial Vault (5,000+ Ready DXFs)" bold />
-                  <BenefitRow text="📲 1-Click WhatsApp Direct PDF Quotes & Invoices" bold />
-                  <BenefitRow text="🚀 LightBurn, Ruida & xTool 1-Click CAD Export" bold />
-                  <BenefitRow text="⏱️ Automatic Kerf Math & Pierce/Speed Optimization" bold />
+                  <BenefitRow text="300 LaserAI CAD Generations / mo (Prompt-to-SVG)" bold />
+                  <BenefitRow text="Unlimited True-Shape Nesting (Save ~30% scrap)" bold />
+                  <BenefitRow text="Unlimited Commercial Vault (5,000+ Ready DXFs)" bold />
+                  <BenefitRow text="1-Click WhatsApp Direct PDF Quotes & Invoices" bold />
+                  <BenefitRow text="LightBurn, Ruida & xTool 1-Click CAD Export" bold />
+                  <BenefitRow text="Automatic Kerf Math & Pierce/Speed Optimization" bold />
                 </View>
               </TouchableOpacity>
 
@@ -327,9 +327,9 @@ export function ProUpgradeModal({
                 </View>
 
                 <View style={styles.benefitList}>
-                  <BenefitRow text="⚡ 50 LaserAI Generations / mo" />
-                  <BenefitRow text="💎 50 Commercial Packs / mo" />
-                  <BenefitRow text="🧩 True-Shape Nesting (25 parts)" />
+                  <BenefitRow text="50 LaserAI Generations / mo" />
+                  <BenefitRow text="50 Commercial Packs / mo" />
+                  <BenefitRow text="True-Shape Nesting (25 parts)" />
                   <BenefitRow text="Material Inventory & Laser Presets" />
                   <BenefitRow text="PDF Quotes & WhatsApp Dispatch" />
                 </View>
@@ -472,7 +472,7 @@ function BenefitRow({ text, bold }: { text: string; bold?: boolean }) {
         <Text style={[styles.benefitText, bold && styles.benefitTextBold]}>
           {text}
         </Text>
-        {isWhatsApp && !text.includes('⏱️') && !text.includes('📲') && (
+        {isWhatsApp && !text.toLowerCase().includes('kerf') && (
           <View style={{ backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.4)', borderWidth: 1, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1 }}>
             <Text style={{ color: '#25D366', fontSize: 10, fontWeight: '700' }}>WhatsApp</Text>
           </View>

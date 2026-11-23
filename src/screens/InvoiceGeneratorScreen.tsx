@@ -421,7 +421,7 @@ export default function InvoiceGeneratorScreen() {
                         <div class="footer" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #64748b;">
                             Thank you for your business!<br/>
                             <span style="display: inline-block; margin-top: 6px; font-weight: 600; color: #fe7733;">
-                                ⚡ Quoted with 0Machine Planner — Free Laser Business OS (<a href="https://www.0machine.com" target="_blank" style="color: #fe7733; text-decoration: none;">www.0machine.com</a>)
+                                Quoted with 0Machine Planner — Laser Business OS (<a href="https://www.0machine.com" target="_blank" style="color: #fe7733; text-decoration: none;">www.0machine.com</a>)
                             </span>
                         </div>
                     </div>
@@ -470,7 +470,7 @@ export default function InvoiceGeneratorScreen() {
 
         const parsedItems = typeof inv.items === 'string' ? JSON.parse(inv.items) : (inv.items || []);
         
-        let text = `🧾 *INVOICE: ${inv.invoice_number}*\n`;
+        let text = `*INVOICE: ${inv.invoice_number}*\n`;
         text += `Client: *${inv.client_name}*\n`;
         if (businessName) text += `From: *${businessName}*\n`;
         text += `\n*ITEMS:* \n`;
@@ -480,8 +480,8 @@ export default function InvoiceGeneratorScreen() {
         if (inv.tax_rate) text += `\n*Tax:* ${inv.tax_rate}%\n`;
         text += `*TOTAL AMOUNT:* *$${parseFloat(inv.total).toFixed(2)}*\n`;
         text += `*STATUS:* ${inv.status ? inv.status.toUpperCase() : 'PENDING'}\n\n`;
-        if (inv.due_date) text += `📅 *Due Date:* ${inv.due_date}\n`;
-        text += `Thank you for your business! ⚡\n_Sent via 0Machine Planner_`;
+        if (inv.due_date) text += `*Due Date:* ${inv.due_date}\n`;
+        text += `Thank you for your business!\n_Sent via 0Machine Planner_`;
 
         const encoded = encodeURIComponent(text);
         const url = `https://wa.me/?text=${encoded}`;

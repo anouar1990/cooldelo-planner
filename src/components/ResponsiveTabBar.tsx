@@ -111,12 +111,12 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                             <React.Fragment key={route.key}>
                                 {isProHeader && (
                                     <View style={[styles.sectionHeader, { marginTop: 14 }]}>
-                                        <Text style={styles.sectionHeaderText}>⚡ PRO TOOLS</Text>
+                                        <Text style={styles.sectionHeaderText}>PRO TOOLS</Text>
                                     </View>
                                 )}
                                 {isWorkshopHeader && (
                                     <View style={[styles.sectionHeader, { marginTop: 14 }]}>
-                                        <Text style={styles.sectionHeaderText}>🛠️ WORKSHOP TOOLS</Text>
+                                        <Text style={styles.sectionHeaderText}>WORKSHOP TOOLS</Text>
                                     </View>
                                 )}
                                 <TouchableOpacity

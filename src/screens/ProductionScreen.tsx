@@ -251,12 +251,12 @@ export default function ProductionScreen() {
         const clientObj = clients.find(c => c.name.toLowerCase() === order.clientName.toLowerCase());
         const phone = clientObj?.phone?.replace(/[^\d+]/g, '') ?? '';
         const msg = encodeURIComponent(
-            `Hi ${order.clientName} 👋\n\nYour order is ready for pickup!\n\n` +
-            `📦 *${order.projectName}*\n` +
-            `🔢 Order: ${order.orderNumber}\n` +
-            `💰 Total: ${profile.currency}${order.price.toFixed(2)}\n\n` +
+            `Hi ${order.clientName},\n\nYour order is ready for pickup!\n\n` +
+            `*${order.projectName}*\n` +
+            `Order: ${order.orderNumber}\n` +
+            `Total: ${profile.currency}${order.price.toFixed(2)}\n\n` +
             `Workshop: ${profile.workshopName}\n` +
-            `Thank you for your business! 🙏`
+            `Thank you for your business!`
         );
         const url = phone
             ? `https://wa.me/${phone}?text=${msg}`
@@ -359,7 +359,7 @@ export default function ProductionScreen() {
                     {sortedQueue.length === 0 ? (
                         <EmptyCard
                             icon={<CheckCircle color={C.green} size={28} />}
-                            title="You're all caught up 🎉"
+                            title="You're all caught up"
                             sub="No pending jobs in the queue"
                         />
                     ) : (
@@ -478,7 +478,7 @@ function ActiveJobCard({
     onComplete: () => void;
     onOpen: () => void;
 }) {
-    const due = order.dueDate ? isOverdue(order.dueDate) ? '⚠️ Overdue' : isDueToday(order.dueDate) ? '📅 Due Today' : `Due ${order.dueDate}` : null;
+    const due = order.dueDate ? isOverdue(order.dueDate) ? 'Overdue' : isDueToday(order.dueDate) ? 'Due Today' : `Due ${order.dueDate}` : null;
 
     return (
         <View style={ss.activeCard}>

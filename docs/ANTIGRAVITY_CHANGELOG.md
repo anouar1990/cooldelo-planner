@@ -1294,3 +1294,111 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+
+## [2026-11-23 22:15:00] - GSAP-Inspired Website Redesign & Bespoke Studio Aperture Viewport
+- **Task**: Execute the visual redesign of `0machine-landing` based on the approved GSAP-Inspired Creative Studio Master Plan (`0MACHINE_GSAP_REDESIGN_PROMPT.md`) and the user's uploaded retro-futuristic aperture viewport frame reference.
+- **Files Changed**:
+  - `0machine-landing/app/components/StudioApertureViewport.js` (Created): Bespoke SVG-masked atelier viewport featuring warm vintage cream body (`#f3ebd8`), central circular cutout lens (`r=398`), twin concentric coral hairline arcs (`#d3534a`, `r=426`), technical telemetry markings ("0M // ATELIER CAD LENS", "LIGHTBURN C00", "SCALE 1:1"), and responsive framing for live studio screenshots.
+  - `0machine-landing/app/components/Hero.js` (Modified): Integrated `StudioApertureViewport` replacing generic Mac browser frame, updated editorial headline to "300,000+ DESIGNS. ONE CREATIVE ATELIER." with cream `#fffce1` and electric lime `#0ae448`/`#abff84`, GSAP hairline pill badges, and outlined pill CTAs.
+  - `0machine-landing/app/components/Navbar.js` (Modified): Transformed into floating studio island (`#0e100f`/90 blur, `#42433d` hairline border), warm stone navigation links, and cream/lime outlined pill CTA.
+  - `0machine-landing/app/components/DesignsVault.js` (Modified): Re-styled into GSAP dark atelier gallery (`#0e100f` / `#141513`), cream titles, rounded-full category filter island, and resale benchmark metrics.
+  - `0machine-landing/app/components/Pricing.js` (Modified): Refactored to GSAP dark obsidian (`#0e100f`), rounded-full cycle toggle island (`#141513` / `#42433d`), highlighted Starter card with glowing lime border (`#abff84`), and `.gsap-pill-primary` buttons.
+  - `0machine-landing/app/components/Benefits.js` (Modified): Styled with `#0e100f` dark atelier background, `#141513` card surfaces, `#abff84` badges, and cream typography.
+  - `0machine-landing/app/components/FeatureShowcase.js` (Modified): Harmonized tabs and browser chrome to `#141513` and `#42433d` with lime status indicators.
+  - `0machine-landing/app/components/RoiCalculator.js` (Modified): Styled benchmark cards with `#141513` surface, `#abff84` gain metrics, and outlined pill CTA.
+  - `0machine-landing/app/components/FinalCTA.js` (Modified): Redesigned with GSAP Atelier Pass banner, cream typography, and outlined pill CTAs.
+  - `0machine-landing/app/components/Footer.js` (Modified): Styled as dark studio footer (`#0e100f`), warm cream headings, and muted stone links.
+  - `0machine-landing/app/globals.css` (Modified): Added GSAP color tokens, `.gsap-pill-btn`, `.gsap-pill-primary`, and utility classes.
+- **Tests Performed**:
+  - Next.js production build check (`npm run build` in `0machine-landing`): PASS (65/65 routes compiled with 0 errors in 5.8s).
+  - Headless Chrome visual rendering verification (`hero_studio_viewport_verified.png`): PASS (verified responsive 1440px desktop rendering of aperture frame, cream wings, red arc rings, typography, and screenshots).
+  - Mobile responsiveness check (`hero_studio_viewport_mobile.png`): PASS (verified 375px mobile viewport layout without horizontal overflow).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
+
+
+## [2026-11-23 22:30:00] - Refine Hero Editorial Headline to Studio Precision
+- **Task**: Refactor hero headline from loud ALL-CAPS "300,000+ DESIGNS. ONE CREATIVE ATELIER." to high-end, punchy editorial direction ("Design. Nest. Cut. At Studio Precision.") matching modern CAD/atelier standards.
+- **Files Changed**:
+  - `0machine-landing/app/components/Hero.js`: Updated top pill badge to "0MACHINE // CREATIVE ATELIER OS", headline to "Design. Nest. Cut. At Studio Precision.", refined subheadline with focus on CAD vectorization, nesting yield, and commercial library. Responsive font scaling (`text-[28px]` on mobile, `text-8xl` on desktop).
+- **Tests Performed**:
+  - Next.js production build (`npm run build`): PASS (65/65 static routes compiled in 6.2s).
+  - Headless Chrome desktop snapshot (`headline_refined_desktop.png`): PASS (verified typography, line heights, and gradient accents).
+  - Headless Chrome mobile snapshot (`headline_refined_mobile_fixed.png`): PASS (verified responsive 375px mobile layout without horizontal overflow).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
+
+
+## [2026-11-23 23:00:00] - Transform 0Machine into a Visually Cleaner, Simpler, and More Premium SaaS Experience
+- **Task**: Make 0Machine visually cleaner, simpler, and more premium across `0machine-landing` and `lasercut-planner`, eliminating all AI-generated tropes, visual clutter, glowing blur orbs, and redundant decorations in the class of Linear, Figma, Vercel, and Shapr3D.
+- **Key Enhancements**:
+  1. **Strict Zero-Emoji Policy**: Removed 100% of emojis (💎, 🤖, ⚡, 🧩, 📊, ⭐, 📲, 🔥, 🚀, 💡, 👤, 📁, etc.) across translation files (EN, FR, ES), landing components, auth screens, paywall modals, dashboard cards, client directories, and workshop tools. Replaced with crisp typography or minimal monochrome Lucide SVG icons (16–20px, stroke width 1.75–2) inheriting text color only where functionally critical.
+  2. **Elimination of Visual Noise & AI Tropes**:
+     - Disabled particle canvas background (`ParticleField.js`) and heavy background mesh lines.
+     - Removed all cartoonish multi-layer glowing blur orbs (`blur-[100px]`, `blur-[140px]`, `gradient-mesh`, `.glow-btn`) from Hero, Studio Aperture Viewport, LaserAI synthesis canvas, Designs Vault, Benefits, Comparison, Pricing, ROI Calculator, and Final CTA sections.
+     - Stripped distracting floating HUD cards flanking the hero to direct complete focus to the bespoke retro-futuristic `StudioApertureViewport`.
+  3. **Refined Typography & Whitespace Hierarchy**:
+     - Elevated typography to do the primary visual lifting with restrained stone/cream palettes (`#fffce1`, `#a1a1aa`, `#71717a`) and electric lime accents (`#abff84`).
+     - Standardized hairline borders (`#42433d` / `#262626`) and quiet dark surfaces (`#0e100f`, `#141513`).
+     - Replaced loud badge styling with restrained monospace pill indicators.
+  4. **Core Application Polish (`lasercut-planner`)**:
+     - Cleaned up tab navigation and sidebar section labels.
+     - Refactored Paywall & ProUpgrade modals: removed emoji prefixes from value proposition lists and ROI metrics while maintaining full Stripe checkout integration.
+     - Cleaned up tool screens (Nesting Estimator, Invoice Generator, Production, Laser Tools, Materials, Clients, Machine Profiles, Laser Expert).
+- **Files Changed**:
+  - `0machine-landing/app/components/ParticleField.js` (Disabled particle canvas)
+  - `0machine-landing/app/context/LanguageContext.js` (Zero emojis across EN/FR/ES translations)
+  - `0machine-landing/app/components/Navbar.js` (Removed flag and lightning emojis)
+  - `0machine-landing/app/components/Hero.js` (Removed emojis, blur orbs, floating cards)
+  - `0machine-landing/app/components/StudioApertureViewport.js` (Removed ambient blur orb)
+  - `0machine-landing/app/components/DesignsVault.js` (Removed blur circles, cleaned tag styles)
+  - `0machine-landing/app/components/LaserAiSection.js` (Removed background blur orbs, cleaned pills)
+  - `0machine-landing/app/components/Benefits.js` (Replaced raw emojis with monochrome Lucide icons)
+  - `0machine-landing/app/components/FeatureShowcase.js` (Replaced emojis with Lucide icons)
+  - `0machine-landing/app/components/Comparison.js` (Cleaned comparison matrix, replaced emojis with Lucide Check/X)
+  - `0machine-landing/app/components/Pricing.js` (Cleaned plan badges, feature lists, removed blur orbs)
+  - `0machine-landing/app/components/RoiCalculator.js` (Removed blur orb, refined surfaces)
+  - `0machine-landing/app/components/FinalCTA.js` (Removed large blur orbs, cleaned pill tags)
+  - `0machine-landing/app/components/Footer.js` (Replaced address emojis with monochrome Lucide icons)
+  - `0machine-landing/app/components/ProductShowcase.js` (Removed blur orb, replaced lock emoji)
+  - `0machine-landing/app/components/SocialProof.js` (Removed gradient mesh)
+  - `0machine-landing/app/components/Workflow.js` (Removed blur dividers)
+  - `0machine-landing/app/components/LaserAiCreditModal.js` (Removed badge emojis)
+  - `0machine-landing/app/components/LaserAiDemoVideo.js` (Cleaned video overlay text)
+  - `0machine-landing/app/tools/page.js` (Cleaned tool hero and descriptions)
+  - `0machine-landing/app/contact/page.js` (Replaced emojis with Lucide icons)
+  - `0machine-landing/app/calculator/page.js` (Cleaned calculator descriptions)
+  - `0machine-landing/app/lib/translations.js` (Cleaned translation dictionaries)
+  - `0machine-landing/app/globals.css` (Cleaned gradient mesh and glowing classes)
+  - `lasercut-planner/src/components/ResponsiveTabBar.tsx` (Cleaned section labels)
+  - `lasercut-planner/src/screens/DesignLibraryScreen.tsx` (Cleaned studio banner)
+  - `lasercut-planner/src/screens/LaserToolsScreen.tsx` (Cleaned tabs and setup cards)
+  - `lasercut-planner/src/screens/NestingEstimatorScreen.tsx` (Cleaned card headers)
+  - `lasercut-planner/src/screens/PaywallScreen.tsx` (Cleaned plan features and ROI comparison)
+  - `lasercut-planner/src/components/ProUpgradeModal.tsx` (Cleaned feature highlights)
+  - `lasercut-planner/src/context/LanguageContext.tsx` (Removed emojis from context dictionaries)
+  - `lasercut-planner/src/screens/DesktopAuthScreen.tsx` (Cleaned logo and login button)
+  - `lasercut-planner/src/screens/AuthScreen.tsx` (Cleaned mobile auth screen)
+  - `lasercut-planner/src/screens/InvoiceGeneratorScreen.tsx` (Cleaned WhatsApp and print text)
+  - `lasercut-planner/src/screens/ProductionScreen.tsx` (Cleaned status badges and messages)
+  - `lasercut-planner/src/screens/MaterialsScreen.tsx` (Cleaned inventory alerts)
+  - `lasercut-planner/src/screens/DashboardScreen.tsx` (Cleaned alerts, replaced icon)
+  - `lasercut-planner/src/screens/ClientsScreen.tsx` (Replaced emoji with Lucide User icon)
+  - `lasercut-planner/src/screens/MachineProfilesScreen.tsx` (Replaced emojis with Lucide icons)
+  - `lasercut-planner/src/screens/LaserPresetsScreen.tsx` (Cleaned notes)
+  - `lasercut-planner/src/screens/LaserExpertScreen.tsx` (Cleaned prompt suggestions and badges)
+  - `lasercut-planner/src/components/LaserExpertBubble.tsx` (Cleaned AI chat bubble)
+  - `lasercut-planner/src/screens/ProjectDetailsScreen.tsx` (Cleaned export alert and footer)
+  - `lasercut-planner/src/components/OnboardingModal.tsx` (Cleaned button text)
+  - `docs/ANTIGRAVITY_CHANGELOG.md` & `lasercut-planner/docs/ANTIGRAVITY_CHANGELOG.md` (Appended entry)
+- **Tests Performed**:
+  - Production Next.js build (`cd 0machine-landing && npm run build`): PASS (65/65 static and dynamic pages compiled with 0 errors in 5.1s).
+  - TypeScript compilation check (`cd lasercut-planner && npx tsc --noEmit`): PASS (0 type errors).
+  - Emoji scan verification (`Python regex audit on components`): PASS (0 emojis in landing components, 0 emojis in planner components).
+  - Visual headless Chrome rendering check (desktop 1440px & mobile 375px): PASS (confirmed clean typography hierarchy, crisp hairline borders, zero horizontal overflow, and absence of visual clutter).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.

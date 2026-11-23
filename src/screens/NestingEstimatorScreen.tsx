@@ -225,7 +225,7 @@ export default function NestingEstimatorScreen() {
                 {/* Form inputs */}
                 <View style={styles.formGrid}>
                     <View style={styles.card}>
-                        <Text style={styles.cardTitle}>📐 Sheet Dimensions</Text>
+                        <Text style={styles.cardTitle}>Sheet Dimensions</Text>
                         <View style={styles.row}>
                             <View style={styles.inputWrap}>
                                 <Text style={styles.label}>Width (mm)</Text>
@@ -249,7 +249,7 @@ export default function NestingEstimatorScreen() {
                     </View>
 
                     <View style={styles.card}>
-                        <Text style={styles.cardTitle}>🧩 Part Details</Text>
+                        <Text style={styles.cardTitle}>Part Details</Text>
                         <View style={styles.row}>
                             <View style={styles.inputWrap}>
                                 <Text style={styles.label}>Part Width (mm)</Text>
@@ -276,7 +276,7 @@ export default function NestingEstimatorScreen() {
                 {/* Calculation Results Card */}
                 {result && (
                     <View style={styles.resultsCard}>
-                        <Text style={styles.resultsTitle}>📊 Layout & Financial Metrics</Text>
+                        <Text style={styles.resultsTitle}>Layout & Financial Metrics</Text>
                         <View style={styles.metricsGrid}>
                             <MetricBox label="Parts per Sheet" value={`${result.perSheet}`} color={C.primary} />
                             <MetricBox label="Sheets Needed" value={`${result.sheetsNeeded}`} color={C.blue} />

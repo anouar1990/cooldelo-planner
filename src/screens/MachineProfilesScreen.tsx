@@ -6,7 +6,7 @@ import {
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useMachineProfiles, MachineProfile } from '../hooks/useMachineProfiles';
 import { useRequireVerification } from '../context/VerificationContext';
-import { Plus, Cpu, Zap, Gauge, ChevronLeft, Trash2, Edit2, X, Check } from 'lucide-react-native';
+import { Plus, Cpu, Zap, Gauge, ChevronLeft, Trash2, Edit2, X, Check, Scissors, Wrench } from 'lucide-react-native';
 
 const C = {
     bg: '#111317', surface: '#1A1D21', surface2: '#23262C',
@@ -15,12 +15,19 @@ const C = {
     text: '#FFFFFF', sub: '#8B95A8', dim: '#4B5568',
 };
 
-const TYPE_OPTS: { label: string; value: MachineProfile['type']; emoji: string; color: string }[] = [
-    { label: 'Laser', value: 'laser', emoji: '⚡', color: C.primary },
-    { label: 'CNC', value: 'cnc', emoji: '🔩', color: C.blue },
-    { label: 'Vinyl', value: 'vinyl', emoji: '✂️', color: C.green },
-    { label: 'Other', value: 'other', emoji: '🛠️', color: C.amber },
+const TYPE_OPTS: { label: string; value: MachineProfile['type']; color: string }[] = [
+    { label: 'Laser', value: 'laser', color: C.primary },
+    { label: 'CNC', value: 'cnc', color: C.blue },
+    { label: 'Vinyl', value: 'vinyl', color: C.green },
+    { label: 'Other', value: 'other', color: C.amber },
 ];
+
+function MachineTypeIcon({ type, size = 13, color }: { type: MachineProfile['type']; size?: number; color: string }) {
+    if (type === 'laser') return <Zap size={size} color={color} />;
+    if (type === 'cnc') return <Cpu size={size} color={color} />;
+    if (type === 'vinyl') return <Scissors size={size} color={color} />;
+    return <Wrench size={size} color={color} />;
+}
 
 const EMPTY: Omit<MachineProfile, 'id' | 'created_at'> = {
     name: '', type: 'laser', speed: undefined, power: undefined, notes: '',
@@ -100,7 +107,9 @@ export default function MachineProfilesScreen({ navigation }: any) {
 
                 {machines.length === 0 && !loading ? (
                     <View style={s.empty}>
-                        <Text style={s.emptyIcon}>🛠️</Text>
+                        <View style={{ marginBottom: 8, opacity: 0.7 }}>
+                            <Cpu size={28} color={C.sub} />
+                        </View>
                         <Text style={s.emptyTitle}>No machines yet</Text>
                         <Text style={s.emptySub}>Save your laser settings once — use them on every project.</Text>
                         <TouchableOpacity style={s.emptyBtn} onPress={openAdd}>
@@ -120,8 +129,8 @@ export default function MachineProfilesScreen({ navigation }: any) {
                             const t = typeInfo(m.type);
                             return (
                                 <View style={[s.card, { flex: 1 }]}>
-                                    <View style={[s.typeTag, { backgroundColor: t.color + '20', borderColor: t.color + '40' }]}>
-                                        <Text style={s.typeEmoji}>{t.emoji}</Text>
+                                    <View style={[s.typeTag, { backgroundColor: t.color + '20', borderColor: t.color + '40', flexDirection: 'row', alignItems: 'center', gap: 5 }]}>
+                                        <MachineTypeIcon type={m.type} color={t.color} size={12} />
                                         <Text style={[s.typeLabel, { color: t.color }]}>{t.label}</Text>
                                     </View>
                                     <Text style={s.machineName}>{m.name}</Text>
@@ -187,7 +196,7 @@ export default function MachineProfilesScreen({ navigation }: any) {
                                         style={[s.typeOpt, form.type === t.value && { borderColor: t.color, backgroundColor: t.color + '15' }]}
                                         onPress={() => setForm(f => ({ ...f, type: t.value }))}
                                     >
-                                        <Text>{t.emoji}</Text>
+                                        <MachineTypeIcon type={t.value} color={form.type === t.value ? t.color : C.sub} size={14} />
                                         <Text style={[s.typeOptText, form.type === t.value && { color: t.color }]}>{t.label}</Text>
                                     </TouchableOpacity>
                                 ))}

@@ -180,7 +180,7 @@ ${dueDateStr ? `<div class="row"><span>Due Date</span><span>${dueDateStr}</span>
 <div class="row"><span>Labor Cost (at $${hourlyRate}/hr)</span><span>$${timeCost.toFixed(2)}</span></div>
 </div>
 <div class="total"><span class="total-label">TOTAL ESTIMATED COST</span><span class="total-value">$${totalCost.toFixed(2)}</span></div>
-<footer>0machine Planner — Made for makers ⚡</footer>
+<footer>0machine Planner — Made for makers</footer>
 </body></html>`;
         try {
             const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -225,7 +225,7 @@ ${dueDateStr ? `<div class="row"><span>Due Date</span><span>${dueDateStr}</span>
     const confirmSaveTemplate = async () => {
         await updateProject(id, { is_template: true, template_name: templateName.trim() || project.title });
         setShowTemplateModal(false);
-        Alert.alert('Saved! 📐', 'Template saved. Find it in Projects → Templates.');
+        Alert.alert('Saved!', 'Template saved. Find it in Projects → Templates.');
     };
 
     type StatusKey = 'planned' | 'in-progress' | 'completed';

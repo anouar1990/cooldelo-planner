@@ -445,7 +445,7 @@ export default function LaserPresetsScreen() {
                                     {/* Status & Notes */}
                                     {s.notes ? (
                                         <Text style={styles.notesText} numberOfLines={2}>
-                                            💡 {s.notes}
+                                            Note: {s.notes}
                                         </Text>
                                     ) : null}
 
