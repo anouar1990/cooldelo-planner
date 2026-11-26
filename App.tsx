@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { trackPageView } from './src/lib/analytics';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar, View, StyleSheet, ActivityIndicator, Text, useWindowDimensions } from 'react-native';
+import { StatusBar, View, StyleSheet, ActivityIndicator, Text, useWindowDimensions, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import DashboardScreen from './src/screens/DashboardScreen';
@@ -39,6 +39,7 @@ import { ThemeProvider } from './src/context/ThemeContext';
 import { LanguageProvider } from './src/context/LanguageContext';
 import { WorkshopProvider } from './src/context/WorkshopContext';
 import { VerificationProvider } from './src/context/VerificationContext';
+import { SidebarProvider, useSidebar } from './src/context/SidebarContext';
 
 const Tab = createBottomTabNavigator();
 const DashStack = createNativeStackNavigator();
@@ -80,6 +81,54 @@ function ProjectsNavigator() {
   );
 }
 
+function MainAppContent() {
+  const { isCollapsed } = useSidebar();
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
+
+  // In desktop mode: 68px when in compact icon rail, 260px when pinned open
+  const marginLeft = isDesktop ? (isCollapsed ? 68 : 260) : 0;
+
+  return (
+    <Tab.Navigator
+      initialRouteName="Dashboard"
+      tabBar={(props) => <ResponsiveTabBar {...props} />}
+      screenOptions={{
+        headerShown: false,
+        sceneStyle: {
+          backgroundColor: COLORS.bg,
+          marginLeft,
+          flex: 1,
+          ...Platform.select({
+            web: {
+              transition: 'margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+            } as any,
+          }),
+        }
+      }}
+    >
+      {/* OVERVIEW */}
+      <Tab.Screen name="Dashboard" component={DashboardNavigator} />
+
+      {/* PRO TOOLS */}
+      <Tab.Screen name="LaserAI Studio" component={LaserAiScreen} />
+      <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
+      <Tab.Screen name="Laser Tools" component={LaserToolsScreen} />
+      <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
+      <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
+
+      {/* WORKSHOP TOOLS */}
+      <Tab.Screen name="Cost Calculator" component={CostCalculatorScreen} />
+      <Tab.Screen name="Materials" component={MaterialsScreen} />
+      <Tab.Screen name="Orders" component={OrdersScreen} />
+      <Tab.Screen name="Production" component={ProductionScreen} />
+      <Tab.Screen name="Laser Presets" component={LaserPresetsScreen} />
+      <Tab.Screen name="Quote Generator" component={QuoteGeneratorScreen} />
+      <Tab.Screen name="Laser Expert" component={LaserExpertScreen} />
+    </Tab.Navigator>
+  );
+}
+
 export default function App() {
   const { session, loading } = useAuth();
   const { isPro } = useSubscription();
@@ -91,7 +140,7 @@ export default function App() {
   if (loading) {
     return (
       <View style={styles.loadingScreen}>
-        <Text style={styles.loadingBrand}>⚡ 0machine</Text>
+        <Text style={styles.loadingBrand}>0MACHINE</Text>
         <ActivityIndicator color="#FE7733" size="large" style={{ marginTop: 24 }} />
       </View>
     );
@@ -111,76 +160,48 @@ export default function App() {
       <ThemeProvider>
         <WorkshopProvider>
           <VerificationProvider>
-            <SafeAreaProvider>
-              <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
-              <NavigationContainer
-                ref={navigationRef}
-                onReady={() => {
-                  routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
-                  const currentRouteName = routeNameRef.current;
-                  if (currentRouteName) trackPageView(currentRouteName);
-                }}
-                onStateChange={async () => {
-                  const previousRouteName = routeNameRef.current;
-                  const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
-                  
-                  if (previousRouteName !== currentRouteName && currentRouteName) {
-                    trackPageView(currentRouteName);
-                  }
-                  routeNameRef.current = currentRouteName;
-                }}
-                theme={{
-                  dark: true,
-                  colors: {
-                    primary: COLORS.primary,
-                    background: COLORS.bg,
-                    card: COLORS.surface,
-                    text: '#FFFFFF',
-                    border: COLORS.border,
-                    notification: COLORS.primary,
-                  },
-                  fonts: {
-                    regular: { fontFamily: 'System', fontWeight: '400' as const },
-                    medium: { fontFamily: 'System', fontWeight: '500' as const },
-                    bold: { fontFamily: 'System', fontWeight: '700' as const },
-                    heavy: { fontFamily: 'System', fontWeight: '900' as const },
-                  },
-                }}
-              >
-                <Tab.Navigator
-                  initialRouteName="Dashboard"
-                  tabBar={(props) => <ResponsiveTabBar {...props} />}
-                  screenOptions={{
-                    headerShown: false,
-                    sceneStyle: {
-                      backgroundColor: COLORS.bg,
-                      marginLeft: isDesktop ? 260 : 0,
-                      flex: 1
+            <SidebarProvider>
+              <SafeAreaProvider>
+                <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+                <NavigationContainer
+                  ref={navigationRef}
+                  onReady={() => {
+                    routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name;
+                    const currentRouteName = routeNameRef.current;
+                    if (currentRouteName) trackPageView(currentRouteName);
+                  }}
+                  onStateChange={async () => {
+                    const previousRouteName = routeNameRef.current;
+                    const currentRouteName = navigationRef.current?.getCurrentRoute()?.name;
+                    
+                    if (previousRouteName !== currentRouteName && currentRouteName) {
+                      trackPageView(currentRouteName);
                     }
+                    routeNameRef.current = currentRouteName;
+                  }}
+                  theme={{
+                    dark: true,
+                    colors: {
+                      primary: COLORS.primary,
+                      background: COLORS.bg,
+                      card: COLORS.surface,
+                      text: '#FFFFFF',
+                      border: COLORS.border,
+                      notification: COLORS.primary,
+                    },
+                    fonts: {
+                      regular: { fontFamily: 'System', fontWeight: '400' as const },
+                      medium: { fontFamily: 'System', fontWeight: '500' as const },
+                      bold: { fontFamily: 'System', fontWeight: '700' as const },
+                      heavy: { fontFamily: 'System', fontWeight: '900' as const },
+                    },
                   }}
                 >
-                  {/* OVERVIEW */}
-                  <Tab.Screen name="Dashboard" component={DashboardNavigator} />
-
-                  {/* PRO TOOLS */}
-                  <Tab.Screen name="LaserAI Studio" component={LaserAiScreen} />
-                  <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
-                  <Tab.Screen name="Laser Tools" component={LaserToolsScreen} />
-                  <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
-                  <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />
-
-                  {/* WORKSHOP TOOLS */}
-                  <Tab.Screen name="Cost Calculator" component={CostCalculatorScreen} />
-                  <Tab.Screen name="Materials" component={MaterialsScreen} />
-                  <Tab.Screen name="Orders" component={OrdersScreen} />
-                  <Tab.Screen name="Production" component={ProductionScreen} />
-                  <Tab.Screen name="Laser Presets" component={LaserPresetsScreen} />
-                  <Tab.Screen name="Quote Generator" component={QuoteGeneratorScreen} />
-                  <Tab.Screen name="Laser Expert" component={LaserExpertScreen} />
-                </Tab.Navigator>
-                <LaserExpertBubble onOpenFullScreen={() => navigationRef.current?.navigate('Laser Expert')} />
-              </NavigationContainer>
-            </SafeAreaProvider>
+                  <MainAppContent />
+                  <LaserExpertBubble onOpenFullScreen={() => navigationRef.current?.navigate('Laser Expert')} />
+                </NavigationContainer>
+              </SafeAreaProvider>
+            </SidebarProvider>
           </VerificationProvider>
         </WorkshopProvider>
       </ThemeProvider>

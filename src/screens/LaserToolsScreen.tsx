@@ -524,14 +524,14 @@ export default function LaserToolsScreen() {
             <View style={[styles.header, { borderColor: colors.border }]}>
                 <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text style={[styles.headerTitle, { color: colors.text }]}>Laser CAD & Workshop Utilities</Text>
+                        <Text style={[styles.headerTitle, { color: colors.text }]}>CAD Generators</Text>
                         <View style={styles.proPill}>
                             <Zap size={11} color="#111317" fill="#111317" />
                             <Text style={styles.proPillText}>CUT-READY</Text>
                         </View>
                     </View>
                     <Text style={[styles.headerSub, { color: colors.sub }]}>
-                        Generate parametric boxes, calibrated kerf matrices & bend patterns with instant DXF & SVG export.
+                        Parametric boxes, kerf matrices & living hinges with DXF/SVG export.
                     </Text>
                 </View>
 
@@ -539,11 +539,11 @@ export default function LaserToolsScreen() {
                 <View style={styles.exportActions}>
                     <TouchableOpacity style={styles.btnSvg} onPress={handleDownloadSvg}>
                         <Download size={14} color="#FFF" />
-                        <Text style={styles.btnText}>Export SVG</Text>
+                        <Text style={styles.btnText}>SVG</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.btnDxf} onPress={handleDownloadDxf}>
                         <FileCode size={14} color="#111317" />
-                        <Text style={[styles.btnText, { color: '#111317', fontWeight: '800' }]}>Export DXF</Text>
+                        <Text style={[styles.btnText, { color: '#111317', fontWeight: '800' }]}>DXF</Text>
                     </TouchableOpacity>
                 </View>
             </View>

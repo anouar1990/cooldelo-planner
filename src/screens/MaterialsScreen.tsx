@@ -14,6 +14,7 @@ const C = {
 
 import { useWorkshop, MaterialItem as Material } from '../context/WorkshopContext';
 import { useRequireVerification } from '../context/VerificationContext';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 
 const TYPES = ['Wood', 'Acrylic', 'Metal', 'Leather', 'Fabric', 'Cardboard', 'Other'];
 const TYPE_COLORS: Record<string, string> = {
@@ -30,6 +31,7 @@ export default function MaterialsScreen() {
     const { materials, addMaterial, updateMaterial, deleteMaterial } = useWorkshop();
     const { requireVerification } = useRequireVerification();
     const [showModal, setShowModal] = useState(false);
+    const [materialToDelete, setMaterialToDelete] = useState<Material | null>(null);
     const [editing, setEditing] = useState<Material | null>(null);
     const [form, setForm] = useState<Omit<Material, 'id'>>(BLANK);
 
@@ -65,26 +67,14 @@ export default function MaterialsScreen() {
         }
     };
 
-    const del = (id: string) => {
-        const allowed = requireVerification('Deleting material from inventory', () => {
-            executeDelete(id);
-        });
-        if (allowed) {
-            executeDelete(id);
-        }
+    const del = (m: Material) => {
+        setMaterialToDelete(m);
     };
 
-    const executeDelete = (id: string) => {
-        if (Platform.OS === 'web') {
-            if (window.confirm('Delete this material?')) {
-                deleteMaterial(id);
-            }
-        } else {
-            Alert.alert('Delete', 'Delete this material?', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => deleteMaterial(id) },
-            ]);
-        }
+    const handleConfirmDeleteMaterial = () => {
+        if (!materialToDelete) return;
+        deleteMaterial(materialToDelete.id);
+        setMaterialToDelete(null);
     };
 
     const upd = (k: keyof typeof form) => (v: any) => setForm(p => ({ ...p, [k]: v }));
@@ -129,7 +119,7 @@ export default function MaterialsScreen() {
                 ) : (
                     <View style={styles.grid}>
                         {materials.map(m => (
-                            <MaterialCard key={m.id} material={m} onEdit={() => openEdit(m)} onDelete={() => del(m.id)} />
+                            <MaterialCard key={m.id} material={m} onEdit={() => openEdit(m)} onDelete={() => del(m)} />
                         ))}
                     </View>
                 )}
@@ -190,6 +180,17 @@ export default function MaterialsScreen() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Confirm Delete Material Modal */}
+            <ConfirmDeleteModal
+                visible={materialToDelete !== null}
+                title="Delete Material"
+                itemName={materialToDelete ? `${materialToDelete.name} (${materialToDelete.thickness}mm)` : undefined}
+                message="Are you sure you want to delete this sheet material from your inventory? Any linked estimates will retain their saved cost."
+                confirmText="Delete Material"
+                onConfirm={handleConfirmDeleteMaterial}
+                onCancel={() => setMaterialToDelete(null)}
+            />
         </SafeAreaView>
     );
 }

@@ -6,6 +6,7 @@ import {
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useProjects } from '../hooks/useProjects';
 import { useMaterials } from '../hooks/useMaterials';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { ChevronLeft, Copy, Bookmark, Trash2, Clock, DollarSign } from 'lucide-react-native';
 
 const C = {
@@ -20,6 +21,8 @@ export default function TemplatesScreen({ navigation }: any) {
     const { materials, hourlyRate } = useMaterials();
     const { width } = useWindowDimensions();
     const numColumns = width > 1024 ? 3 : width > 768 ? 2 : 1;
+    const [templateToRemove, setTemplateToRemove] = useState<any | null>(null);
+    const [removing, setRemoving] = useState(false);
 
     // Templates = projects with is_template = true
     const templates = projects.filter((p: any) => p.is_template);
@@ -40,10 +43,15 @@ export default function TemplatesScreen({ navigation }: any) {
     };
 
     const removeTemplate = (t: any) => {
-        Alert.alert('Remove Template', `Remove "${t.title}" from templates? The project will remain.`, [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Remove', style: 'destructive', onPress: () => updateProject(t.id, { is_template: false, template_name: null }) },
-        ]);
+        setTemplateToRemove(t);
+    };
+
+    const handleConfirmRemoveTemplate = async () => {
+        if (!templateToRemove) return;
+        setRemoving(true);
+        await updateProject(templateToRemove.id, { is_template: false, template_name: null });
+        setRemoving(false);
+        setTemplateToRemove(null);
     };
 
     const getCost = (p: any) => {
@@ -68,10 +76,10 @@ export default function TemplatesScreen({ navigation }: any) {
 
                 {templates.length === 0 ? (
                     <View style={s.empty}>
-                        <Text style={s.emptyIcon}>📐</Text>
+                        <Bookmark color={C.primary} size={36} strokeWidth={1.8} style={{ marginBottom: 12 }} />
                         <Text style={s.emptyTitle}>No templates yet</Text>
                         <Text style={s.emptySub}>
-                            Open any project → tap <Text style={{ color: C.primary }}>⋮ Save as Template</Text> to save it here for reuse.
+                            Save frequently used projects as templates for fast reuse.
                         </Text>
                     </View>
                 ) : (
@@ -124,6 +132,20 @@ export default function TemplatesScreen({ navigation }: any) {
                     />
                 )}
             </ResponsiveContainer>
+
+            {/* Confirm Remove Template Modal */}
+            <ConfirmDeleteModal
+                visible={templateToRemove !== null}
+                title="Remove from Templates"
+                itemName={templateToRemove?.title}
+                message="Remove this project from your templates collection? The original project will remain in your project list."
+                confirmText="Remove Template"
+                icon="warning"
+                isDestructive={false}
+                loading={removing}
+                onConfirm={handleConfirmRemoveTemplate}
+                onCancel={() => setTemplateToRemove(null)}
+            />
         </SafeAreaView>
     );
 }

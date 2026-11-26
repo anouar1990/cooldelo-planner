@@ -13,6 +13,7 @@ import { useClients } from '../hooks/useClients';
 import { useSubscription } from '../hooks/useSubscription';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import {
     ChevronLeft, Trash2, Plus, Clock, DollarSign, Package, Cpu, CheckCircle,
     FileText, Camera, Calendar, Bookmark, BookmarkCheck, User, X, Check, Zap
@@ -68,6 +69,9 @@ export default function ProjectDetailsScreen({ route, navigation }: any) {
     const [showTemplateModal, setShowTemplateModal] = useState(false);
     const [templateName, setTemplateName] = useState('');
     const [showClientModal, setShowClientModal] = useState(false);
+    const [showDeleteProjectModal, setShowDeleteProjectModal] = useState(false);
+    const [logToDelete, setLogToDelete] = useState<{ id: string; duration: number } | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     React.useEffect(() => {
         if (id) {
@@ -114,14 +118,15 @@ export default function ProjectDetailsScreen({ route, navigation }: any) {
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            'Delete Project',
-            `Are you sure you want to delete "${project.title}"? This cannot be undone.`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => { deleteProject(project.id); navigation.goBack(); } },
-            ]
-        );
+        setShowDeleteProjectModal(true);
+    };
+
+    const handleConfirmDeleteProject = async () => {
+        setDeleting(true);
+        await deleteProject(project.id);
+        setDeleting(false);
+        setShowDeleteProjectModal(false);
+        navigation.goBack();
     };
 
     const handleAddLog = async () => {
@@ -136,10 +141,16 @@ export default function ProjectDetailsScreen({ route, navigation }: any) {
     };
 
     const handleDeleteLog = (logId: string, durationInSeconds: number) => {
-        Alert.alert('Remove Entry', 'Remove this time entry?', [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Remove', style: 'destructive', onPress: async () => { await deleteTimeLog(logId, project.id, durationInSeconds); setLogs(prev => prev.filter(l => l.id !== logId)); } },
-        ]);
+        setLogToDelete({ id: logId, duration: durationInSeconds });
+    };
+
+    const handleConfirmDeleteLog = async () => {
+        if (!logToDelete) return;
+        setDeleting(true);
+        await deleteTimeLog(logToDelete.id, project.id, logToDelete.duration);
+        setLogs(prev => prev.filter(l => l.id !== logToDelete.id));
+        setDeleting(false);
+        setLogToDelete(null);
     };
 
     // ── PDF Export ──
@@ -426,6 +437,31 @@ ${dueDateStr ? `<div class="row"><span>Due Date</span><span>${dueDateStr}</span>
                     </View>
                 </View>
             </Modal>
+
+            {/* Confirm Delete Project Modal */}
+            {project && (
+                <ConfirmDeleteModal
+                    visible={showDeleteProjectModal}
+                    title="Delete Project"
+                    itemName={project.title}
+                    message="Are you sure you want to delete this project? All associated time tracking logs, material calculations, and uploaded photos will be permanently deleted."
+                    confirmText="Delete Project"
+                    loading={deleting}
+                    onConfirm={handleConfirmDeleteProject}
+                    onCancel={() => setShowDeleteProjectModal(false)}
+                />
+            )}
+
+            {/* Confirm Remove Time Log Modal */}
+            <ConfirmDeleteModal
+                visible={logToDelete !== null}
+                title="Remove Time Entry"
+                message="Are you sure you want to remove this logged work time from the project?"
+                confirmText="Remove Entry"
+                loading={deleting}
+                onConfirm={handleConfirmDeleteLog}
+                onCancel={() => setLogToDelete(null)}
+            />
         </SafeAreaView>
     );
 }

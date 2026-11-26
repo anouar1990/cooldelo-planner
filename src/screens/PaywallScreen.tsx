@@ -400,7 +400,7 @@ function BenefitRow({ text, bold }: { text: string; bold?: boolean }) {
                 <Text style={[styles.benefitText, bold && styles.benefitTextBold]}>
                     {text}
                 </Text>
-                {isWhatsApp && !text.includes('📲') && (
+                {isWhatsApp && !text.includes('WhatsApp') && (
                     <View style={{ backgroundColor: 'rgba(37,211,102,0.15)', borderColor: 'rgba(37,211,102,0.4)', borderWidth: 1, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1 }}>
                         <Text style={{ color: '#25D366', fontSize: 10, fontWeight: '700' }}>WhatsApp</Text>
                     </View>

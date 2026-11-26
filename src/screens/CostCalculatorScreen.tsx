@@ -3,7 +3,7 @@ import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TextInput, TouchableOpacity, Platform, ActivityIndicator, Alert
 } from 'react-native';
-import { Calculator, RotateCcw, Save, DollarSign, Zap, Wrench, Clock, UploadCloud, FileText, Check } from 'lucide-react-native';
+import { Calculator, RotateCcw, Save, DollarSign, Zap, Wrench, Clock, UploadCloud, FileText, Check, Trash2 } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { trackEvent } from '../lib/analytics';
@@ -11,6 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../context/LanguageContext';
 
 import { OnboardingModal } from '../components/OnboardingModal';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 
 const C = {
     bg: '#111317', surface: '#1A1D21', surface2: '#23262C',
@@ -69,6 +70,7 @@ function InputField({ label, value, onChange, placeholder, prefix }: {
 export default function CostCalculatorScreen() {
     const [f, setF] = useState<Inputs>(DEFAULT);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showResetModal, setShowResetModal] = useState(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -330,10 +332,10 @@ export default function CostCalculatorScreen() {
                     <View style={styles.analyzerHeader}>
                         <View style={styles.analyzerTitleRow}>
                             <UploadCloud color={C.primary} size={18} />
-                            <Text style={styles.analyzerTitle}>SVG Vector File Analyzer (Auto-Estimate)</Text>
+                            <Text style={styles.analyzerTitle}>Vector Path Analyzer</Text>
                         </View>
                         <Text style={styles.analyzerSubtitle}>
-                            Upload a vector design file to automatically compute its cut path length and estimate cutting time.
+                            Auto-compute cut length and runtime from SVG vector files.
                         </Text>
                     </View>
 
@@ -504,7 +506,7 @@ export default function CostCalculatorScreen() {
 
                         {/* Actions */}
                         <View style={styles.actionsRow}>
-                            <TouchableOpacity style={styles.resetBtn} onPress={reset}>
+                            <TouchableOpacity style={styles.resetBtn} onPress={() => setShowResetModal(true)}>
                                 <RotateCcw color={C.sub} size={18} />
                                 <Text style={styles.resetBtnText}>Reset</Text>
                             </TouchableOpacity>
@@ -531,6 +533,21 @@ export default function CostCalculatorScreen() {
                         laborCost: '10.00',
                     }));
                 }}
+            />
+
+            {/* Confirm Reset Calculator Inputs Modal */}
+            <ConfirmDeleteModal
+                visible={showResetModal}
+                title="Reset Calculator"
+                message="Are you sure you want to reset all calculation inputs? All entered sheet dimensions, laser cut times, hourly rates, and price markup will be cleared."
+                confirmText="Reset Inputs"
+                icon="warning"
+                isDestructive={false}
+                onConfirm={() => {
+                    setF(DEFAULT);
+                    setShowResetModal(false);
+                }}
+                onCancel={() => setShowResetModal(false)}
             />
         </SafeAreaView>
     );

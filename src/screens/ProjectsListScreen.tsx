@@ -8,7 +8,8 @@ import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useProjects, ProjectRow } from '../hooks/useProjects';
 import { useMaterials, MaterialRow } from '../hooks/useMaterials';
 import { useSubscription } from '../hooks/useSubscription';
-import { Plus, Search, X, Clock, DollarSign, Layers, ChevronRight, Zap, Cpu, User, Copy, Bookmark, BarChart2 } from 'lucide-react-native';
+import { Plus, Search, X, Clock, DollarSign, Layers, ChevronRight, Zap, Cpu, User, Copy, Bookmark, BarChart2, Trash2, Box, Sparkles, Folder, Package } from 'lucide-react-native';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 
 const C = {
     bg: '#111317', surface: '#1A1D21', surface2: '#23262C',
@@ -24,21 +25,21 @@ const STATUS_COLOR: Record<string, string> = {
     planned: C.blue, 'in-progress': C.amber, completed: C.green,
 };
 
-// Material type → color + emoji
-const MAT_META: Record<string, { color: string; emoji: string }> = {
-    wood: { color: '#B45309', emoji: '🪵' },
-    acrylic: { color: '#7C3AED', emoji: '✨' },
-    leather: { color: '#92400E', emoji: '🟫' },
-    mdf: { color: '#6B7280', emoji: '📦' },
-    stone: { color: '#4B5563', emoji: '🪨' },
-    other: { color: C.sub, emoji: '⬡' },
+// Material type → color + icon
+const MAT_META: Record<string, { color: string; icon: any }> = {
+    wood: { color: '#B45309', icon: Layers },
+    acrylic: { color: '#7C3AED', icon: Sparkles },
+    leather: { color: '#92400E', icon: Box },
+    mdf: { color: '#6B7280', icon: Package },
+    stone: { color: '#4B5563', icon: Folder },
+    other: { color: C.sub, icon: Layers },
 };
 
 const FILTERS = ['All', 'Planned', 'In Progress', 'Completed'];
 const TABS = ['Projects', 'Materials'];
 
 export default function ProjectsListScreen({ navigation }: any) {
-    const { projects, refetch: projectsRefetch, loading: pLoading } = useProjects();
+    const { projects, refetch: projectsRefetch, loading: pLoading, deleteProject } = useProjects();
     const { materials, hourlyRate, refetch: materialsRefetch, loading: mLoading } = useMaterials();
     const { isPro } = useSubscription();
     const { width } = useWindowDimensions();
@@ -50,6 +51,16 @@ export default function ProjectsListScreen({ navigation }: any) {
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('All');
     const [refreshing, setRefreshing] = useState(false);
+    const [projectToDelete, setProjectToDelete] = useState<ProjectRow | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const handleConfirmDelete = async () => {
+        if (!projectToDelete) return;
+        setDeleting(true);
+        await deleteProject(projectToDelete.id);
+        setDeleting(false);
+        setProjectToDelete(null);
+    };
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -99,19 +110,33 @@ export default function ProjectsListScreen({ navigation }: any) {
                 {p.image_uri ? (
                     <Image source={{ uri: p.image_uri }} style={styles.cardImage} />
                 ) : (
-                    <View style={[styles.cardImagePlaceholder, { backgroundColor: color + '22' }]}>
-                        <Text style={styles.cardImageEmoji}>
-                            {mat ? (MAT_META[mat.type]?.emoji ?? '✦') : '✦'}
-                        </Text>
+                    <View style={[styles.cardImagePlaceholder, { backgroundColor: color + '15' }]}>
+                        {(() => {
+                            const MatIcon = mat ? (MAT_META[mat.type]?.icon ?? Layers) : Layers;
+                            return <MatIcon color={matColor} size={28} strokeWidth={1.8} />;
+                        })()}
                     </View>
                 )}
 
                 <View style={styles.cardBody}>
-                    {/* Title + status */}
+                    {/* Title + status & trash */}
                     <View style={styles.cardTop}>
                         <Text style={styles.cardTitle} numberOfLines={1}>{p.title}</Text>
-                        <View style={[styles.badge, { borderColor: color, backgroundColor: color + '18' }]}>
-                            <Text style={[styles.badgeText, { color }]}>{STATUS_LABEL[p.status]}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <View style={[styles.badge, { borderColor: color, backgroundColor: color + '18' }]}>
+                                <Text style={[styles.badgeText, { color }]}>{STATUS_LABEL[p.status]}</Text>
+                            </View>
+                            <TouchableOpacity
+                                style={styles.trashCardBtn}
+                                onPress={(e) => {
+                                    (e as any).stopPropagation?.();
+                                    setProjectToDelete(p);
+                                }}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                accessibilityLabel="Delete project"
+                            >
+                                <Trash2 color="#8B95A8" size={14} />
+                            </TouchableOpacity>
                         </View>
                     </View>
 
@@ -155,9 +180,9 @@ export default function ProjectsListScreen({ navigation }: any) {
         if (materials.length === 0) {
             return (
                 <View style={styles.emptyState}>
-                    <Text style={styles.emptyIcon}>📦</Text>
-                    <Text style={styles.emptyTitle}>No materials added yet.</Text>
-                    <Text style={styles.emptySub}>Tap + to add your first material.</Text>
+                    <Package color={C.sub} size={36} strokeWidth={1.8} style={{ marginBottom: 12 }} />
+                    <Text style={styles.emptyTitle}>No materials yet</Text>
+                    <Text style={styles.emptySub}>Add materials to track sheet inventory.</Text>
                 </View>
             );
         }
@@ -180,7 +205,10 @@ export default function ProjectsListScreen({ navigation }: any) {
                         <View key={type} style={styles.matGroup}>
                             {/* Group header */}
                             <View style={styles.matGroupHeader}>
-                                <Text style={styles.matGroupEmoji}>{meta.emoji}</Text>
+                                {(() => {
+                                    const MatIcon = meta.icon ?? Layers;
+                                    return <MatIcon color={meta.color} size={16} strokeWidth={1.8} style={{ marginRight: 6 }} />;
+                                })()}
                                 <Text style={[styles.matGroupTitle, { color: meta.color }]}>
                                     {type.toUpperCase()}
                                 </Text>
@@ -322,10 +350,10 @@ export default function ProjectsListScreen({ navigation }: any) {
                             onRefresh={onRefresh}
                             ListEmptyComponent={
                                 <View style={styles.emptyState}>
-                                    <Text style={styles.emptyIcon}>📂</Text>
+                                    <Folder color={C.sub} size={36} strokeWidth={1.8} style={{ marginBottom: 12 }} />
                                     <Text style={styles.emptyTitle}>No projects found</Text>
                                     <Text style={styles.emptySub}>
-                                        {query ? 'Try a different search term.' : 'Tap + to add your first project.'}
+                                        {query ? 'No matching projects.' : 'Create a project to start tracking time and costs.'}
                                     </Text>
                                 </View>
                             }
@@ -353,6 +381,18 @@ export default function ProjectsListScreen({ navigation }: any) {
                     <Plus color="#FFF" size={24} />
                 </TouchableOpacity>
             ) : null}
+
+            {/* Confirm Delete Project Modal */}
+            <ConfirmDeleteModal
+                visible={projectToDelete !== null}
+                title="Delete Project"
+                itemName={projectToDelete?.title}
+                message="Are you sure you want to delete this project? All associated time tracking logs, material records, and project photos will be permanently deleted."
+                confirmText="Delete Project"
+                loading={deleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setProjectToDelete(null)}
+            />
         </SafeAreaView>
     );
 }
@@ -448,5 +488,15 @@ const styles = StyleSheet.create({
     },
     proToolText: {
         fontSize: 12, fontWeight: '700', color: C.primary,
+    },
+    trashCardBtn: {
+        width: 26,
+        height: 26,
+        borderRadius: 7,
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(239, 68, 68, 0.25)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

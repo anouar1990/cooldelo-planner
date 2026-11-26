@@ -6,6 +6,7 @@ import {
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useMachineProfiles, MachineProfile } from '../hooks/useMachineProfiles';
 import { useRequireVerification } from '../context/VerificationContext';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { Plus, Cpu, Zap, Gauge, ChevronLeft, Trash2, Edit2, X, Check, Scissors, Wrench } from 'lucide-react-native';
 
 const C = {
@@ -40,6 +41,8 @@ export default function MachineProfilesScreen({ navigation }: any) {
     const [editing, setEditing] = useState<MachineProfile | null>(null);
     const [form, setForm] = useState(EMPTY);
     const [saving, setSaving] = useState(false);
+    const [machineToDelete, setMachineToDelete] = useState<MachineProfile | null>(null);
+    const [deleting, setDeleting] = useState(false);
     const { width } = useWindowDimensions();
     const numColumns = width > 1024 ? 3 : width > 768 ? 2 : 1;
 
@@ -72,18 +75,15 @@ export default function MachineProfilesScreen({ navigation }: any) {
     };
 
     const handleDelete = (m: MachineProfile) => {
-        const allowed = requireVerification('Deleting machine profile', () => {
-            Alert.alert('Delete Machine', `Remove "${m.name}"?`, [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => deleteMachine(m.id) },
-            ]);
-        });
-        if (allowed) {
-            Alert.alert('Delete Machine', `Remove "${m.name}"?`, [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => deleteMachine(m.id) },
-            ]);
-        }
+        setMachineToDelete(m);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!machineToDelete) return;
+        setDeleting(true);
+        await deleteMachine(machineToDelete.id);
+        setDeleting(false);
+        setMachineToDelete(null);
     };
 
     const typeInfo = (type: MachineProfile['type']) => TYPE_OPTS.find(t => t.value === type) ?? TYPE_OPTS[3];
@@ -111,7 +111,7 @@ export default function MachineProfilesScreen({ navigation }: any) {
                             <Cpu size={28} color={C.sub} />
                         </View>
                         <Text style={s.emptyTitle}>No machines yet</Text>
-                        <Text style={s.emptySub}>Save your laser settings once — use them on every project.</Text>
+                        <Text style={s.emptySub}>Add machine profiles to track laser & CNC specifications.</Text>
                         <TouchableOpacity style={s.emptyBtn} onPress={openAdd}>
                             <Plus color="#fff" size={16} />
                             <Text style={s.emptyBtnText}>Add Machine</Text>
@@ -249,6 +249,18 @@ export default function MachineProfilesScreen({ navigation }: any) {
                     </ScrollView>
                 </SafeAreaView>
             </Modal>
+
+            {/* Confirm Delete Machine Modal */}
+            <ConfirmDeleteModal
+                visible={machineToDelete !== null}
+                title="Delete Machine Profile"
+                itemName={machineToDelete?.name}
+                message="Are you sure you want to remove this laser/CNC machine configuration profile?"
+                confirmText="Delete Machine"
+                loading={deleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setMachineToDelete(null)}
+            />
         </SafeAreaView>
     );
 }

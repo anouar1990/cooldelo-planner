@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
-import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink, Sun, Moon, Download, Upload, Cpu, Globe, Shield } from 'lucide-react-native';
+import { ArrowLeft, User, CreditCard, Landmark, Trash2, Save, ExternalLink, Sun, Moon, Download, Upload, Cpu, Globe, Shield, AlertTriangle } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useTheme } from '../context/ThemeContext';
@@ -297,9 +297,9 @@ export default function SettingsScreen() {
                         <Text style={styles.label}>Application Language</Text>
                         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
                             {[
-                                { code: 'en', label: 'English 🇺🇸' },
-                                { code: 'fr', label: 'Français 🇫🇷' },
-                                { code: 'es', label: 'Español 🇪🇸' },
+                                { code: 'en', label: 'English' },
+                                { code: 'fr', label: 'Français' },
+                                { code: 'es', label: 'Español' },
                             ].map(item => (
                                 <TouchableOpacity
                                     key={item.code}
@@ -387,7 +387,10 @@ export default function SettingsScreen() {
                 >
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalCard}>
-                            <Text style={styles.modalTitle}>⚠️ Permanent Account Deletion</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                <AlertTriangle color="#EF4444" size={20} strokeWidth={2} />
+                                <Text style={styles.modalTitle}>Permanent Account Deletion</Text>
+                            </View>
                             
                             <Text style={styles.modalWarningText}>
                                 This action is permanent and absolute. 

@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Zap, Plus, X, Check, Search, Star, Pencil, Trash2, Copy, AlertTriangle, ShieldCheck, Filter, Cpu, Layers } from 'lucide-react-native';
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { useMachineProfiles } from '../hooks/useMachineProfiles';
 import { useMaterials } from '../hooks/useMaterials';
 
@@ -172,6 +173,7 @@ export default function LaserPresetsScreen() {
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState<LaserSetting | null>(null);
     const [form, setForm] = useState<Omit<LaserSetting, 'id'>>(BLANK_SETTING);
+    const [presetToDelete, setPresetToDelete] = useState<LaserSetting | null>(null);
 
     const filtered = useMemo(() => {
         return settings.filter(s => {
@@ -237,17 +239,14 @@ export default function LaserPresetsScreen() {
         setShowModal(false);
     };
 
-    const handleDelete = (id: string) => {
-        if (Platform.OS === 'web') {
-            if (window.confirm('Delete this setting record?')) {
-                setSettings(prev => prev.filter(s => s.id !== id));
-            }
-        } else {
-            Alert.alert('Delete Record', 'Are you sure you want to delete this laser setting record?', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => setSettings(prev => prev.filter(s => s.id !== id)) }
-            ]);
-        }
+    const handleDelete = (s: LaserSetting) => {
+        setPresetToDelete(s);
+    };
+
+    const handleConfirmDelete = () => {
+        if (!presetToDelete) return;
+        setSettings(prev => prev.filter(s => s.id !== presetToDelete.id));
+        setPresetToDelete(null);
     };
 
     const handleDuplicate = (s: LaserSetting) => {
@@ -272,15 +271,6 @@ export default function LaserPresetsScreen() {
             <ResponsiveContainer>
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     
-                    {/* Independent Platform Disclaimer Banner */}
-                    <View style={styles.disclaimerCard}>
-                        <ShieldCheck color={C.blue} size={18} style={styles.disclaimerIcon} />
-                        <Text style={styles.disclaimerText}>
-                            <Text style={styles.disclaimerBold}>Independent Platform Notice: </Text>
-                            0machine is an independent software platform and is not affiliated with, sponsored by, or endorsed by the manufacturers or brands referenced in this database. Brand and model names are used solely for identification and compatibility reference.
-                        </Text>
-                    </View>
-
                     {/* Header */}
                     <View style={[styles.header, isMobile && styles.headerMobile]}>
                         <View style={{ flex: 1, minWidth: 0 }}>
@@ -291,21 +281,13 @@ export default function LaserPresetsScreen() {
                                 <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">Laser Settings Library</Text>
                             </View>
                             <Text style={styles.subtitle}>
-                                {settings.length} test records · {settings.filter(s => s.starred).length} starred
+                                {settings.length} presets · {settings.filter(s => s.starred).length} starred
                             </Text>
                         </View>
                         <TouchableOpacity style={[styles.addBtn, isMobile && styles.addBtnMobile]} onPress={openAdd} activeOpacity={0.8}>
                             <Plus color="#fff" size={18} />
-                            <Text style={styles.addBtnText}>Log Test Setting</Text>
+                            <Text style={styles.addBtnText}>New Preset</Text>
                         </TouchableOpacity>
-                    </View>
-
-                    {/* Testing Warning Note */}
-                    <View style={styles.warningNote}>
-                        <AlertTriangle color={C.amber} size={16} />
-                        <Text style={styles.warningText}>
-                            Laser settings vary depending on tube age, optics, focus, air assist, and material batch. Always test settings on a small sample piece before full production.
-                        </Text>
                     </View>
 
                     {/* Search and Filters Bar */}
@@ -401,7 +383,7 @@ export default function LaserPresetsScreen() {
                                             <TouchableOpacity onPress={() => openEdit(s)} style={styles.actionBtn}>
                                                 <Pencil color={C.blue} size={15} />
                                             </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => handleDelete(s.id)} style={styles.actionBtn}>
+                                            <TouchableOpacity onPress={() => handleDelete(s)} style={styles.actionBtn}>
                                                 <Trash2 color="#EF4444" size={15} />
                                             </TouchableOpacity>
                                         </View>
@@ -679,6 +661,16 @@ export default function LaserPresetsScreen() {
                     </View>
                 </View>
             </Modal>
+            {/* Delete Confirmation Modal */}
+            <ConfirmDeleteModal
+                visible={presetToDelete !== null}
+                title="Delete Laser Preset"
+                itemName={presetToDelete?.name}
+                message="Are you sure you want to permanently delete this laser preset record? This action cannot be undone."
+                confirmText="Delete Preset"
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setPresetToDelete(null)}
+            />
         </SafeAreaView>
     );
 }

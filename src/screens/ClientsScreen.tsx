@@ -6,6 +6,7 @@ import {
 import { ResponsiveContainer } from '../components/ResponsiveContainer';
 import { useClients, Client } from '../hooks/useClients';
 import { useRequireVerification } from '../context/VerificationContext';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { Plus, ChevronLeft, Trash2, Edit2, X, Check, Mail, Phone, User } from 'lucide-react-native';
 
 import { useWorkshop } from '../context/WorkshopContext';
@@ -27,6 +28,8 @@ export default function ClientsScreen({ navigation }: any) {
     const [editing, setEditing] = useState<Client | null>(null);
     const [form, setForm] = useState(EMPTY);
     const [saving, setSaving] = useState(false);
+    const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+    const [deleting, setDeleting] = useState(false);
     const { width } = useWindowDimensions();
     const numColumns = width > 1024 ? 3 : width > 768 ? 2 : 1;
 
@@ -72,18 +75,15 @@ export default function ClientsScreen({ navigation }: any) {
     };
 
     const handleDelete = (c: Client) => {
-        const allowed = requireVerification('Deleting customer data', () => {
-            Alert.alert('Delete Client', `Remove "${c.name}"?`, [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => deleteClient(c.id) },
-            ]);
-        });
-        if (allowed) {
-            Alert.alert('Delete Client', `Remove "${c.name}"?`, [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => deleteClient(c.id) },
-            ]);
-        }
+        setClientToDelete(c);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!clientToDelete) return;
+        setDeleting(true);
+        await deleteClient(clientToDelete.id);
+        setDeleting(false);
+        setClientToDelete(null);
     };
 
     const initials = (name: string) => name.split(' ').map(w => w[0]?.toUpperCase()).slice(0, 2).join('');
@@ -110,7 +110,7 @@ export default function ClientsScreen({ navigation }: any) {
                             <User size={28} color={C.sub} />
                         </View>
                         <Text style={s.emptyTitle}>No clients yet</Text>
-                        <Text style={s.emptySub}>Add clients to assign them to projects and track client revenue.</Text>
+                        <Text style={s.emptySub}>Add clients to track customer projects and orders.</Text>
                         <TouchableOpacity style={s.emptyBtn} onPress={openAdd}>
                             <Plus color="#fff" size={16} />
                             <Text style={s.emptyBtnText}>Add Client</Text>
@@ -214,6 +214,18 @@ export default function ClientsScreen({ navigation }: any) {
                     </ScrollView>
                 </SafeAreaView>
             </Modal>
+
+            {/* Confirm Delete Customer Modal */}
+            <ConfirmDeleteModal
+                visible={clientToDelete !== null}
+                title="Delete Customer"
+                itemName={clientToDelete?.name}
+                message="Are you sure you want to delete this customer record? All associated contact details and history will be permanently removed."
+                confirmText="Delete Customer"
+                loading={deleting}
+                onConfirm={handleConfirmDelete}
+                onCancel={() => setClientToDelete(null)}
+            />
         </SafeAreaView>
     );
 }

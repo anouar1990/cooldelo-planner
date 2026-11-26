@@ -14,6 +14,8 @@ import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { UnverifiedUserBanner } from '../components/UnverifiedUserBanner';
 import { downloadCsv, objectsToCsv } from '../lib/exportCsv';
 import { trackEvent } from '../lib/analytics';
+import { LiveLaserSimulator } from '../components/LiveLaserSimulator';
+import { ProductionHeatmap } from '../components/ProductionHeatmap';
 
 function StatusBadge({ status, isDark }: { status: string; isDark: boolean }) {
     const color = status === 'completed' || status === 'delivered' ? '#10B981' : status === 'in-progress' ? '#F59E0B' : '#3B82F6';
@@ -135,12 +137,12 @@ export default function DashboardScreen({ navigation }: any) {
                                         borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
                                     }}>
                                         <Text style={{ fontSize: 9, fontWeight: '800', color: isPro ? '#111317' : '#FFF' }}>
-                                            {isPro ? 'WORKSHOP PRO' : isStarter ? 'STARTER' : 'FREE PLAN'}
+                                            {isPro ? 'PRO' : isStarter ? 'STARTER' : 'FREE'}
                                         </Text>
                                     </View>
                                 </View>
                                 <Text style={[styles.subtitle, { color: colors.sub }]} numberOfLines={1}>
-                                    Owner: {profile.ownerName} · <MapPin size={12} color={colors.sub} /> {profile.city}, {profile.country}
+                                    <MapPin size={11} color={colors.sub} /> {profile.city ? `${profile.city}, ${profile.country}` : (profile.country || 'Laser Workshop')}
                                 </Text>
                             </View>
                         </View>
@@ -186,8 +188,8 @@ export default function DashboardScreen({ navigation }: any) {
                         <StatCard 
                             icon={<Folder color="#3B82F6" size={20} />} 
                             value={stats.totalProjects} 
-                            label="Total Projects" 
-                            subtext={`${stats.inProgressProjects} Active · ${stats.completedProjects} Done · ${stats.deliveredProjects} Delivered`} 
+                            label="Projects" 
+                            subtext={`${stats.inProgressProjects} active · ${stats.completedProjects} done`} 
                             color="#3B82F6" 
                             colors={colors}
                             onPress={() => navigateTab('Orders')}
@@ -195,8 +197,8 @@ export default function DashboardScreen({ navigation }: any) {
                         <StatCard 
                             icon={<Package color="#10B981" size={20} />} 
                             value={stats.totalMaterials} 
-                            label="Materials Logged" 
-                            subtext={`$${stats.inventoryValue.toFixed(0)} Value · ${stats.lowStockCount} Low Stock`} 
+                            label="Materials" 
+                            subtext={stats.lowStockCount > 0 ? `${stats.lowStockCount} low stock` : 'In stock'} 
                             color="#10B981" 
                             colors={colors}
                             onPress={() => navigateTab('Materials')}
@@ -204,8 +206,8 @@ export default function DashboardScreen({ navigation }: any) {
                         <StatCard 
                             icon={<FileText color="#FE7733" size={20} />} 
                             value={`$${stats.totalRevenue.toFixed(0)}`} 
-                            label="Revenue Issued" 
-                            subtext={`${stats.paidInvoicesCount} Paid · ${stats.pendingInvoicesCount} Pending`} 
+                            label="Revenue" 
+                            subtext={`${stats.pendingInvoicesCount} pending`} 
                             color="#FE7733" 
                             colors={colors}
                             onPress={() => navigateTab('Invoice Generator')}
@@ -213,8 +215,8 @@ export default function DashboardScreen({ navigation }: any) {
                         <StatCard 
                             icon={<Users color="#8B5CF6" size={20} />} 
                             value={stats.totalClients} 
-                            label="Active Clients" 
-                            subtext={`+${stats.newClientsThisMonth} New this month`} 
+                            label="Clients" 
+                            subtext={stats.newClientsThisMonth > 0 ? `+${stats.newClientsThisMonth} this month` : 'Active'} 
                             color="#8B5CF6" 
                             colors={colors}
                             onPress={() => navigateTab('Orders')}
@@ -227,34 +229,40 @@ export default function DashboardScreen({ navigation }: any) {
                             <View style={styles.revIconWrap}>
                                 <TrendingUp color="#10B981" size={18} />
                             </View>
-                            <Text style={[styles.revWidgetTitle, { color: colors.text }]}>Revenue Analytics & Order Value</Text>
+                            <Text style={[styles.revWidgetTitle, { color: colors.text }]}>Revenue Analytics</Text>
                         </View>
                         <View style={styles.revWidgetRow}>
                             <View style={styles.revWidgetStat}>
                                 <Text style={[styles.revWidgetValue, { color: '#10B981' }]}>{profile.currency}{stats.monthlyRevenue}</Text>
-                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Monthly Revenue</Text>
+                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Monthly</Text>
                             </View>
                             <View style={styles.revWidgetStat}>
                                 <Text style={[styles.revWidgetValue, { color: '#3B82F6' }]}>{profile.currency}{stats.weeklyRevenue}</Text>
-                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Weekly Avg</Text>
+                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Weekly</Text>
                             </View>
                             <View style={styles.revWidgetStat}>
                                 <Text style={[styles.revWidgetValue, { color: '#FE7733' }]}>{profile.currency}{stats.averageOrderValue}</Text>
-                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Avg Order Value</Text>
+                                <Text style={[styles.revWidgetLabel, { color: colors.sub }]}>Avg Order</Text>
                             </View>
                         </View>
                     </View>
 
+                    {/* Live Laser Cut & Spark Simulator (Interactive Wow-Factor) */}
+                    <LiveLaserSimulator />
+
+                    {/* Workshop Production & Streak Heatmap */}
+                    <ProductionHeatmap />
+
                     {/* Quick Workshop Actions */}
                     <View style={styles.sectionRow}>
-                        <Text style={[styles.sectionTitle, { color: colors.sub }]}>{t('dash_quick_start')}</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.sub }]}>TOOLS & WORKFLOWS</Text>
                     </View>
                     <View style={styles.toolsGrid}>
                         <QuickToolCard
                             icon={<Sparkles color="#FE7733" size={20} />}
                             title="LaserAI Studio"
                             badge="PRO"
-                            desc="Text-to-CAD laser vectorizer & prompt studio"
+                            desc="Text-to-vector CAD engine"
                             color="#FE7733"
                             colors={colors}
                             onPress={() => {
@@ -268,7 +276,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<Sliders color="#B1FA63" size={20} />}
                             title="Laser CAD Tools"
-                            desc="Kerf test matrix, box maker & living hinges"
+                            desc="Boxes, kerf matrix & living hinges"
                             color="#B1FA63"
                             colors={colors}
                             onPress={() => navigateTab('Laser Tools')}
@@ -276,7 +284,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<Calculator color="#FE7733" size={20} />}
                             title={t('calc_title')}
-                            desc="Material, machine time & labor margin"
+                            desc="Material, runtime & markup"
                             color="#FE7733"
                             colors={colors}
                             onPress={() => navigateTab('Cost Calculator')}
@@ -284,7 +292,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<FileText color="#10B981" size={20} />}
                             title={t('nav_invoices')}
-                            desc="Export professional PDF quotes & invoices"
+                            desc="PDF quotes & billing invoices"
                             color="#10B981"
                             colors={colors}
                             onPress={() => navigateTab('Invoice Generator')}
@@ -293,7 +301,7 @@ export default function DashboardScreen({ navigation }: any) {
                             icon={<Layers color="#B1FA63" size={20} />}
                             title="0machine Nest"
                             badge="PRO"
-                            desc="Autonomous True-Shape sheet nesting & CAD/CAM engine"
+                            desc="True-Shape sheet nesting"
                             color="#B1FA63"
                             colors={colors}
                             onPress={() => {
@@ -311,7 +319,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<Zap color="#F59E0B" size={20} />}
                             title={t('preset_title')}
-                            desc="Speed, power & frequency presets"
+                            desc="Speed, power & materials library"
                             color="#F59E0B"
                             colors={colors}
                             onPress={() => navigateTab('Laser Presets')}
@@ -319,7 +327,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<Folder color="#EC4899" size={20} />}
                             title={t('design_title')}
-                            desc="Laser cut SVG/DXF templates"
+                            desc="300K+ ready-to-cut laser files"
                             color="#EC4899"
                             colors={colors}
                             onPress={() => navigateTab('Design Library')}
@@ -327,7 +335,7 @@ export default function DashboardScreen({ navigation }: any) {
                         <QuickToolCard
                             icon={<Package color="#3B82F6" size={20} />}
                             title={t('mat_title')}
-                            desc="Track wood, acrylic, MDF & metal stock"
+                            desc="Sheet inventory & stock levels"
                             color="#3B82F6"
                             colors={colors}
                             onPress={() => navigateTab('Materials')}
@@ -336,7 +344,7 @@ export default function DashboardScreen({ navigation }: any) {
 
                     {/* Recent Orders & Jobs */}
                     <View style={styles.sectionRow}>
-                        <Text style={[styles.sectionTitle, { color: colors.sub }]}>RECENT WORKSHOP ORDERS</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.sub }]}>RECENT ORDERS</Text>
                         <TouchableOpacity onPress={() => navigateTab('Orders')}>
                             <Text style={[styles.seeAll, { color: colors.primary }]}>View All →</Text>
                         </TouchableOpacity>
@@ -347,9 +355,9 @@ export default function DashboardScreen({ navigation }: any) {
                             <View style={{ marginBottom: 8, opacity: 0.7 }}>
                                 <Folder color={colors.sub} size={28} />
                             </View>
-                            <Text style={[styles.emptyTitle, { color: colors.text }]}>No active orders yet</Text>
+                            <Text style={[styles.emptyTitle, { color: colors.text }]}>No orders yet</Text>
                             <Text style={[styles.emptySub, { color: colors.sub }]}>
-                                Head over to Orders Tracker to log your first client order.
+                                Client orders logged in Orders Tracker will appear here.
                             </Text>
                         </View>
                     ) : (

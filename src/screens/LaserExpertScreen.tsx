@@ -13,6 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useLaserExpert, AIMessage, AIConversation } from '../hooks/useLaserExpert';
 import { trackEvent } from '../lib/analytics';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 
 // ═══════════════════════════════════════════════════════════════════
 // SUGGESTED PROMPTS
@@ -469,6 +470,8 @@ export default function LaserExpertScreen() {
 
     const [inputText, setInputText] = useState('');
     const [showSidebar, setShowSidebar] = useState(false);
+    const [conversationToDelete, setConversationToDelete] = useState<AIConversation | null>(null);
+    const [deletingConversation, setDeletingConversation] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
 
     const primaryColor = colors.primary || '#FE7733';
@@ -563,7 +566,7 @@ export default function LaserExpertScreen() {
                             colors={colors}
                             primaryColor={primaryColor}
                             onSelect={() => { selectConversation(conv.id); setShowSidebar(false); }}
-                            onDelete={() => deleteConversation(conv.id)}
+                            onDelete={() => setConversationToDelete(conv)}
                             onRename={(title) => renameConversation(conv.id, title)}
                         />
                     ))
@@ -710,6 +713,28 @@ export default function LaserExpertScreen() {
                     {renderChat()}
                 </View>
             </View>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmDeleteModal
+                visible={conversationToDelete !== null}
+                title="Delete Conversation"
+                itemName={conversationToDelete?.title}
+                message="Are you sure you want to permanently delete this chat conversation? All messages and recommendations will be removed."
+                confirmText="Delete Conversation"
+                loading={deletingConversation}
+                onConfirm={async () => {
+                    if (conversationToDelete) {
+                        try {
+                            setDeletingConversation(true);
+                            await deleteConversation(conversationToDelete.id);
+                        } finally {
+                            setDeletingConversation(false);
+                            setConversationToDelete(null);
+                        }
+                    }
+                }}
+                onCancel={() => setConversationToDelete(null)}
+            />
         </SafeAreaView>
     );
 }

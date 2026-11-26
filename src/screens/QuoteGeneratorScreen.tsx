@@ -7,6 +7,7 @@ import { FileText, Plus, X, Check, Trash2, User, Calendar, Hash, Percent, Messag
 import { useSubscription } from '../hooks/useSubscription';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
 import { useRequireVerification } from '../context/VerificationContext';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 
 const C = {
     bg: '#111317', surface: '#1A1D21', surface2: '#23262C',
@@ -59,6 +60,7 @@ export default function QuoteGeneratorScreen() {
     const [quotes, setQuotes] = useState<Quote[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [showProModal, setShowProModal] = useState(false);
+    const [quoteToDelete, setQuoteToDelete] = useState<Quote | null>(null);
     const [editing, setEditing] = useState<Quote | null>(null);
 
     // Form state
@@ -122,12 +124,14 @@ export default function QuoteGeneratorScreen() {
         setShowModal(false);
     };
 
-    const delQuote = (id: string) => {
-        if (Platform.OS === 'web') {
-            if (window.confirm('Delete this quote?')) setQuotes(prev => prev.filter(q => q.id !== id));
-        } else {
-            Alert.alert('Delete', 'Delete quote?', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => setQuotes(prev => prev.filter(q => q.id !== id)) }]);
-        }
+    const delQuote = (q: Quote) => {
+        setQuoteToDelete(q);
+    };
+
+    const handleConfirmDeleteQuote = () => {
+        if (!quoteToDelete) return;
+        setQuotes(prev => prev.filter(item => item.id !== quoteToDelete.id));
+        setQuoteToDelete(null);
     };
 
     const setStatus = (id: string, status: Quote['status']) => setQuotes(prev => prev.map(q => q.id === id ? { ...q, status } : q));
@@ -150,7 +154,7 @@ export default function QuoteGeneratorScreen() {
         const sub = q.items.reduce((s, i) => s + i.qty * i.unit, 0);
         const total = sub * (1 + q.vatPct / 100);
         
-        let text = `📄 *QUOTATION: ${q.quoteNumber}*\n`;
+        let text = `*QUOTATION: ${q.quoteNumber}*\n`;
         text += `Hello *${q.clientName}*,\n\n`;
         text += `Here is your requested quotation for: *${q.projectDescription || 'Laser Cutting & Engraving'}*\n\n`;
         text += `*ITEMS:* \n`;
@@ -162,9 +166,9 @@ export default function QuoteGeneratorScreen() {
             text += `*VAT (${q.vatPct}%):* $${(sub * (q.vatPct / 100)).toFixed(2)}\n`;
         }
         text += `*TOTAL:* *$${total.toFixed(2)}*\n\n`;
-        if (q.deliveryDate) text += `📅 *Est. Delivery:* ${q.deliveryDate}\n`;
-        if (q.notes) text += `ℹ️ *Notes:* ${q.notes}\n`;
-        text += `\nThank you for choosing us! ⚡\n_Sent via 0Machine Planner_`;
+        if (q.deliveryDate) text += `*Est. Delivery:* ${q.deliveryDate}\n`;
+        if (q.notes) text += `*Notes:* ${q.notes}\n`;
+        text += `\nThank you for choosing us!\n_Sent via 0Machine_`;
 
         const encoded = encodeURIComponent(text);
         const url = `https://wa.me/?text=${encoded}`;
@@ -248,7 +252,7 @@ export default function QuoteGeneratorScreen() {
                                         </TouchableOpacity>
                                     ))}
                                     <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(q)}><Text style={styles.editBtnText}>Edit</Text></TouchableOpacity>
-                                    <TouchableOpacity style={styles.delBtn} onPress={() => delQuote(q.id)}><Text style={styles.delBtnText}>Delete</Text></TouchableOpacity>
+                                    <TouchableOpacity style={styles.delBtn} onPress={() => delQuote(q)}><Text style={styles.delBtnText}>Delete</Text></TouchableOpacity>
                                 </View>
                             </View>
                         );
@@ -352,6 +356,17 @@ export default function QuoteGeneratorScreen() {
                 featureName="1-Click WhatsApp Direct Dispatch"
                 actionTitle="Send Quotes & Invoices via WhatsApp"
                 description="Upgrade to Pro ($19/mo) to send custom Quotes and Invoices directly to your clients via WhatsApp with 1 tap!"
+            />
+
+            {/* Confirm Delete Quote Modal */}
+            <ConfirmDeleteModal
+                visible={quoteToDelete !== null}
+                title="Delete Quote"
+                itemName={quoteToDelete ? `${quoteToDelete.quoteNumber} — ${quoteToDelete.clientName}` : undefined}
+                message="Are you sure you want to permanently delete this quote estimate? This cannot be undone."
+                confirmText="Delete Quote"
+                onConfirm={handleConfirmDeleteQuote}
+                onCancel={() => setQuoteToDelete(null)}
             />
         </SafeAreaView>
     );

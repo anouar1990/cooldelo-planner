@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
 import { useNavigation } from '@react-navigation/native';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { useRequireVerification } from '../context/VerificationContext';
 import { trackEvent } from '../lib/analytics';
 import * as Print from 'expo-print';
@@ -47,6 +48,8 @@ export default function InvoiceGeneratorScreen() {
     const [loading, setLoading] = useState(false);
     const [invoices, setInvoices] = useState<any[]>([]);
     const [showProModal, setShowProModal] = useState(false);
+    const [invoiceToDelete, setInvoiceToDelete] = useState<any | null>(null);
+    const [deletingInvoice, setDeletingInvoice] = useState(false);
 
     // Business settings state
     const [businessName, setBusinessName] = useState('');
@@ -295,22 +298,30 @@ export default function InvoiceGeneratorScreen() {
     };
 
     const handleDeleteInvoice = async (id: string) => {
-        const confirmed = Platform.OS === 'web'
-            ? window.confirm('Are you sure you want to delete this invoice record?')
-            : true;
+        const inv = invoices.find(i => i.id === id);
+        if (inv) {
+            setInvoiceToDelete(inv);
+        } else {
+            setInvoiceToDelete({ id });
+        }
+    };
 
-        if (!confirmed) return;
-
+    const handleConfirmDeleteInvoice = async () => {
+        if (!invoiceToDelete) return;
         try {
+            setDeletingInvoice(true);
             const { error } = await supabase
                 .from('invoices')
                 .delete()
-                .eq('id', id);
+                .eq('id', invoiceToDelete.id);
 
             if (error) throw error;
             fetchInvoices();
         } catch (err: any) {
             showAlert('Error', err.message || 'Failed to delete invoice');
+        } finally {
+            setDeletingInvoice(false);
+            setInvoiceToDelete(null);
         }
     };
 
@@ -533,7 +544,7 @@ export default function InvoiceGeneratorScreen() {
                         onPress={() => handleWhatsAppInvoice(item)}
                     >
                         <MessageSquare size={15} color="#000000" />
-                        <Text style={[styles.actionIconText, { color: '#000000', fontWeight: '800' }]}>Send via WhatsApp</Text>
+                        <Text style={[styles.actionIconText, { color: '#000000', fontWeight: '800' }]}>WhatsApp</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 
@@ -541,12 +552,12 @@ export default function InvoiceGeneratorScreen() {
                         onPress={() => handlePrintInvoice(item)}
                     >
                         <Printer size={16} color={COLORS.text} />
-                        <Text style={styles.actionIconText}>Print / PDF</Text>
+                        <Text style={styles.actionIconText}>PDF</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity 
                         style={[styles.actionIconButton, { borderColor: COLORS.error + '40' }]}
-                        onPress={() => handleDeleteInvoice(item.id)}
+                        onPress={() => setInvoiceToDelete(item)}
                     >
                         <Trash2 size={16} color={COLORS.error} />
                         <Text style={[styles.actionIconText, { color: COLORS.error }]}>Delete</Text>
@@ -848,6 +859,18 @@ export default function InvoiceGeneratorScreen() {
                 featureName="Invoice Generator"
                 actionTitle="Generate Invoice"
                 description="Your invoice is ready to generate! Upgrade to Pro ($19/mo) to generate and download professional PDF invoices."
+            />
+
+            {/* Confirm Delete Invoice Modal */}
+            <ConfirmDeleteModal
+                visible={invoiceToDelete !== null}
+                title="Delete Invoice"
+                itemName={invoiceToDelete ? `${invoiceToDelete.invoice_number || invoiceToDelete.invoiceNumber || 'Invoice'} — ${invoiceToDelete.client_name || invoiceToDelete.clientName || ''}` : undefined}
+                message="Are you sure you want to permanently delete this invoice record? This action cannot be undone."
+                confirmText="Delete Invoice"
+                loading={deletingInvoice}
+                onConfirm={handleConfirmDeleteInvoice}
+                onCancel={() => setInvoiceToDelete(null)}
             />
         </SafeAreaView>
     );

@@ -14,6 +14,7 @@ const C = {
 
 import { useWorkshop, OrderItem as Order } from '../context/WorkshopContext';
 import { useRequireVerification } from '../context/VerificationContext';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 
 type Status = Order['status'];
 
@@ -33,6 +34,7 @@ export default function OrdersScreen() {
     const { orders, addOrder, updateOrder, deleteOrder } = useWorkshop();
     const { requireVerification } = useRequireVerification();
     const [showModal, setShowModal] = useState(false);
+    const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
     const [editing, setEditing] = useState<Order | null>(null);
     const [form, setForm] = useState(BLANK);
     const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -67,24 +69,14 @@ export default function OrdersScreen() {
         setShowModal(false);
     };
 
-    const del = (id: string) => {
-        const allowed = requireVerification('Deleting order', () => {
-            executeDelete(id);
-        });
-        if (allowed) {
-            executeDelete(id);
-        }
+    const del = (order: Order) => {
+        setOrderToDelete(order);
     };
 
-    const executeDelete = (id: string) => {
-        if (Platform.OS === 'web') {
-            if (window.confirm('Delete this order?')) deleteOrder(id);
-        } else {
-            Alert.alert('Delete', 'Delete this order?', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => deleteOrder(id) },
-            ]);
-        }
+    const handleConfirmDeleteOrder = () => {
+        if (!orderToDelete) return;
+        deleteOrder(orderToDelete.id);
+        setOrderToDelete(null);
     };
 
     const changeStatus = (id: string, s: Status) => updateOrder(id, { status: s });
@@ -150,7 +142,7 @@ export default function OrdersScreen() {
                         <Text style={styles.emptyTitle}>No orders found</Text>
                     </View>
                 ) : (
-                    filtered.map(o => <OrderRow key={o.id} order={o} onEdit={() => openEdit(o)} onDelete={() => del(o.id)} onStatusChange={(s) => changeStatus(o.id, s)} />)
+                    filtered.map(o => <OrderRow key={o.id} order={o} onEdit={() => openEdit(o)} onDelete={() => del(o)} onStatusChange={(s) => changeStatus(o.id, s)} />)
                 )}
             </ScrollView>
 
@@ -198,6 +190,17 @@ export default function OrdersScreen() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Confirm Delete Order Modal */}
+            <ConfirmDeleteModal
+                visible={orderToDelete !== null}
+                title="Delete Order"
+                itemName={orderToDelete ? `${orderToDelete.orderNumber} — ${orderToDelete.projectName}` : undefined}
+                message="Are you sure you want to delete this customer order? All related status notes and price records will be permanently removed."
+                confirmText="Delete Order"
+                onConfirm={handleConfirmDeleteOrder}
+                onCancel={() => setOrderToDelete(null)}
+            />
         </SafeAreaView>
     );
 }

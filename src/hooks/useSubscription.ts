@@ -314,7 +314,7 @@ export function useSubscription() {
 
       return {
         success: true,
-        message: `🎉 Promo Code "${cleanCode}" Applied! 3-Day Free Trial activated (Design Library downloads excluded until paid).`,
+        message: `Promo Code "${cleanCode}" Applied. 3-Day Free Trial activated (Design Library downloads excluded until paid).`,
       };
     } catch (err: any) {
       console.error('Apply promo code error:', err);

@@ -32,7 +32,7 @@ export function getLaserExpertFallback(userQuery: string): FallbackResponse {
     // ─── 1. PLYWOOD & WOOD CUTTING ─────────────────────────────────────
     if (q.includes('plywood') || q.includes('baltic birch') || q.includes('6mm') || q.includes('3mm') || q.includes('4mm')) {
         return {
-            content: `### 🪵 Plywood Laser Cutting Recommended Settings
+            content: `### Plywood Laser Cutting Recommended Settings
 
 Here are optimal baseline parameters for cutting high-grade plywood (e.g., Baltic Birch, Poplar):
 
@@ -52,14 +52,14 @@ Here are optimal baseline parameters for cutting high-grade plywood (e.g., Balti
   - 3mm Plywood: 200 mm/min at 90% power (1 pass)
   - 6mm Plywood: 120 mm/min at 100% power (2 passes)
 
-💡 **Pro Tip**: Use strong Air Assist to prevent charring on the surface, and ensure your material is flat with honeycomb pin clamps.`
+**Pro Tip**: Use strong Air Assist to prevent charring on the surface, and ensure your material is flat with honeycomb pin clamps.`
         };
     }
 
     // ─── 2. ENGRAVING TROUBLESHOOTING ──────────────────────────────────
     if (q.includes('engrav') || q.includes('dark') || q.includes('burn') || q.includes('black') || q.includes('smoke')) {
         return {
-            content: `### ⚡ Laser Engraving Quality & Burn Troubleshooting
+            content: `### Laser Engraving Quality & Burn Troubleshooting
 
 If your engraving appears too dark, burnt, or fuzzy:
 
@@ -77,7 +77,7 @@ If your engraving appears too dark, burnt, or fuzzy:
     // ─── 3. PRICING & COST CALCULATION ─────────────────────────────────
     if (q.includes('price') || q.includes('cost') || q.includes('quote') || q.includes('calc') || q.includes('money') || q.includes('charge')) {
         return {
-            content: `### 💰 How to Price Laser & CNC Workshop Projects
+            content: `### How to Price Laser & CNC Workshop Projects
 
 To guarantee profitability for your workshop, use this industry formula (available in your **0machine Cost Calculator**):
 
@@ -87,14 +87,14 @@ $$\\text{Total Price} = (\\text{Material Cost} \\times 1.25) + (\\text{Machine T
 • **Machine Hourly Rate**: $45 - $85/hr (includes electricity, tube wear, exhaust filters).
 • **Vector File Setup**: $15 - $35 flat fee for file cleaning & nesting.
 
-👉 You can use the **Cost Calculator** tab in 0machine to auto-calculate instant quotes with exact kerf yield!`
+You can use the **Cost Calculator** tab in 0machine to auto-calculate instant quotes with exact kerf yield.`
         };
     }
 
     // ─── 4. ACRYLIC CUTTING & ENGRAVING ────────────────────────────────
     if (q.includes('acrylic') || q.includes('plexiglass') || q.includes('perspex')) {
         return {
-            content: `### 🎯 Acrylic (PMMA) Laser Processing Settings
+            content: `### Acrylic (PMMA) Laser Processing Settings
 
 • **Cast Acrylic vs. Extruded**:
   - **Cast Acrylic**: Best for frosted white engraving and clean flame-polished cut edges.
@@ -107,14 +107,14 @@ $$\\text{Total Price} = (\\text{Material Cost} \\times 1.25) + (\\text{Machine T
   - Air Assist: LOW (prevents frosty edges)
 
 • **Engraving Acrylic**:
-  - Mirror/Reverse engrave on the back side of clear acrylic for a smooth front surface!`
+  - Mirror/Reverse engrave on the back side of clear acrylic for a smooth front surface.`
         };
     }
 
     // ─── 5. CNC FEEDS & SPEEDS ─────────────────────────────────────────
     if (q.includes('cnc') || q.includes('feed') || q.includes('speed') || q.includes('rpm') || q.includes('spindle') || q.includes('bit')) {
         return {
-            content: `### 🔧 CNC Router Feeds & Speeds for Woodworking
+            content: `### CNC Router Feeds & Speeds for Woodworking
 
 • **Softwood / MDF (1/4" Compression Bit)**:
   - Spindle Speed: 18,000 RPM
@@ -126,13 +126,13 @@ $$\\text{Total Price} = (\\text{Material Cost} \\times 1.25) + (\\text{Machine T
   - Feed Rate: 100 - 120 inches/min (2500 - 3000 mm/min)
   - Pass Depth: 0.125" (0.5x D)
 
-💡 **Bit Selection**: Use *Downcut* bits for clean top surfaces, *Upcut* bits for deep pocket chip evacuation, and *Compression* bits for double-sided clean edges on sheet goods.`
+**Bit Selection**: Use *Downcut* bits for clean top surfaces, *Upcut* bits for deep pocket chip evacuation, and *Compression* bits for double-sided clean edges on sheet goods.`
         };
     }
 
     // ─── DEFAULT GENERAL EXPERT RESPONSE ────────────────────────────────
     return {
-        content: `### 🤖 0machine Laser & Workshop Technical Guide
+        content: `### 0machine Laser & Workshop Technical Guide
 
 I am ready to assist with your workshop operations. Here are areas I can help with right now:
 

@@ -183,11 +183,11 @@ export default function NestingEstimatorScreen() {
                             </View>
                             <View style={{ flex: 1 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                    <Text style={styles.camTitle}>0machine Autonomous CAM Nesting</Text>
+                                    <Text style={styles.camTitle}>True-Shape CAM Nesting</Text>
                                     <View style={styles.camBadge}><Text style={styles.camBadgeText}>SVG, DXF & AI</Text></View>
                                 </View>
                                 <Text style={styles.camSubtitle}>
-                                    True-shape nesting, SVG & DXF import, hole utilization, common-line cutting & LaserAI Studio
+                                    Multi-part DXF/SVG nesting & common-line cut optimization.
                                 </Text>
                             </View>
                         </View>

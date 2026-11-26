@@ -35,6 +35,66 @@
         outline: none !important;
         box-shadow: none !important;
       }
+
+      /* Native 0Machine Sidebar Rail & Hover System */
+      #zero-machine-sidebar {
+        width: 68px !important;
+        transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease !important;
+        overflow: hidden !important;
+        z-index: 1000 !important;
+      }
+      #zero-machine-sidebar:hover,
+      #zero-machine-sidebar[data-pinned="true"] {
+        width: 260px !important;
+        box-shadow: 6px 0 28px rgba(0, 0, 0, 0.65) !important;
+      }
+
+      /* Block items (section titles) completely hidden with 0 height when collapsed */
+      #zero-machine-sidebar [data-sidebar-block-hide] {
+        display: none !important;
+      }
+      #zero-machine-sidebar:hover [data-sidebar-block-hide],
+      #zero-machine-sidebar[data-pinned="true"] [data-sidebar-block-hide] {
+        display: flex !important;
+      }
+
+      /* Horizontal text labels hidden with smooth opacity */
+      #zero-machine-sidebar [data-sidebar-hide] {
+        opacity: 0 !important;
+        max-width: 0 !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        pointer-events: none !important;
+        transition: opacity 0.15s ease, max-width 0.22s ease !important;
+      }
+      #zero-machine-sidebar:hover [data-sidebar-hide],
+      #zero-machine-sidebar[data-pinned="true"] [data-sidebar-hide] {
+        opacity: 1 !important;
+        max-width: 220px !important;
+        pointer-events: auto !important;
+      }
+
+      /* Compact-only items */
+      #zero-machine-sidebar [data-sidebar-show] {
+        display: flex !important;
+      }
+      #zero-machine-sidebar:hover [data-sidebar-show],
+      #zero-machine-sidebar[data-pinned="true"] [data-sidebar-show] {
+        display: none !important;
+      }
+
+      /* User profile card styling: transparent circle in compact mode, capsule on hover */
+      #zero-machine-sidebar .user-pill-container {
+        border-color: transparent !important;
+        background-color: transparent !important;
+        padding: 0 !important;
+      }
+      #zero-machine-sidebar:hover .user-pill-container,
+      #zero-machine-sidebar[data-pinned="true"] .user-pill-container {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        padding: 8px !important;
+      }
     </style>
     <!-- Google tag (gtag.js) -->
     <script>
