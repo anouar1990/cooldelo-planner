@@ -1642,3 +1642,19 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+## [2026-11-26 23:38:00] - Production Deployment to Vercel (Laser Cut Planner & 0Machine Landing)
+- **Task**: Deploy latest work to Vercel production across both repositories (`lasercut-planner` and `0machine-landing`). Verified local clean builds (`npm run vercel-build` for Expo web export and `npm run build` for Next.js 16), committed all staged changes, and pushed to `origin/main` to trigger automated Vercel CI/CD pipelines.
+- **Files Changed**:
+  - `lasercut-planner` repository (commit `823a165` - Deployed `LiveLaserSimulator`, `ProductionHeatmap`, `ConfirmDeleteModal`, `SidebarContext`, and UI cleanups to `https://app.0machine.com`)
+  - `0machine-landing` repository (commit `4989398` - Deployed updated studio window, free tools `image-to-dxf`, `photo-to-svg`, `designsCatalog`, and landing UI updates to `https://www.0machine.com`)
+- **Tests Performed**:
+  - `lasercut-planner` build (`npm run vercel-build`): PASS (Bundled 2394 modules cleanly, exported `web-build`).
+  - `0machine-landing` build (`npm run build`): PASS (Next.js 16 Turbopack compiled 73/73 static routes in 5.7s).
+  - Git Push verification (`git push origin main` on both repos): PASS (Pushed commits `823a165` and `4989398`).
+  - Production HTTP verification:
+    - `https://app.0machine.com`: PASS (`HTTP/2 200`, serving 0machine Planner).
+    - `https://www.0machine.com`: PASS (`HTTP/2 200`, serving 0Machine Landing & Tools).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
