@@ -1707,3 +1707,17 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+## [2026-11-27 22:42:00] - Promote Design Vault to #1 in Sidebar & Mobile Navigation
+- **Task**: Reclassify Design Vault as a mobile-friendly workshop tool (does not require a PC) and position it as the #1 tool in the desktop sidebar (right below Dashboard at the top of PRO TOOLS) and as a primary tab on the mobile bottom navigation bar.
+- **Files Changed**:
+  - `App.tsx` (Modified - Placed `Design Library` as the first screen in the Pro tools group)
+  - `src/components/ResponsiveTabBar.tsx` (Modified - Removed `Design Library` from `DESKTOP_FIRST_TABS`; added `Design Library` to `PRIMARY_MOBILE_TABS` for 1-tap mobile access; set `isProHeader = route.name === 'Design Library'` for sidebar section header and mini-divider)
+  - `src/components/DesktopRecommendedView.tsx` (Modified - Added quick-jump pill directly to `Design Vault`)
+- **Tests Performed**:
+  - TypeScript compiler check (`npx tsc --noEmit`): PASS (0 errors).
+  - Production build (`npm run vercel-build`): PASS (Bundled 2,395 modules in 1.6s).
+  - Navigation order verification (Desktop sidebar & Mobile bottom bar): PASS.
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.

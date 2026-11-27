@@ -111,8 +111,8 @@ function MainAppContent() {
       <Tab.Screen name="Dashboard" component={DashboardNavigator} />
 
       {/* PRO TOOLS */}
-      <Tab.Screen name="LaserAI Studio" component={LaserAiScreen} />
       <Tab.Screen name="Design Library" component={DesignLibraryScreen} />
+      <Tab.Screen name="LaserAI Studio" component={LaserAiScreen} />
       <Tab.Screen name="Laser Tools" component={LaserToolsScreen} />
       <Tab.Screen name="Nesting Estimator" component={NestingEstimatorScreen} />
       <Tab.Screen name="Invoice Generator" component={InvoiceGeneratorScreen} />

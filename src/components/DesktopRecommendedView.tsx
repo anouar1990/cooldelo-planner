@@ -21,6 +21,7 @@ import {
   Calendar,
   FileText,
   Sparkles,
+  Library,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -170,6 +171,15 @@ export function DesktopRecommendedView({
         <View style={styles.managementSection}>
           <Text style={styles.managementTitle}>ON MOBILE? USE WORKSHOP MANAGEMENT INSTEAD:</Text>
           <View style={styles.mobileShortcuts}>
+            <TouchableOpacity
+              style={styles.shortcutPill}
+              onPress={() => navigation.navigate('Design Library')}
+              activeOpacity={0.75}
+            >
+              <Library size={14} color={COLORS.neonLime} strokeWidth={2} />
+              <Text style={styles.shortcutText}>Design Vault</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.shortcutPill}
               onPress={() => navigation.navigate('Cost Calculator')}

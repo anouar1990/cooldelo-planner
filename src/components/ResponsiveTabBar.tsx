@@ -54,9 +54,9 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
         : displayName.charAt(0).toUpperCase();
 
     const isDesktop = width > 768;
-    const PRO_TABS = ['LaserAI Studio', 'Design Library', 'Laser Tools', 'Nesting Estimator', 'Invoice Generator'];
-    const PRIMARY_MOBILE_TABS = ['Dashboard', 'Cost Calculator', 'Orders', 'Production'];
-    const DESKTOP_FIRST_TABS = ['LaserAI Studio', 'Laser Tools', 'Nesting Estimator', 'Design Library'];
+    const PRO_TABS = ['Design Library', 'LaserAI Studio', 'Laser Tools', 'Nesting Estimator', 'Invoice Generator'];
+    const PRIMARY_MOBILE_TABS = ['Dashboard', 'Design Library', 'Cost Calculator', 'Orders'];
+    const DESKTOP_FIRST_TABS = ['LaserAI Studio', 'Laser Tools', 'Nesting Estimator'];
 
     const routeTitleMap: Record<string, string> = {
         'Dashboard': 'nav_dashboard',
@@ -154,13 +154,13 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         const Icon = ICONS[route.name] || LayoutDashboard;
                         const isProTab = PRO_TABS.includes(route.name);
                         const isWhatsAppTab = route.name === 'Quote Generator' || route.name === 'Invoice Generator';
-                        const isProHeader = route.name === 'LaserAI Studio';
+                        const isProHeader = route.name === 'Design Library';
                         const isWorkshopHeader = route.name === 'Cost Calculator';
 
                         return (
                             <React.Fragment key={route.key}>
                                 {/* Only one mini divider after Dashboard in compact mode */}
-                                {route.name === 'LaserAI Studio' && (
+                                {route.name === 'Design Library' && (
                                     <View 
                                         // @ts-ignore
                                         dataSet={{ sidebarShow: 'true' }} 
@@ -339,7 +339,7 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                                     )}
                                 </View>
                                 <Text style={[styles.bottomLabel, isFocused && styles.bottomLabelActive]} numberOfLines={1}>
-                                    {route.name === 'LaserAI Studio' ? 'LaserAI' : route.name === 'Cost Calculator' ? 'Calculator' : getRouteTitle(route.name)}
+                                    {route.name === 'Design Library' ? 'Vault' : route.name === 'LaserAI Studio' ? 'LaserAI' : route.name === 'Cost Calculator' ? 'Calculator' : getRouteTitle(route.name)}
                                 </Text>
                             </TouchableOpacity>
                         );
