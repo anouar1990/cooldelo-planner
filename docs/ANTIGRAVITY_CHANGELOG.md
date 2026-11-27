@@ -1658,3 +1658,52 @@
 - **Test Results**: All tests PASS (100%).
 - **Current Status**: COMPLETE
 - **Known Issues**: None.
+
+## [2026-11-27 21:06:00] - Generate Google Merchant Center (GMC) Compliant Catalog for Cooldelo Shop
+- **Task**: Build a complete, structured JSON catalog (`cooldelo_products_gmc_catalog.json`) and tab-delimited feed (`cooldelo_products_gmc_feed.csv`) containing all 91 verified laser cutting design products for automated e-commerce agent ingestion into Cooldelo shop and 100% policy compliance in Google Merchant Center (GMC).
+- **Files Changed**:
+  - `scripts/generate-cooldelo-gmc-catalog.js` (Created - Orchestrator merging Supabase `designs` DB, verified laser datasets, and Drive state into standardized GMC feed schema)
+  - `cooldelo_products_gmc_catalog.json` (Created - Master JSON catalog with GMC required fields + Shopify/WooCommerce store attributes)
+  - `cooldelo_products_gmc_feed.csv` (Created - Tab-delimited direct upload feed for Google Merchant Center)
+- **Tests Performed**:
+  - Feed schema validation (`node scripts/generate-cooldelo-gmc-catalog.js`): PASS (91 unique products processed, 100% compliant with GMC specifications).
+  - Identifier check: Confirmed `identifier_exists: false` to exempt craft designs from GTIN/UPC requirement.
+  - Image URL check: Confirmed all image URLs point to high-resolution public WebP mockups on Supabase CDN.
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
+
+## [2026-11-27 21:19:00] - Fix GMC Image Quality: Purge Placeholders & Generic Stock Images
+- **Task**: Audit and eliminate all image quality defects in `cooldelo_products_gmc_catalog.json` and `cooldelo_products_gmc_feed.csv`. Specifically resolved the 19 products using `test_3d_lion.webp` placeholder and 4 products using generic Unsplash stock photos to prevent Google Merchant Center duplicate image disapprovals.
+- **Files Changed**:
+  - `scripts/fix-gmc-feed-images.js` (Created - Automated extractor from local ZIP archives and OpenRouter Recraft v4.1 studio visual generator)
+  - `scripts/generate-cooldelo-gmc-catalog.js` (Modified - Added top-level direct `download_link`, `google_drive_view_url`, `google_drive_file_id`)
+  - `cooldelo_products_gmc_catalog.json` (Updated - 91 items, 100% unique high-res image URLs on Supabase CDN)
+  - `cooldelo_products_gmc_feed.csv` (Updated - Tab-delimited feed with unique image URLs)
+  - Supabase `designs` database table & `design-thumbnails` storage bucket (Uploaded 23 new unique high-res product photos)
+- **Tests Performed**:
+  - Automated GMC Image Quality Audit:
+    - Products with `test_3d_lion.webp`: 0 (Down from 19).
+    - Products with `unsplash`: 0 (Down from 4).
+    - Duplicate image URLs across entire feed: 0.
+  - Supabase CDN HTTP verification: PASS (`HTTP/2 200 OK` on sample images).
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.
+
+## [2026-11-27 22:28:00] - Mobile UX Architecture: Workshop Management Focus & Desktop-Recommended CAD View
+- **Task**: Restructure mobile web app UX by prioritizing essential Workshop Management tools on mobile (Dashboard, Cost Calculator, Orders, Production, Quotes, Invoices, Materials) and routing heavy CAD/CAM tools (Nesting Estimator, Parametric CAD Generators, LaserAI Studio) to a dedicated `DesktopRecommendedView` with one-click desktop copy, WhatsApp link dispatch, and an opt-in preview mode.
+- **Files Changed**:
+  - `src/components/DesktopRecommendedView.tsx` (Created - Reusable desktop recommendation card with WhatsApp link sender, link copy with clipboard check, quick mobile tools jump, and opt-in preview mode)
+  - `src/screens/NestingEstimatorScreen.tsx` (Modified - Guarded true-shape multi-part nesting with DesktopRecommendedView on mobile viewports < 768px with bypass toggle)
+  - `src/screens/LaserToolsScreen.tsx` (Modified - Guarded parametric box joints, living hinges, and kerf matrix DXF generators with DesktopRecommendedView on mobile)
+  - `src/screens/LaserAiScreen.tsx` (Modified - Guarded vector synthesis and sketch-to-CAD iframe canvas with DesktopRecommendedView on mobile)
+  - `src/components/ResponsiveTabBar.tsx` (Modified - Set primary mobile bottom tabs to Dashboard, Cost Calculator, Orders, Production; structured More sheet modal into "Workshop Management" vs "Desktop CAD & Tools" with PC badges)
+  - `src/components/LiveLaserSimulator.tsx` (Modified - Added subtle mobile hint badge for desktop drop zone)
+- **Tests Performed**:
+  - TypeScript strict type check (`cd lasercut-planner && npx tsc --noEmit`): PASS (0 errors).
+  - Production build (`cd lasercut-planner && npm run vercel-build`): PASS (3.9s bundle, 2395 modules exported to web-build).
+  - Component rendering & responsive breakpoints check (< 768px): PASS.
+- **Test Results**: All tests PASS (100%).
+- **Current Status**: COMPLETE
+- **Known Issues**: None.

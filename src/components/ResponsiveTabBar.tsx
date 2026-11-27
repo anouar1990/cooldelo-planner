@@ -5,7 +5,7 @@ import {
     LayoutDashboard, LogOut, Calculator, Package, Calendar, Zap, 
     FileText, Grid, Library, HelpCircle, Receipt, Factory, 
     Bot, Sliders, Sparkles, Menu, X, Settings,
-    PanelLeftClose, PanelLeftOpen
+    PanelLeftClose, PanelLeftOpen, Monitor
 } from 'lucide-react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useSubscription } from '../hooks/useSubscription';
@@ -55,7 +55,8 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
 
     const isDesktop = width > 768;
     const PRO_TABS = ['LaserAI Studio', 'Design Library', 'Laser Tools', 'Nesting Estimator', 'Invoice Generator'];
-    const PRIMARY_MOBILE_TABS = ['Dashboard', 'LaserAI Studio', 'Cost Calculator', 'Production'];
+    const PRIMARY_MOBILE_TABS = ['Dashboard', 'Cost Calculator', 'Orders', 'Production'];
+    const DESKTOP_FIRST_TABS = ['LaserAI Studio', 'Laser Tools', 'Nesting Estimator', 'Design Library'];
 
     const routeTitleMap: Record<string, string> = {
         'Dashboard': 'nav_dashboard',
@@ -396,11 +397,11 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                         </View>
 
                         <ScrollView style={styles.sheetScroll} showsVerticalScrollIndicator={false}>
-                            {/* Pro Tools Section */}
-                            <Text style={styles.sheetSectionTitle}>PRO TOOLS</Text>
+                            {/* Management Tools Section (Mobile Optimized) */}
+                            <Text style={styles.sheetSectionTitle}>WORKSHOP MANAGEMENT (MOBILE OPTIMIZED)</Text>
                             <View style={styles.sheetGrid}>
                                 {state.routes
-                                    .filter((r: any) => PRO_TABS.includes(r.name))
+                                    .filter((r: any) => !DESKTOP_FIRST_TABS.includes(r.name) && r.name !== 'Dashboard')
                                     .map((route: any) => {
                                         const isFocused = activeRoute?.name === route.name;
                                         const Icon = ICONS[route.name] || LayoutDashboard;
@@ -432,15 +433,17 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                                     })}
                             </View>
 
-                            {/* Workshop Tools Section */}
-                            <Text style={[styles.sheetSectionTitle, { marginTop: 16 }]}>WORKSHOP TOOLS</Text>
+                            {/* Desktop First CAD / CAM Section */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 18, marginBottom: 8 }}>
+                                <Monitor size={13} color={COLORS.neonLime} strokeWidth={2.2} />
+                                <Text style={styles.sheetSectionTitle}>DESKTOP CAD & ENGINES (PC RECOMMENDED)</Text>
+                            </View>
                             <View style={styles.sheetGrid}>
                                 {state.routes
-                                    .filter((r: any) => !PRO_TABS.includes(r.name) && r.name !== 'Dashboard')
+                                    .filter((r: any) => DESKTOP_FIRST_TABS.includes(r.name))
                                     .map((route: any) => {
                                         const isFocused = activeRoute?.name === route.name;
                                         const Icon = ICONS[route.name] || LayoutDashboard;
-                                        const isWhatsApp = route.name === 'Quote Generator' || route.name === 'Invoice Generator';
 
                                         return (
                                             <TouchableOpacity
@@ -458,11 +461,9 @@ export function ResponsiveTabBar({ state, descriptors, navigation }: any) {
                                                 <Text style={[styles.sheetCardLabel, isFocused && { color: COLORS.primary }]} numberOfLines={1}>
                                                     {getRouteTitle(route.name)}
                                                 </Text>
-                                                {isWhatsApp && (
-                                                    <View style={styles.sheetWaBadge}>
-                                                        <Text style={styles.sheetWaText}>WA</Text>
-                                                    </View>
-                                                )}
+                                                <View style={styles.sheetPcBadge}>
+                                                    <Text style={styles.sheetPcText}>PC</Text>
+                                                </View>
                                             </TouchableOpacity>
                                         );
                                     })}
@@ -844,6 +845,20 @@ const styles = StyleSheet.create({
         color: '#25D366',
         fontSize: 8,
         fontWeight: '900',
+    },
+    sheetPcBadge: {
+        backgroundColor: 'rgba(177, 250, 99, 0.12)',
+        borderColor: 'rgba(177, 250, 99, 0.3)',
+        borderWidth: 1,
+        borderRadius: 6,
+        paddingHorizontal: 5,
+        paddingVertical: 1,
+    },
+    sheetPcText: {
+        color: '#B1FA63',
+        fontSize: 8,
+        fontWeight: '800',
+        letterSpacing: 0.3,
     },
     sheetFooter: {
         flexDirection: 'row',

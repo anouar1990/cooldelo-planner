@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, Platform
 import Svg, { Rect, Path, Circle, Defs, RadialGradient, Stop, Line, G } from 'react-native-svg';
 import { 
   Play, Pause, RotateCcw, UploadCloud, MessageCircle, FileText, 
-  CheckCircle, AlertTriangle, Sparkles, ChevronDown, RefreshCw, Minus, Plus 
+  CheckCircle, AlertTriangle, Sparkles, ChevronDown, RefreshCw, Minus, Plus, Monitor 
 } from 'lucide-react-native';
 import { useWorkshop } from '../context/WorkshopContext';
 
@@ -965,7 +965,15 @@ export function LiveLaserSimulator() {
               {customJob ? `CUSTOM FILE ANALYZER: ${customJob.fileName}` : 'INSTANT LASER ANALYZER'}
             </Text>
           </View>
-          <Text style={styles.simulatorTitle}>Virtual Honeycomb Bed & Drop Zone</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Text style={styles.simulatorTitle}>Virtual Honeycomb Bed & Drop Zone</Text>
+            {!isDesktop && (
+              <View style={styles.mobilePcHint}>
+                <Monitor size={11} color="#B1FA63" strokeWidth={2.2} />
+                <Text style={styles.mobilePcHintText}>PC Drop Zone</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Action Pills / Presets */}
@@ -1353,6 +1361,23 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.2,
+  },
+  mobilePcHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(177, 250, 99, 0.1)',
+    borderColor: 'rgba(177, 250, 99, 0.3)',
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  mobilePcHintText: {
+    color: '#B1FA63',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
   headerRightActions: {
     flexDirection: 'row',

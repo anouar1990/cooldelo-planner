@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
-    TouchableOpacity, TextInput, Platform, Linking,
+    TouchableOpacity, TextInput, Platform, Linking, useWindowDimensions,
 } from 'react-native';
 import { Grid, RotateCcw, Info, Lock, Zap, Check, AlertCircle } from 'lucide-react-native';
 import { useSubscription } from '../hooks/useSubscription';
 import { useLanguage } from '../context/LanguageContext';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { DesktopRecommendedView } from '../components/DesktopRecommendedView';
 import { trackEvent } from '../lib/analytics';
 import { calculateNestingScore, Sheet as NestSheet, Part as NestPart } from '../nest';
 
@@ -30,6 +31,8 @@ const PRESETS = [
 export default function NestingEstimatorScreen() {
     const { isFree, isStarter, isPro } = useSubscription();
     const { t } = useLanguage();
+    const { width } = useWindowDimensions();
+    const isMobile = width < 768;
 
     // Inputs
     const [sheetW, setSheetW] = useState('600');
@@ -43,6 +46,7 @@ export default function NestingEstimatorScreen() {
     const [allowRotation, setAllowRotation] = useState(true);
 
     const [showProModal, setShowProModal] = useState(false);
+    const [bypassDesktopNotice, setBypassDesktopNotice] = useState(false);
 
     useEffect(() => {
         trackEvent('pro_feature_viewed', { feature: 'nesting' });
@@ -145,6 +149,25 @@ export default function NestingEstimatorScreen() {
             setShowProModal(true);
         }
     };
+
+    if (isMobile && !bypassDesktopNotice) {
+        return (
+            <SafeAreaView style={styles.safe}>
+                <DesktopRecommendedView
+                    toolName="Nesting Estimator & Sheet Optimizer"
+                    category="CAD / CAM SHEET PACKING"
+                    description="True-shape multi-part nesting, sheet layouts, and kerf gap optimization require a large PC display and mouse controls for production precision."
+                    benefits={[
+                        'Multi-sheet visual packing with rotation & kerf',
+                        'Real-time material usage % and waste optimization',
+                        'Precision mouse-based part arrangement and margins',
+                        'Direct export to laser machine bed dimensions',
+                    ]}
+                    onContinueAnyway={() => setBypassDesktopNotice(true)}
+                />
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.safe}>

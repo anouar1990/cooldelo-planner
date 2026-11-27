@@ -9,6 +9,7 @@ import { useAiWallet } from '../hooks/useAiWallet';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
+import { DesktopRecommendedView } from '../components/DesktopRecommendedView';
 
 const STUDIO_URL = '/nest?tool=laserai';
 
@@ -19,6 +20,8 @@ export default function LaserAiScreen() {
     const { t } = useLanguage();
     const { width } = useWindowDimensions();
     const [showProModal, setShowProModal] = useState(false);
+    const [bypassDesktopNotice, setBypassDesktopNotice] = useState(false);
+    const isMobile = width < 768;
 
     // Access granted if user is Pro OR user has prepaid AI credits (> 0) OR local dev/admin mode
     const isLocalOrDev = typeof window !== 'undefined' && (
@@ -96,6 +99,26 @@ export default function LaserAiScreen() {
                     </View>
                 </View>
                 <ProUpgradeModal visible={showProModal} onClose={() => setShowProModal(false)} />
+            </SafeAreaView>
+        );
+    }
+
+    // Mobile Desktop-First Guard (CAD Vector Studio)
+    if (isMobile && !bypassDesktopNotice) {
+        return (
+            <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+                <DesktopRecommendedView
+                    toolName="LaserAI Studio (Vector CAD)"
+                    category="AI CAD / CAM CONTOUR ENGINE"
+                    description="Closed-contour AI vector synthesis, photo-to-CAD tracing, and multi-layer LightBurn DXF/SVG generation require desktop precision."
+                    benefits={[
+                        'High-precision closed contour vector editor',
+                        'Multi-layer LightBurn color mapping: Cut (Red), Score (Blue), Engrave (Black)',
+                        'Bridge tab generator for cutouts & dropouts',
+                        'Direct 1-click nesting sheet export to your laser PC',
+                    ]}
+                    onContinueAnyway={() => setBypassDesktopNotice(true)}
+                />
             </SafeAreaView>
         );
     }

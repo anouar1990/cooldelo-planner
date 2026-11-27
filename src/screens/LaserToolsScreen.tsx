@@ -10,6 +10,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSubscription } from '../hooks/useSubscription';
+import { DesktopRecommendedView } from '../components/DesktopRecommendedView';
 import {
     generateDxfString,
     triggerFileDownload,
@@ -37,6 +38,7 @@ export default function LaserToolsScreen() {
 
     const [activeTab, setActiveTab] = useState<ToolTab>('matrix');
     const [copied, setCopied] = useState(false);
+    const [bypassDesktopNotice, setBypassDesktopNotice] = useState(false);
 
     // ==========================================
     // 1. KERF & TEST MATRIX STATE
@@ -517,6 +519,25 @@ export default function LaserToolsScreen() {
             setTimeout(() => setCopied(false), 2000);
         }
     };
+
+    if (isMobile && !bypassDesktopNotice) {
+        return (
+            <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+                <DesktopRecommendedView
+                    toolName="Laser CAD Generators"
+                    category="PARAMETRIC DXF & LIGHTBURN FILES"
+                    description="Generating production-ready DXF cutting files for finger joint boxes, living hinges, and kerf power matrices is built for PC screen precision and direct LightBurn/RDWorks transfer."
+                    benefits={[
+                        'Parametric finger joint boxes with custom kerf compensation',
+                        'Living flexible wooden hinges with bend radius calculations',
+                        'Power/speed test grid matrix generator with layer colors',
+                        'Direct 1-click DXF download for LightBurn & RDWorks',
+                    ]}
+                    onContinueAnyway={() => setBypassDesktopNotice(true)}
+                />
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
